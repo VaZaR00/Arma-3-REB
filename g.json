@@ -1,0 +1,23 @@
+[
+  "cba_xeh_deleted",
+  "ace_dragging_candrag",
+  "cba_xeh_incomingmissile",
+  "cba_xeh_getin",
+  "ace_dragging_carryposition",
+  "cba_xeh_local",
+  "cba_xeh_isprocessed",
+  "cba_xeh_init",
+  "cba_xeh_fired",
+  "cba_xeh_initpost",
+  "ace_dragging_dragposition",
+  "cba_xeh_engine",
+  "cba_xeh_respawn",
+  "ace_dragging_dragdirection",
+  "ace_dragging_cancarry",
+  "cba_xeh_killed",
+  "ace_dragging_carrydirection",
+  "cba_xeh_getout",
+  "cba_xeh_isinitialized",
+  "ace_dragging_ignoreweightdrag",
+  "ace_dragging_ignoreweightcarry"
+]

@@ -1,0 +1,5 @@
+Language,  							    English,										Russian
+STR_REB_Enabled,					"Enabled",						"Ввімкнено"
+STR_REB_Range,					"Range",						"Радіус"
+STR_REB_Deadzone,					"Deadzone",						"Радіус втрати зв'язку"
+STR_REB_Strength,					"Strength",						"Потужність"

@@ -22,4 +22,4 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
 	[_this, _thisArgs] call REB_fnc_eventHandler;
 }, [_freq, _random, _noise]];
 
-missionNamespace setVariable ["REB_var_INITED", true];
+MSVAR ["REB_var_INITED", true];

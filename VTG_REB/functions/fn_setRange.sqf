@@ -2,7 +2,8 @@
 
 params [["_reb", objNull]];
 
-REB_currentHandledReb = GET_HASH(_reb);
+REB_currentHandledReb = _reb;
+REB_currentHandledRebHash = GET_HASH(_reb);
 
 private _display = findDisplay 46 createDisplay "RscDisplayEmpty";
 
@@ -28,7 +29,7 @@ _text ctrlCommit 0;
 _slider ctrlAddEventHandler ["SliderPosChanged", {
     params ["_ctrl", "_newValue"];
 	private _disp = ctrlParent _ctrl;
-	_newValue = round ((REB_currentHandledReb get ["REB_var_rebMaxRange", 100]) * (_newValue/10));
+	_newValue = round ((REB_currentHandledRebHash get ["REB_var_rebMaxRange", 100]) * (_newValue/10));
 	(_disp displayCtrl 11) ctrlSetText (format ["%1: %2 m", LOC "$STR_REB_VALUE", _newValue]);
 }];
 
@@ -44,13 +45,13 @@ _button ctrlCommit 0;
 _button ctrlAddEventHandler ["ButtonClick", {
     private _disp = ctrlParent (_this select 0);
     private _sliderVal = (sliderPosition (_disp displayCtrl 10));
-	private _newRange = round ((REB_currentHandledReb get "REB_var_rebMaxRange") * (_sliderVal/10));
-    private _newDeadzone = (_newRange / (REB_currentHandledReb get "REB_var_rebRatio"));
+	private _newRange = round ((REB_currentHandledRebHash get "REB_var_rebMaxRange") * (_sliderVal/10));
+    private _newDeadzone = (_newRange / (REB_currentHandledRebHash get "REB_var_rebRatio"));
 
-	REB_currentHandledReb set ["REB_var_rebRange", _newRange, true];
-	REB_currentHandledReb set ["REB_var_rebDeadzone", _newDeadzone, true];
+    SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebRange", _newRange, REB_currentHandledReb)
+    SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebDeadzone", _newDeadzone, REB_currentHandledReb)
 
-    UPD_HASH(REB_currentHandledReb)
+    UPD_HASH(REB_currentHandledRebHash)
 	
 	// private _rebItem = player getVariable ["REB_var_currentRebItem", ""];
 
@@ -60,6 +61,7 @@ _button ctrlAddEventHandler ["ButtonClick", {
 	// };
 
 	REB_currentHandledReb = nil;
+	REB_currentHandledRebHash = nil;
 
     _disp closeDisplay 0;
 }];

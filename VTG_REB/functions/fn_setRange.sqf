@@ -52,13 +52,6 @@ _button ctrlAddEventHandler ["ButtonClick", {
     SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebDeadzone", _newDeadzone, REB_currentHandledReb)
 
     UPD_HASH(REB_currentHandledRebHash)
-	
-	// private _rebItem = player getVariable ["REB_var_currentRebItem", ""];
-
-	// if !(_rebItem isEqualTo "") then {
-    //     SET_HASH_VAL(GET_HASH(_rebItem), "REB_var_rebRange", _newRange)
-    //     SET_HASH_VAL(GET_HASH(_rebItem), "REB_var_rebDeadzone", _newDeadzone)
-	// };
 
 	REB_currentHandledReb = nil;
 	REB_currentHandledRebHash = nil;

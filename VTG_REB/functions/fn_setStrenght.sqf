@@ -47,17 +47,10 @@ _button ctrlAddEventHandler ["ButtonClick", {
     private _sliderVal = (sliderPosition (_disp displayCtrl 10));
 	private _newStrenght = ((REB_currentHandledRebHash getDef ["REB_var_rebMaxStrength", 0.5]) * (_sliderVal/10));
 
-	// REB_currentHandledRebHash set ["REB_var_rebStrength", _newStrenght];
     SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebStrength", _newStrenght, REB_currentHandledReb)
 
     UPD_HASH(REB_currentHandledRebHash)
 	
-	// private _rebItem = _unit getVariable ["REB_var_currentRebItem", ""];
-
-	// if !(_rebItem isEqualTo "") then {
-	// 	(REB_itemRebsClasses get _rebItem) setVariable ["REB_var_rebStrength", _newStrenght, true];
-	// };
-
 	REB_currentHandledRebHash = nil;
 
     _disp closeDisplay 0;

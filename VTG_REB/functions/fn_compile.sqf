@@ -30,11 +30,10 @@ REB_fnc_main = {
 		PR _obj = _reb;
 		R_HASH(_reb);
 
-		(_reb getDef ["REB_var_hasActiveReb", false]) && {
+		(GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", false, _obj)) && {
 			[
 				_obj, 
 				_uav, 
-				// _reb getDef [if (_checkRadius) then {"REB_var_rebRange"} else {"REB_var_rebDeadzone"}, -1]
 				GET_HASHS_OBJ_VAL(_reb, if (_checkRadius) then {"REB_var_rebRange"} else {"REB_var_rebDeadzone"}, -1, _obj)
 			] call REB_fnc_isDroneInRadius
 		}
@@ -54,6 +53,51 @@ REB_fnc_main = {
 		false setCamUseTI 0;
 	};
 	_activeRebs call REB_fnc_suppress;
+};
+REB_fnc_isDroneInRadius = {
+	params ["_reb", "_uav", "_radius"];
+
+	PR _attachedToObj = attachedTo _reb;
+
+	// check if reb is loaded in cargo 
+	if !(_attachedToObj isEqualTo objNull) then {
+		if (_reb in (_attachedToObj getVariable ["ace_cargo_loaded", []])) then {
+			_reb = _attachedToObj;
+		};
+	};
+
+	_res = ((_reb distance _uav) < _radius);
+
+	_res
+};
+REB_fnc_disconectDrone = {
+	if (ISLANCETHANDL) exitWith {
+		closeDialog 1;
+	};
+
+	player connectTerminalToUAV objNull; //disconnect from players terminal
+	_noise ppEffectEnable false; //disable noise
+	//delete drone ai crew so drone will fall, otherwise ai will try to hover on 
+	_this spawn {
+		deleteVehicleCrew _this; 
+		uiSleep 10;
+		createVehicleCrew _this;
+	};
+};
+REB_fnc_showEffect = {
+	_noise ppEffectEnable true;
+	_noise ppEffectAdjust [_this,0,2,2,2,true];
+	_noise ppEffectCommit 0;
+};
+REB_fnc_suppress = {
+	PR _sortedByStrenght = [_this, [], { (GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebStrength", 0, _x)) }, "DESCEND"] call BIS_fnc_sortBy; 
+
+	PR _activeReb = _sortedByStrenght#0;
+	PR _strenght = GET_HASHS_OBJ_VAL(GET_HASH(_activeReb), "REB_var_rebStrength", 0, _activeReb) ^ (1 / (count _sortedByStrenght));
+	
+	PR _effect = (random _random) * _strenght;
+	
+	_effect call REB_fnc_showEffect;
 };
 REB_fnc_eventHandler = {
 	params ["_args", "_thisArgs"];
@@ -169,7 +213,7 @@ REB_fnc_changeRebOnObj = {
 	if (!IS_HASH(_newHash)) exitWith {};
 
 	if (IS_HASH(_oldHash)) exitWith {
-		if ((_oldHash get "REB_var_rebRange") < (_newHash get "REB_var_rebRange")) then {
+		if (GET_HASHS_OBJ_VAL(_oldHash, "REB_var_rebRange", 0, _obj) < GET_HASHS_OBJ_VAL(_newHash, "REB_var_rebRange", 0, _new)) then {
 			[_obj, _newHash] call REB_fnc_setRebToObj;
 		};
 	};
@@ -220,58 +264,17 @@ REB_fnc_handleHashObj = {
 	UPD_HASH(_hash);
 };
 
-REB_fnc_isDroneInRadius = {
-	params ["_reb", "_uav", "_radius"];
-
-	PR _attachedToObj = attachedTo _reb;
-
-	// check if reb is loaded in cargo 
-	if !(_attachedToObj isEqualTo objNull) then {
-		if (_reb in (_attachedToObj getVariable ["ace_cargo_loaded", []])) then {
-			_reb = _attachedToObj;
-		};
-	};
-
-	_res = ((_reb distance _uav) < _radius);
-
-	_res
-};
-REB_fnc_disconectDrone = {
-	if (ISLANCETHANDL) exitWith {
-		closeDialog 1;
-	};
-
-	player connectTerminalToUAV objNull; //disconnect from players terminal
-	_noise ppEffectEnable false; //disable noise
-	//delete drone ai crew so drone will fall, otherwise ai will try to hover on 
-	_this spawn {
-		deleteVehicleCrew _this; 
-		uiSleep 10;
-		createVehicleCrew _this;
-	};
-};
-REB_fnc_showEffect = {
-	_noise ppEffectEnable true;
-	_noise ppEffectAdjust [_this,0,2,2,2,true];
-	_noise ppEffectCommit 0;
-};
-REB_fnc_suppress = {
-	PR _sortedByStrenght = [_this, [], { (_x getVariable "REB_var_rebStrength") }, "DESCEND"] call BIS_fnc_sortBy; 
-
-	PR _activeReb = _sortedByStrenght#0;
-	PR _strenght = (_activeReb getVariable "REB_var_rebStrength") ^ (1 / (count _sortedByStrenght));
-	
-	PR _effect = (random _random) * _strenght;
-	
-	_effect call REB_fnc_showEffect;
-};
-
 REB_fnc_setRebActive = {
-	params[["_reb", ""], ["_state", true]];
+	params[["_reb", ""], ["_obj", []], ["_state", true]];
 
 	R_HASH(_reb);
 
-	SET_HASH_VAL(_reb, "REB_var_hasActiveReb", _state)
+	IF_(!IS_ARR(_obj), _obj = [_obj]);
+	IF_(ARR_EMPTY(_obj), _obj = GET_HASH_OBJS(_reb));
+
+	{
+		SET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", _state, _x)
+	} forEach _obj;
 };
 REB_fnc_toggleReb = {
 	params ["_target", "_caller", "_actionId", "_arguments"];
@@ -279,11 +282,11 @@ REB_fnc_toggleReb = {
 	PR _reb = _target;
 	R_HASH(_reb);
 
-	private _hasActive = (_reb getDef ["REB_var_hasActiveReb", true]);
+	private _hasActive = GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", true, _target);
 
-	[_reb, !_hasActive] call REB_fnc_setRebActive;
+	[_reb, _target, !_hasActive] call REB_fnc_setRebActive;
 
-	private _text = if (_reb getDef ["REB_var_hasActiveReb", true]) then {LOC "$STR_REB_DISABLE"} else {LOC "$STR_REB_ENABLE"};
+	private _text = if (GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", true, _target)) then {LOC "$STR_REB_DISABLE"} else {LOC "$STR_REB_ENABLE"};
 
 	_target setUserActionText [(_target getVariable ["REB_TOGGLE_REB_ACTION_ID", -1]), _text];
 };
@@ -302,9 +305,9 @@ REB_fnc_handleContainer = {
 		PR _rebsSorted = ([
 			_rebsInContainer, 
 			[], 
-			{GET_HASH_VAL(GET_HASH(_x), "REB_var_rebRange", 0)}, 
+			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebRange", 0, _x)}, 
 			"DESCEND", 
-			{GET_HASH_VAL(GET_HASH(_x), "REB_var_hasActiveReb", false)}
+			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_hasActiveReb", false, _x)}
 		] call BIS_fnc_sortBy);
 
 		if (count _rebsSorted == 0) exitWith {false};
@@ -339,14 +342,6 @@ REB_fnc_rebItemHandle = {
 	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
 		_unit setVariable ["REB_var_currentRebItem", _item, true];
 
-		// PR _namespace = REB_itemRebsClasses get _item;
-		// [
-		// 	_unit, 
-		// 	HGVAR "REB_var_rebRange", 
-		// 	HGVAR "REB_var_rebDeadzone", 
-		// 	HGVAR "REB_var_rebStrength", 
-		// 	HGVAR "REB_var_hasActiveReb"
-		// ] call REB_fnc_reb;
 		[_unit, _item] call REB_fnc_changeRebOnObj;
 	} else {
 		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
@@ -388,7 +383,7 @@ REB_fnc_setActions = {
 	if !((_obj getVariable ["REB_TOGGLE_REB_ACTION_ID", ""]) isEqualType 1) then {
 		private _id = _obj addAction
 		[
-			[_obj, if !(GET_HASH_VAL(_obj, "REB_var_hasActiveReb", false)) then {LOC "$STR_REB_ENABLE"} else {LOC "$STR_REB_DISABLE"}] call REB_fnc_setActionText,
+			[_obj, if !(GET_HASHS_OBJ_VAL(GET_HASH(_obj), "REB_var_hasActiveReb", false, _obj)) then {LOC "$STR_REB_ENABLE"} else {LOC "$STR_REB_DISABLE"}] call REB_fnc_setActionText,
 			{
 				call REB_fnc_toggleReb;
 			},
@@ -498,13 +493,7 @@ REB_fnc_initHash = {
 	_newHash set ["REB_var_rebMaxStrength", _strenght, _override];
 	_newHash set ["REB_var_rebRatio", (_radius / _deadzone), _override];
 
-	// _newHash set ["REB_var_hasActiveReb", _active];
-	// _newHash set ["REB_var_rebRange", _radius];
-	// _newHash set ["REB_var_rebDeadzone", _deadzone];
-	// _newHash set ["REB_var_rebStrength", _strenght];
-
 	if (IS_OBJ(_initObj)) then {
-		// _newHash set ["HASH_CURRENT_OBJS", _initObj];
 		[_newHash, _initObj] call REB_fnc_handleHashObj;
 	};
 	SET_HASHS_OBJ_VAL(_newHash, "REB_var_hasActiveReb", _active, _initObj);

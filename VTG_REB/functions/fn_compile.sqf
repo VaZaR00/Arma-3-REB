@@ -24,23 +24,8 @@ REB_fnc_main = {
 		_uav = uiNamespace getVariable ["lancet_currentProjectile", objNull];
 	};
 
-	PR _selectF = {
-		params["_reb", ["_checkRadius", true]];
-
-		PR _obj = _reb;
-		R_HASH(_reb);
-
-		(GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", false, _obj)) && {
-			[
-				_obj, 
-				_uav, 
-				GET_HASHS_OBJ_VAL(_reb, if (_checkRadius) then {"REB_var_rebRange"} else {"REB_var_rebDeadzone"}, -1, _obj)
-			] call REB_fnc_isDroneInRadius
-		}
-	};
-
-	PR _activeRebs = _rebs select {[_x, true] call _selectF};
-	PR _deadZoneRebs = _rebs select {[_x, false] call _selectF};
+	PR _activeRebs = _rebs select {[_x, true] call REB_fnc_selectReb};
+	PR _deadZoneRebs = _rebs select {[_x, false] call REB_fnc_selectReb};
 
 	if (count _deadZoneRebs != 0) exitWith {
 		_uav call REB_fnc_disconectDrone;
@@ -53,6 +38,9 @@ REB_fnc_main = {
 		false setCamUseTI 0;
 	};
 	_activeRebs call REB_fnc_suppress;
+};
+REB_fnc_off = {
+	true	
 };
 REB_fnc_isDroneInRadius = {
 	params ["_reb", "_uav", "_radius"];
@@ -69,6 +57,20 @@ REB_fnc_isDroneInRadius = {
 	_res = ((_reb distance _uav) < _radius);
 
 	_res
+};
+REB_fnc_selectReb = {
+	params["_reb", ["_checkRadius", true]];
+
+	PR _obj = _reb;
+	R_HASH(_reb);
+
+	(GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", false, _obj)) && {
+		[
+			_obj, 
+			_uav, 
+			GET_HASHS_OBJ_VAL(_reb, if (_checkRadius) then {"REB_var_rebRange"} else {"REB_var_rebDeadzone"}, -1, _obj)
+		] call REB_fnc_isDroneInRadius
+	}
 };
 REB_fnc_disconectDrone = {
 	if (ISLANCETHANDL) exitWith {
@@ -118,6 +120,65 @@ REB_fnc_eventHandler = {
 		};
 	};
 };
+REB_fnc_rebItemHandle = {
+	//check unit inventory and _container if its replaced
+	params ["_isTake", "_args"];
+	_args params ["_unit", "_container", "_item"];
+
+	[_container] spawn REB_fnc_handleContainer;
+
+	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
+		_unit setVariable ["REB_var_currentRebItem", _item, true];
+
+		[_unit, _item, _container] call REB_fnc_changeRebOnObj;
+	} else {
+		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
+		_unit setVariable ["REB_var_currentRebItem", nil, true];
+	};
+};
+REB_fnc_handleContainer = {
+	params["_container", ["_item", ""]];
+
+	if (_container isEqualTo objNull) exitWith {};
+
+	PR _allContainerItems = (((everyContainer _container) apply {_x#0}) + ((getItemCargo _container)#0)) apply {WITH_PREF(_x)};
+	PR _rebsInContainer = (if (STR_EMPTY(_item)) then {(keys REB_all_hashes)} else {[_item]}) select {WITH_PREF(_x) in _allContainerItems};
+
+	_rebsInContainer pushBack _container;
+
+	PR _rebItem = "";
+	PR _hasSet = if (count _rebsInContainer > 0) then {
+		PR _rebsSorted = ([
+			_rebsInContainer, 
+			[], 
+			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebMaxRange", 0, _x)}, 
+			"DESCEND", 
+			{GV_HAS_ACTIVE_REB_TRUE(_x) && (IS_HASH(GET_INIT_HASH(_x)))}
+		] call BIS_fnc_sortBy);
+
+		if (count _rebsSorted == 0) exitWith {false};
+
+		_rebItem = _rebsSorted#0;
+
+		if !(IS_HASH(GET_INIT_HASH(_rebItem))) EW {false};
+
+		// if !((_container GV ["REB_var_currentRebItem", ""]) isEqualTo _rebItem) EW {false};
+		
+		[_container, _rebItem, player] call REB_fnc_changeRebOnObj;
+		_container setVariable ["REB_var_currentRebItem", _rebItem, true];
+		true
+	} else {false};
+
+	if (_hasSet) exitWith {true};
+
+	if (_container in REB_all_rebs) then {
+		// [_container] call REB_fnc_removeReb;
+		[_container, objNull] call REB_fnc_setRebToObj;
+	};
+	_container setVariable ["REB_var_currentRebItem", nil, true];
+
+	false
+};
 
 REB_fnc_initRebItemSystem = {
 	if (REB_var_rebItemsSystemInited) exitWith {};
@@ -135,26 +196,16 @@ REB_fnc_initRebItemSystem = {
 	};
 
 	if (isServer) then {
-		[] call REB_fnc_initRebItems;
+		[] spawn REB_fnc_initRebItems;
 	};
 	
-	// [] spawn {
-	// 	sleep 5;
-
-	// 	if (count REB_itemRebsClasses == 0) exitWith {};
-
-	// 	PR _allHolders = "GroundWeaponHolder" allObjects 0;
-
-	// 	_allHolders apply {
-	// 		if (local _x) then {
-	// 			[_x] call REB_fnc_handleContainer;
-	// 		};
-	// 	};
-	// };
 	REB_var_rebItemsSystemInited = true;
 };
 REB_fnc_initRebItems = {
 	params[["_items", ""]];
+
+	if !(isNil "REB_initingRebItems") exitWith {};
+	REB_initingRebItems = _thisScript;
 
 	if !(IS_ARR(_items)) then {
 		if (STR_EMPTY(_items)) then {
@@ -166,10 +217,12 @@ REB_fnc_initRebItems = {
 
 	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
 		_o = _x;
+		// IF_(!ISNIL(_o GV "REB_var_hasActiveReb"), SKIP);
 		{
-			[_o, _x] call REB_fnc_handleContainer;
+			if ([_o, _x] call REB_fnc_handleContainer) EX;
 		} forEach _items;
 	};
+	REB_initingRebItems = nil;
 };
 REB_fnc_setRebToObj = {
 	params["_newObj", ["_reb", objNull]];
@@ -177,37 +230,33 @@ REB_fnc_setRebToObj = {
 	PR _hash = [_reb] call REB_fnc_getObjHash;
 	PR _currentHash = OBJ_CURR_HASH(_newObj);
 
-	// LOG[_newObj, _reb, IS_HASH(_hash), IS_HASH(_currentHash), (_hash isEqualTo _currentHash)];
-
 	if (_hash isEqualTo _currentHash) exitWith {};
 
-	[{[_this] call REB_fnc_updateAllRebsArr}, _newObj] call CBA_fnc_execNextFrame;
-
 	if (IS_HASH(_currentHash)) then {
-		// _currentHash set ["HASH_CURRENT_OBJS", objNull];
 		[_currentHash, _newObj, false] call REB_fnc_handleHashObj;
 	};
 	if !(IS_HASH(_hash)) exitWith {
 		// removing
 		_newObj setVariable ["REB_currentRebHash", nil, true];
 		_newObj remoteExec ["REB_fnc_removeActions", 0];
+		[_newObj] call REB_fnc_updateAllRebsArr;
 	};
 
 	// setting
-	// _hash set ["HASH_CURRENT_OBJS", _newObj];
+	_newObj setVariable ["REB_currentRebHash", compile HASH_NAME(_hash), true];
+	
 	[_hash, _newObj] call REB_fnc_handleHashObj;
 
-	_newObj setVariable ["REB_currentRebHash", compile HASH_NAME(_hash), true];
-
 	_newObj remoteExec ["REB_fnc_setActions", 0];
+	_newObj remoteExec ["REB_fnc_setEventHandlers", 0];
+
+	[_newObj] call REB_fnc_updateAllRebsArr;
 };
 REB_fnc_changeRebOnObj = {
-	params["_obj", "_new"];
+	params["_obj", "_new", ["_prevObj", objNull]];
 
 	PR _newHash = GET_HASH(_new);
 	PR _oldHash = GET_HASH(_obj);
-
-	// LOG [_obj, _new, GET_HASH(_new), GET_HASH(_obj)];
 
 	if (_newHash isEqualTo _oldHash) exitWith {};
 	if (!IS_HASH(_newHash)) exitWith {};
@@ -215,9 +264,11 @@ REB_fnc_changeRebOnObj = {
 	if (IS_HASH(_oldHash)) exitWith {
 		if (GET_HASHS_OBJ_VAL(_oldHash, "REB_var_rebRange", 0, _obj) < GET_HASHS_OBJ_VAL(_newHash, "REB_var_rebRange", 0, _new)) then {
 			[_obj, _newHash] call REB_fnc_setRebToObj;
+			[_newHash, HAS_ACTIVE_REB_TRUE(_prevObj), _obj] call REB_fnc_setRebActive;
 		};
 	};
 	[_obj, _newHash] call REB_fnc_setRebToObj;	
+	[_newHash, HAS_ACTIVE_REB_TRUE(_prevObj), _obj] call REB_fnc_setRebActive;
 };
 REB_fnc_updateAllRebsArr = {
 	params[["_o", REB_all_rebs]];
@@ -241,13 +292,25 @@ REB_fnc_updateAllRebsArr = {
 
 	MSVAR ["REB_all_rebs", REB_all_rebs, true];
 };
+REB_fnc_setRebObjValues = {
+	params ["_obj", ["_args", []]];
+	_args params [["_active", nil], ["_radius", nil], ["_deadzone", nil], ["_strenght", nil]];
+
+	IF_EX(!IS_OBJ(_obj));
+
+	PR _hash = GET_HASH(_obj);
+
+	SET_HASHS_OBJ_VAL(_hash, "REB_var_hasActiveReb", NIL_(_active), _obj);
+	SET_HASHS_OBJ_VAL(_hash, "REB_var_rebRange", NIL_(_radius), _obj);
+	SET_HASHS_OBJ_VAL(_hash, "REB_var_rebDeadzone", NIL_(_deadzone), _obj);
+	SET_HASHS_OBJ_VAL(_hash, "REB_var_rebStrength", NIL_(_strenght), _obj);
+};
 REB_fnc_handleHashObj = {
 	params["_hash", "_obj", ["_add", true]];
 
-
 	if (!(IS_HASH(_hash)) || !(IS_OBJ(_obj))) exitWith {};
 
-	PR _currObjs = _hash getDef ["HASH_CURRENT_OBJS", []];
+	PR _currObjs = GET_HASH_OBJS(_hash);
 
 	if (IS_ARR(_currObjs)) then {
 		PR _i = _currObjs find _obj;
@@ -262,10 +325,16 @@ REB_fnc_handleHashObj = {
 
 	_hash set ["HASH_CURRENT_OBJS", _currObjs];
 	UPD_HASH(_hash);
+
+	if (_add) then {
+		[_obj, [true, HASH_MAXRANGE(_hash), HASH_MAXDEADZ(_hash), HASH_MAXSTREN(_hash)]] call REB_fnc_setRebObjValues;
+	} else {
+		[_obj] call REB_fnc_setRebObjValues;
+	};
 };
 
 REB_fnc_setRebActive = {
-	params[["_reb", ""], ["_obj", []], ["_state", true]];
+	params[["_reb", ""], ["_state", true], ["_obj", []]];
 
 	R_HASH(_reb);
 
@@ -277,79 +346,24 @@ REB_fnc_setRebActive = {
 	} forEach _obj;
 };
 REB_fnc_toggleReb = {
-	params ["_target", "_caller", "_actionId", "_arguments"];
+	// params ["_target", "_caller", "_actionId", "_arguments"];
+	params ["_target"];
 
 	PR _reb = _target;
 	R_HASH(_reb);
 
 	private _hasActive = GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", true, _target);
 
-	[_reb, _target, !_hasActive] call REB_fnc_setRebActive;
+	[_reb, !_hasActive, _target] call REB_fnc_setRebActive;
 
 	private _text = if (GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", true, _target)) then {LOC "$STR_REB_DISABLE"} else {LOC "$STR_REB_ENABLE"};
 
-	_target setUserActionText [(_target getVariable ["REB_TOGGLE_REB_ACTION_ID", -1]), _text];
-};
-REB_fnc_handleContainer = {
-	params["_container", ["_item", ""]];
-
-	if (_container isEqualTo objNull) exitWith {};
-
-	PR _allContainerItems = (((everyContainer _container) apply {_x#0}) + ((getItemCargo _container)#0)) apply {HASH_PREF + _x};
-	PR _rebsInContainer = (if (STR_EMPTY(_item)) then {(keys REB_all_hashes)} else {[_item]}) select {_x in _allContainerItems};
-
-	_rebsInContainer pushBack _container;
-
-	PR _rebItem = "";
-	PR _hasSet = if (count _rebsInContainer > 0) then {
-		PR _rebsSorted = ([
-			_rebsInContainer, 
-			[], 
-			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebRange", 0, _x)}, 
-			"DESCEND", 
-			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_hasActiveReb", false, _x)}
-		] call BIS_fnc_sortBy);
-
-		if (count _rebsSorted == 0) exitWith {false};
-
-		_rebItem = _rebsSorted#0;
-
-		if !((_rebItem in _allContainerItems) || (_rebItem isEqualTo _container)) exitWith {false};
-		if ((_rebItem isEqualTo _container) && {!(IS_HASH(GET_INIT_HASH(_container)))}) exitWith {false};
-		
-		[_container, _rebItem] call REB_fnc_changeRebOnObj;
-		_container setVariable ["REB_var_currentRebItem", _rebItem, true];
-		true
-	} else {false};
-
-	if (_hasSet) exitWith {true};
-
-	if (_container in REB_all_rebs) then {
-		// [_container] call REB_fnc_removeReb;
-		[_container, objNull] call REB_fnc_setRebToObj;
-	};
-	_container setVariable ["REB_var_currentRebItem", nil, true];
-
-	false
-};
-REB_fnc_rebItemHandle = {
-	//check unit inventory and _container if its replaced
-	params ["_isTake", "_args"];
-	_args params ["_unit", "_container", "_item"];
-
-	[_container] call REB_fnc_handleContainer;
-
-	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
-		_unit setVariable ["REB_var_currentRebItem", _item, true];
-
-		[_unit, _item] call REB_fnc_changeRebOnObj;
-	} else {
-		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
-		_unit setVariable ["REB_var_currentRebItem", nil, true];
-	};
+	_target setUserActionText [(_target getVariable ["REB_TOGGLE_REB_ACTION_ID", -1]), [_target, _text] call REB_fnc_setActionText];
 };
 REB_fnc_setActionText = {
 	params["_reb", ["_text", ""]];
+
+	[player, _reb, (_reb isEqualTo player)] RLOG
 
 	if (_reb isEqualTo player) then {
 		format["Self: %1", _text]
@@ -364,22 +378,7 @@ REB_fnc_setActions = {
 
 	PR _actionDistance = _obj getVariable ["REB_actionDistance", MGVAR ["REB_global_actionDistance", 2]];
 
-	if !((_obj getVariable ["REB_KILLED_EH", ""]) isEqualType 1) then {
-		private _eh = _obj addEventHandler ["Killed", {
-			params ["_unit", "_killer", "_instigator", "_useEffects"];
-
-			[_unit, true] call REB_fnc_removeReb;
-			
-			private _type = toLower (typeOf _unit);
-
-			if (("volnorez" in _type) || ("sania" in _type)) then {
-				deleteVehicle _unit;
-			};
-		}];
-
-		_obj setVariable ["REB_KILLED_EH", _eh];
-	};
-
+	// ACTIONS
 	if !((_obj getVariable ["REB_TOGGLE_REB_ACTION_ID", ""]) isEqualType 1) then {
 		private _id = _obj addAction
 		[
@@ -442,6 +441,11 @@ REB_fnc_setActions = {
 		];
 		_obj setVariable ["REB_SET_STRENGHT_ACTION_ID", _id];
 	};
+};
+REB_fnc_setEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
 
 	if !((_obj getVariable ["REB_DELETED_EH", ""]) isEqualType 1) then {
 		private _eh = _obj addEventHandler ["Deleted", {
@@ -450,18 +454,46 @@ REB_fnc_setActions = {
 		}];
 		_obj setVariable ["REB_DELETED_EH", _eh];
 	};
+
+	if !((_obj getVariable ["REB_KILLED_EH", ""]) isEqualType 1) then {
+		private _eh = _obj addEventHandler ["Killed", {
+			params ["_unit", "_killer", "_instigator", "_useEffects"];
+
+			[_unit, true] call REB_fnc_removeReb;
+			
+			private _type = toLower (typeOf _unit);
+
+			// if (("volnorez" in _type) || ("sania" in _type)) then {
+			// 	[_unit] spawn REB_fnc_destructionEffect;
+			// };
+		}];
+
+		_obj setVariable ["REB_KILLED_EH", _eh];
+	};
 };
 REB_fnc_removeActions = {
 	params["_obj"];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
 	_obj removeAction (_obj getVariable ["REB_TOGGLE_REB_ACTION_ID", -1]);
 	_obj removeAction (_obj getVariable ["REB_SET_RANGE_ACTION_ID", -1]);
 	_obj removeAction (_obj getVariable ["REB_SET_STRENGHT_ACTION_ID", -1]);
-	// _obj removeEventHandler ["Killed", (_obj setVariable ["REB_TOGGLE_REB_ACTION_ID", -1])];
 
 	_obj setVariable ["REB_TOGGLE_REB_ACTION_ID", nil];
 	_obj setVariable ["REB_SET_RANGE_ACTION_ID", nil];
 	_obj setVariable ["REB_SET_STRENGHT_ACTION_ID", nil];
-	// _obj setVariable ["REB_KILLED_EH", nil];
+};
+REB_fnc_removeEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
+	_obj removeEventHandler ["Deleted", (_obj getVariable ["REB_DELETED_EH", -1])];
+	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_KILLED_EH", -1])];
+
+	_obj setVariable ["REB_DELETED_EH", nil];
+	_obj setVariable ["REB_KILLED_EH", nil];
 };
 
 REB_fnc_initHash = {
@@ -492,21 +524,20 @@ REB_fnc_initHash = {
 	_newHash set ["REB_var_rebMaxDeadzone", _deadzone, _override];
 	_newHash set ["REB_var_rebMaxStrength", _strenght, _override];
 	_newHash set ["REB_var_rebRatio", (_radius / _deadzone), _override];
+	_newHash set ["REB_var_rebIsOn", _active, _override];
 
 	if (IS_OBJ(_initObj)) then {
 		[_newHash, _initObj] call REB_fnc_handleHashObj;
 	};
-	SET_HASHS_OBJ_VAL(_newHash, "REB_var_hasActiveReb", _active, _initObj);
-	SET_HASHS_OBJ_VAL(_newHash, "REB_var_rebRange", _radius, _initObj);
-	SET_HASHS_OBJ_VAL(_newHash, "REB_var_rebDeadzone", _deadzone, _initObj);
-	SET_HASHS_OBJ_VAL(_newHash, "REB_var_rebStrength", _strenght, _initObj);
-
-	MSVAR [_newHashName, _newHash, true];
-
-	if (_override) exitWith {_newHash};
 
 	REB_all_hashes set [_newHashName, compile _newHashName];
 	MSVAR ["REB_all_hashes", REB_all_hashes, true];
+
+	MSVAR [_newHashName, _newHash, true];
+
+	[_initObj, [_active, _radius, _deadzone, _strenght]] call REB_fnc_setRebObjValues;
+
+	// if (_override) exitWith {_newHash};
 
 	_newHash
 };
@@ -519,41 +550,34 @@ REB_fnc_getProperty = {
 	PR _hash = [_obj] call REB_fnc_getObjHash;
 	if !(IS_HASH(_hash)) exitWith {_def};
 
-	if (IS_OBJNULL(_hashObj) && !IS_OBJ(_hashObj)) then {
+	if !(IS_OBJ(_hashObj) && {!IS_OBJNULL(_hashObj)}) then {
 		_hash getDef [_prop, _def];
 	} else {
 		PR _currObjs = GET_HASH_OBJS(_hash);
 
-		IF_EX(ARR_EMPTY(_currObjs), _def);
+		IF_EXW(!(_hashObj in _currObjs), _def);
 
-		PR _i = _currObjs find _hashObj;
-
-		IF_EX(_i == -1, _def);
-
-		(_currObjs select _i) GV [_prop, _def];
+		_hashObj GV [_prop, _def];
 	};
 };
 REB_fnc_setProperty = {
-	params["_obj", ["_prop", -1], ["_val", 0], ["_hashObj", objNull]];
-
-	if !(_prop isEqualTo "") exitWith {};
-
-	PR _hash = [_obj] call REB_fnc_getObjHash;
-	if !(IS_HASH(_hash)) exitWith {""};
-
-	if (IS_OBJNULL(_hashObj) && !IS_OBJ(_hashObj)) then {
-		_hash set [_prop, _val];
+	params["_obj", ["_prop", -1], ["_val", nil], ["_hashObj", objNull]];
+	
+	if (STR_EMPTY(_prop)) exitWith {};
+	
+	PR _hash = GET_HASH(_obj);
+	
+	if !(IS_HASH(_hash)) exitWith {};
+	
+	if !(IS_OBJ(_hashObj) && {!IS_OBJNULL(_hashObj)}) then {
+		_hash set [_prop, NIL_(_val)];
 		UPD_HASH(_hash)
 	} else {
 		PR _currObjs = GET_HASH_OBJS(_hash);
 
-		IF_EX(ARR_EMPTY(_currObjs), );
+		IF_EX(!(_hashObj in _currObjs));
 
-		PR _i = _currObjs find _hashObj;
-
-		IF_EX(_i == -1, );
-
-		(_currObjs select _i) GV [_prop, _val, true];
+		_hashObj SV [_prop, NIL_(_val), true];
 	};
 };
 REB_fnc_getObjHash = {
@@ -606,7 +630,7 @@ REB_fnc_removeHash = {
 	REB_all_hashes deleteAt _hashName;
 	MSVAR ["REB_all_hashes", REB_all_hashes, true];
 	
-	(_hash getOrDefault [HASH_INIT_OBJ, objNull]) setVariable ["REB_currentRebHash", nil];
+	(_hash getDef [HASH_INIT_OBJ, objNull]) setVariable ["REB_currentRebHash", nil];
 };
 
 // precompile
@@ -615,3 +639,6 @@ REB_fnc_reb = compileScript ["VTG_REB\functions\fn_reb.sqf", _final];
 REB_fnc_removeReb = compileScript ["VTG_REB\functions\fn_removeReb.sqf", _final];
 REB_fnc_setRange = compileScript ["VTG_REB\functions\fn_setRange.sqf", _final];
 REB_fnc_setStrenght = compileScript ["VTG_REB\functions\fn_setStrenght.sqf", _final];
+REB_fnc_setValueDialog = compileScript ["VTG_REB\functions\fn_setValueDialog.sqf", _final];
+REB_fnc_destructionEffect = compileScript ["VTG_REB\functions\fn_destructionEffect.sqf", _final];
+

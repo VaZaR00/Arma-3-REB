@@ -4,7 +4,7 @@
 
 #include "defines.h"
 
-
+sleep 1;
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
 params[ 
@@ -26,9 +26,9 @@ PR _hash = call REB_fnc_initHash;
 if (IS_STR(_obj)) then {
 	MSVAR ["REB_hasRebItems", true, true];
 	if (REB_var_rebItemsSystemInited) then {
-		_obj remoteExec ["REB_fnc_initRebItems", 2];
+		[_obj] remoteExec ["REB_fnc_initRebItems", 2];
 	} else {
-		_obj remoteExec ["REB_fnc_initRebItemSystem", 0];
+		[_obj] remoteExec ["REB_fnc_initRebItemSystem", 0];
 	};
 } else {
 	[_obj, _hash] call REB_fnc_setRebToObj;

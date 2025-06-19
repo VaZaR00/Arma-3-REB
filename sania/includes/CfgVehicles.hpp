@@ -2,19 +2,19 @@ class CfgVehicleClasses
 {
     class sania_podavitel
     {
-        displayName="Podavitel";
+        displayName="REB";
     };
 
-	class volnorez_podavitel : sania_podavitel
-    {
-        displayName="Podavitel";
-    };
+	// class volnorez_podavitel : sania_podavitel
+    // {
+    //     displayName="REB";
+    // };
 };
 class CfgFactionClasses
 {
         class sania_model
         {
-               displayName = "sania";                        // Name based on the editor faction class.
+               displayName = "REB Sania";                        // Name based on the editor faction class.
                priority = 1;
                side = 2;                                              // Group association.
         };
@@ -105,7 +105,9 @@ class CfgVehicles
 		editorPreview = "\sania\pictures\preview_sania.jpg";
 		scope = 2;
 		model = "sania\sania.p3d";
-		displayName = "sania";
+		displayName = "REB Sania";
+		vehicleClass = "sania_podavitel";
+		faction = "sania";
 
 		class UserActions
 		{
@@ -114,10 +116,10 @@ class CfgVehicles
 				displayName="Put in inventory";
 				priority=0.5;
 				radius=7;
-				position="";
+				position=;
 				showWindow=0;
 				onlyForPlayer=1;
-				icon="";
+				icon=;
 				condition="this call DB_fnc_jammerCanDisassembly";
 				statement="this call DB_fnc_addJammerToInventory";
 			};
@@ -129,7 +131,7 @@ class CfgVehicles
 		editorPreview = "\sania\pictures\preview_sania_tripod.jpg";
 		scope = 2;
 		model = "sania\tripod.p3d";
-		displayName = "Sania with tripod";
+		displayName = "REB Sania with tripod";
 		vehicleClass = "sania_podavitel";
 		faction = "sania";
     };
@@ -140,21 +142,21 @@ class CfgVehicles
 		editorPreview = "\sania\pictures\preview_volnorez.jpg";
 		scope = 2;
 		model = "sania\volnorez.p3d";
-		displayName = "Volnorez Jammer";
-		vehicleClass = "volnorez_podavitel";
+		displayName = "REB Volnorez";
+		vehicleClass = "sania_podavitel";
 		faction = "sania";
     };
 
 	class B_Bergen_dgtl_F;
 	class Sania_Bag: B_Bergen_dgtl_F
 	{
-	    displayName="Sania Jammer Bag";
+	    displayName="REB Sania Bag";
 		scope = 2;
 	    class assembleInfo
 	    {
 	        assembleTo="Sania";
-	        base="";
-	        displayName="Sania Jammer";
+	        base=;
+	        displayName="REB Sania";
 	        dissasembleTo[]={};
 	        primary=1;
 	    };
@@ -162,13 +164,13 @@ class CfgVehicles
 
 	class Volnorez_Bag: B_Bergen_dgtl_F
 	{
-	    displayName="Volnorez Jammer Bag";
+	    displayName="REB Volnorez Bag";
 		scope = 2;
 	    class assembleInfo
 	    {
 	        assembleTo="Volnorez_1";
-	        base="";
-	        displayName="Volnorez Jammer";
+	        base=;
+	        displayName="REB Volnorez";
 	        dissasembleTo[]={};
 	        primary=1;
 	    };
@@ -177,7 +179,7 @@ class CfgVehicles
 	class Box_EAF_Equip_F;
 	class Sania_Crate: Box_EAF_Equip_F
 	{
-		displayName="Sania Crate";
+		displayName="REB Sania Crate";
 		scope=2;
 		scopeCurator=2;
 		transportMaxWeapons=3;
@@ -205,7 +207,7 @@ class CfgVehicles
 
 	class Volnorez_Crate: Box_EAF_Equip_F
 	{
-		displayName="Volnorez Crate";
+		displayName="REB Volnorez Crate";
 		scope=2;
 		scopeCurator=2;
 		transportMaxWeapons=3;

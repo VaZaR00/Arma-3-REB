@@ -1,7 +1,6 @@
 #include "defines.h"
-#define ISLANCET ("lancet_tripod_launcher" in (typeOf vehicle player))
-#define ISLANCETHANDL (ISLANCET && dialog)
-#define NGVAR _namespace getVariable
+
+#include 
 
 if !(isNil "REB_ON_HANDLE_DRONE_EH") then {
 	removeMissionEventHandler ["PlayerViewChanged", REB_ON_HANDLE_DRONE_EH];
@@ -9,7 +8,7 @@ if !(isNil "REB_ON_HANDLE_DRONE_EH") then {
 
 // Define main variables
 REB_all_rebs = [];
-REB_all_hashes = createHashMap;
+REB_all_classes = createHashMap;
 REB_var_rebItemsSystemInited = false;
 
 REB_createUavCrewOnDisconectTime = 5;

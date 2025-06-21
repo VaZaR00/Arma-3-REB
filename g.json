@@ -1,23 +1,51 @@
+[[["ace_missileguidance","JDAM settings","",{createDialog "ace_missileguidance_gpsAttackOptionsUI";},{params ["_target", "_player"]; 
+
+    private _turretPath = if (_player == (driver _target)) then {[-1]} else {_player call CBA_fnc_turretPath};
+    private _hasJDAM = (_target weaponsTurret _turretPath) findIf {
+        private _weapon = _x;
+        ace_missileguidance_gps_weapons getOrDefaultCall [_weapon, {
+            (getArray (configFile >> "CfgWeapons" >> _weapon >> "magazines")) findIf {
+                private _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+                private _ammoAttackProfiles = getArray (configFile >> "CfgAmmo" >> _ammo >> "ace_missileguidance" >> "attackProfiles");
+                "JDAM" in _ammoAttackProfiles
+            } > -1
+        }, true]
+    } > -1;
+    _hasJDAM},{},[],{[0, 0, 0]},2,[false,false,false,false,false],{}],["ACE_SelfActions"]],[["REB_mainAction","REB","",{
+
+params ["_target", ["_player", player], ["_params", []]];
+},{
+
+(_this#0 in REB_all_rebs)
+},{
+
+params ["_target", ["_player", player], ["_params", []]];
+[]
+},[B Alpha 1-1:1 ([J] Vazar)],{[0,0,0]},2,[false,false,false,false,false],{
+
+params ["_target", ["_player", player], ["_params", []], ["_actionData", []]];
+}],["ACE_SelfActions","ACE_Equipment"]],[["FRXA_tf_rt1523g_Ranger_Green","RT-1523G (ASIP) [Ranger Green]","",{
+
+params ["_target", ["_player", player], ["_params", []]];
+},{
+
+(_this#0 in REB_all_rebs)
+},{
+
+params ["_target", ["_player", player], ["_params", []]];
+
 [
-  "cba_xeh_deleted",
-  "ace_dragging_candrag",
-  "cba_xeh_incomingmissile",
-  "cba_xeh_getin",
-  "ace_dragging_carryposition",
-  "cba_xeh_local",
-  "cba_xeh_isprocessed",
-  "cba_xeh_init",
-  "cba_xeh_fired",
-  "cba_xeh_initpost",
-  "ace_dragging_dragposition",
-  "cba_xeh_engine",
-  "cba_xeh_respawn",
-  "ace_dragging_dragdirection",
-  "ace_dragging_cancarry",
-  "cba_xeh_killed",
-  "ace_dragging_carrydirection",
-  "cba_xeh_getout",
-  "cba_xeh_isinitialized",
-  "ace_dragging_ignoreweightdrag",
-  "ace_dragging_ignoreweightcarry"
-]
+REB_aceMenuAction_disableReb,
+REB_aceMenuAction_enableReb,
+REB_aceMenuAction_setRange,
+REB_aceMenuAction_setStrenght
+] apply {
+[(_target call _x) call ace_interact_menu_fnc_createAction, [], _target]
+};
+
+},[B Alpha 1-1:1 ([J] Vazar)],{[0,0,0]},2,[false,false,false,false,false],{
+
+params ["_target", ["_player", player], ["_params", []], ["_actionData", []]];
+
+_actionData set [1, format ["%1: %2", count (items player)]];
+}],["ACE_SelfActions","ACE_Equipment","REB_mainAction"]]]

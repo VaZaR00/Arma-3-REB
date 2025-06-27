@@ -7,7 +7,7 @@ REB_aceMenuAction_disableReb = {["REB_disableReb", LOC "$STR_REB_DISABLE", "", {
 	[_target] call REB_fnc_toggleReb;
 }, {
 	// condition
-	HAS_ACTIVE_REB(_this#0)
+	HAS_ACTIVE_REB(_this select 0)
 }, {
 	// insertChildren 
     params ["_target", ["_player", player], ["_params", []]];
@@ -24,7 +24,7 @@ REB_aceMenuAction_enableReb = {["REB_enableReb", LOC "$STR_REB_ENABLE", "", {
 	[_target] call REB_fnc_toggleReb;
 }, {
 	// condition
-	!HAS_ACTIVE_REB(_this#0)
+	!HAS_ACTIVE_REB(_this select 0)
 }, {
 	// insertChildren 
     params ["_target", ["_player", player], ["_params", []]];
@@ -82,7 +82,7 @@ REB_fnc_createAceMenuRebAction = {
 		params ["_target", ["_player", player], ["_params", []]];
 	}, {
 		// condition
-		IS_REB(_this#0)
+		IS_REB(_this select 0)
 	}, {
 		// insertChildren 
 		params ["_target", ["_player", player], ["_params", []]];
@@ -121,7 +121,7 @@ REB_fnc_createAceMenuAction = {
 		params ["_target", ["_player", player], ["_params", []]];
 	}, {
 		// condition
-		IS_REB(_this#0)
+		IS_REB(_this select 0)
 	}, {
 		// insertChildren 
 		params ["_target", ["_player", player], ["_params", []]];

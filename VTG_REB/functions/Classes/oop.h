@@ -58,14 +58,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
 #define CALLCLASS_FROMCHILD(className,member,args,access,origin) ([_classID, member, SAFE_VAR(args), access, origin] call GETCLASS(className))
 
-#define VAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETVAR(varName), nil]} else {NAMESPACE setVariable [GETVAR(varName), _this]};}
-#define UIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETVAR(varName), nil]} else {UINAMESPACE setVariable [GETVAR(varName), _this]};}
+#define VAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETVAR(varName), nil]} else {NAMESPACE setVariable [GETVAR(varName), _this, _globaly]};}
+#define UIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETVAR(varName), nil]} else {UINAMESPACE setVariable [GETVAR(varName), _this, _globaly]};}
 
-#define SVAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETSVAR(varName), nil]} else {NAMESPACE setVariable [GETSVAR(varName), _this]};}
-#define SUIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETSVAR(varName), nil]} else {UINAMESPACE setVariable [GETSVAR(varName), _this]};}
+#define SVAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETSVAR(varName), nil]} else {NAMESPACE setVariable [GETSVAR(varName), _this, _globaly]};}
+#define SUIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETSVAR(varName), nil]} else {UINAMESPACE setVariable [GETSVAR(varName), _this, _globaly]};}
 
-#define VAR_DELETE(varName) (NAMESPACE setVariable [GETVAR(varName), nil])
-#define UIVAR_DELETE(varName) (UINAMESPACE setVariable [GETVAR(varName), nil])
+#define VAR_DELETE(varName) (NAMESPACE setVariable [GETVAR(varName), nil, _globaly])
+#define UIVAR_DELETE(varName) (UINAMESPACE setVariable [GETVAR(varName), nil, _globaly])
 
 #define MOD_VAR(varName,mod) MEMBER(varName,MEMBER(varName,nil)+mod); 
 #define INC_VAR(varName) MOD_VAR(varName,1)
@@ -272,15 +272,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	CHECK_THIS; \
 	if ((count _this) > 0) then { \
 		private _class = className; \
+		if (isNil "_globaly") then {_globaly = false}; \
 		private _parentClass = parentClassName; \
 		if (isNil {_this select 0}) then {_this set [0,_class]}; \
 		switch (_this select 0) do { \
 		case "new": { \
-			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
+			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1), _globaly]; \
 			private _code = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', (className + "_" + str(GET_AUTO_INC(className)))]; \
 			ENSURE_INDEX(1,nil); \
 			private _classID = className + "_" + str(GET_AUTO_INC(className)); \
-			NAMESPACE setVariable [format ['%1_this', _classID], _code]; \
+			NAMESPACE setVariable [format ['%1_this', _classID], _code, _globaly]; \
+			private _instance = _code; \
 			[CONSTRUCTOR_METHOD, (_this select 1)] call _code; \
 			_code; \
 		}; \
@@ -292,11 +294,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _array = toArray str (missionNamespace getVariable className); \
     			_array deleteAt (count _array - 1); \
     			_array deleteAt (0); \
-    			missionNamespace setVariable[className, (compileFinal toString _array)]; \
+    			missionNamespace setVariable[className, (compileFinal toString _array), _globaly]; \
 		}; \
 		case "delete": { \
 			if ((count _this) == 2) then {_this set [2,nil]}; \
 			[DECONSTRUCTOR_METHOD, (_this select 2)] call (_this select 1); \
+		}; \
+		case "classname": { \
+			className \
 		}; \
 		default { \
 			private _classID = _this select 0; \
@@ -316,4 +321,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			format ['EXCEPTION : %1', _exception select 1] call BIS_fnc_error; \
 		}; \
 	}; \
-}}] 
+}}, if (isNil "_globaly") then {false} else {_globaly}] 

@@ -7,30 +7,18 @@
 sleep 1;
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
-params[ 
+params[
 	"_obj", 
-	["_radius", 100], 
+	["_range", 100], 
 	["_deadzone", 30], 
-	["_strenght", 0.5],
-	["_active", true], 
-	["_override", false]
-]; 
+	["_strenght", 0.6], 
+	["_can_modify_range", true], 
+	["_can_modify_strenght", true], 
+	["_active", true]
+];
 
 if !(IS_LOCAL(_obj)) exitWith {};
 
-_strenght = (_strenght max 0) min 1;
-_deadzone = _radius min _deadzone;
+PR _rebObject = ["new", _this] call OO_REB;
 
-PR _hash = call REB_fnc_initHash;
-
-if (IS_STR(_obj)) then {
-	MSVAR ["REB_hasRebItems", true, true];
-	if (REB_var_rebItemsSystemInited) then {
-		[_obj] remoteExec ["REB_fnc_initRebItems", 2];
-	} else {
-		[_obj] remoteExec ["REB_fnc_initRebItemSystem", 0];
-	};
-} else {
-	[_obj, _hash] call REB_fnc_setRebToObj;
-};
-
+MSVAR [OBJECT_VAR(_rebObject, Name), _rebObject, true];

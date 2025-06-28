@@ -16,6 +16,8 @@
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
 #define NOLOG MSVAR ["TEMP_DO_LOG", false];
 
+#define GET_PLAYER_DRONE (vehicle (remoteControlled player))
+
 #define LOC  
 // #define LOC localize
 #define SKIP continue
@@ -24,14 +26,15 @@
 #define C , 
 #define EQTYPE isEqualType
 #define EQTO isEqualTo
+#define ISNIL(v) isNil STR(v)
 #define IF_(c, t) if (c) then {t}
 #define IF_ELSE(c, t, t1) if (c) then {t} else {t1}
 #define IF_EX(c) if (c) exitWith {}
 #define IF_EXW(c, t) if (c) exitWith {t}
 #define IF_ELSE_EX(c, t, t1) if (c) exitWith {t} else {t1}
-#define IF_NIL_EX(v) if (isNil #v) EX;
-#define ISNIL(v) isNil STR(v)
-#define NIL_(v) IF_ELSE(ISNIL(v), nil, v)
+#define IF_NIL_EX(v) if (ISNIL(v)) EX;
+#define IF_NIL(v, d) IF_ELSE(ISNIL(v), d, v)
+#define NIL_(v) IF_NIL(v, nil)
 #define SET_IF_NIL(v, d) IF_ELSE(ISNIL(v), v = d, v)
 #define getDef getOrDefault
 #define IS_HASH(h) (h isEqualType createHashMap)
@@ -50,6 +53,7 @@
 #define ARR_EMPTY(a) (count a == 0)
 #define REB_itemRebsClasses (keys REB_all_classes)
 #define OBJ_REBS_LIST(o) (o GV ["REB_objectRebs", []])
+#define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST;
 
 // FOR OOP
 
@@ -66,6 +70,7 @@
 #define SET_GLOBALY(v) _globaly = v;
 #define GLOBALY SET_GLOBALY(true)
 #define LOCALY SET_GLOBALY(false)
+#define IS_GLOBALY IF_NIL(_globaly, false)
 
 // #define SET_CURRENT_CLASS(c) IF_(ISNIL(_mainClass), _mainClass = _class); _prevclass = _class;_class = c; 
 // #define SET_MAIN_CLASS _class = _mainClass; 

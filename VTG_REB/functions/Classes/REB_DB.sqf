@@ -30,13 +30,33 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 		REB_all_classes = nil;
 	};
 
+	/* 
+		Handle REB_all_classes Methods
+	*/
+
 	PUBLIC FUNCTION("string","Add_reb_class") {
+		// remote
+
 		REB_all_classes set [_this, MGVAR _this];
 
 		SAVE_REB_ALL_CLASSES
 	};
 
+	PUBLIC FUNCTION("string","Remove_reb_class") {
+		// remote
+
+		REB_all_classes deleteAt _this;
+
+		SAVE_REB_ALL_CLASSES
+	};
+
+	/* 
+		Handle REB_all_rebs Methods
+	*/
+
 	PUBLIC FUNCTION("","Add_reb") {
+		// remote
+
 		if (IS_CODE(_this)) then {
 			_this = OBJECT_VAR(_this, Object);
 		};
@@ -47,19 +67,19 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 		SAVE_REB_ALL_REBS
 	};
 
-	PUBLIC FUNCTION("string","Remove_reb_class") {
-		REB_all_classes deleteAt _this;
-
-		SAVE_REB_ALL_CLASSES
-	};
-
 	PUBLIC FUNCTION("","Remove_reb") {
+		// remote
+
 		PR _name = MEMBER("Make_reb_classname", _this);
 
 		REB_all_rebs deleteAt _name;
 
 		SAVE_REB_ALL_REBS
 	};
+
+	/* 
+		Other Methods
+	*/
 
 	PUBLIC FUNCTION("","Make_reb_classname") {
 		if (IS_STR(_this) && {REB_CLS_PREF in _this}) EW {_this};

@@ -8,7 +8,6 @@
 #include "defines.h"
 
 #define ROVAR "REB_objectRebs"
-#define OBJ_ROVAR PR _objRebs = OBJ_REBS_LIST;
 #define SAVE_ROVAR _obj SV [ROVAR, _objRebs, true];
 
 CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
@@ -24,7 +23,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		IF_NIL_EX(_objectReb);
 
-		OBJ_ROVAR
+		OBJ_REBS_LIST_VAR
 
 		_objRebs = _objRebs - [_objectReb];
 
@@ -44,7 +43,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		IF_NIL_EX(_objectReb);
 
-		OBJ_ROVAR
+		OBJ_REBS_LIST_VAR
 
 		_objRebs pushBackUnique _objectReb;
 
@@ -56,7 +55,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		
 		params["_obj"];
 
-		OBJ_ROVAR
+		OBJ_REBS_LIST_VAR
 
 		_objRebs apply {
 			DELETE(_x);

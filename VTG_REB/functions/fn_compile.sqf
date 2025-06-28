@@ -19,39 +19,45 @@
 
 
 REB_fnc_main = {
-	params [["_freq", REB_freq], ["_random", REB_random], ["_noise", REB_noise], ["_uav", vehicle (remoteControlled player)]];
+	params [["_freq", REB_freq], ["_random", REB_random], ["_noise", REB_noise], ["_uav", GET_PLAYER_DRONE]];
 
 	_noise ppEffectEnable false; 
-	// equipmentDisabled _uav params ["_nvg", "_tiDisabled"];
 
 	if (_uav getVariable ['ArmaFPV_EnableTI', false]) then {
 		_uav disableTIEquipment false;
 	};
+	// equipmentDisabled _uav params ["_nvg", "_tiDisabled"];
+	if (count REB_all_rebs == 0) exitWith {};
 
-	if !((_uav in allUnitsUAV) || ISLANCETHANDL) exitWith {};
+	PR _isLancet = ISLANCETHANDL;
 
-	PR _rebs = +REB_all_rebs;
+	if !((_uav in allUnitsUAV) || _isLancet) exitWith {};
 
-	if (count _rebs == 0) exitWith {};
-
-	if (ISLANCETHANDL) then {
+	if (_isLancet) then {
 		_uav = uiNamespace getVariable ["lancet_currentProjectile", objNull];
 	};
 
-	PR _activeRebs = _rebs select {[_x, true] call REB_fnc_selectReb};
-	PR _deadZoneRebs = _rebs select {[_x, false] call REB_fnc_selectReb};
-
-	if (count _deadZoneRebs != 0) exitWith {
+	if (_uav call REB_fnc_isInDeadzone) exitWith {
 		_uav call REB_fnc_disconectDrone;
 	};
-	if (count _activeRebs == 0) exitWith {};
+
+	PR _activeReb = _uav call REB_fnc_currentJammingReb;
+	
+	if !(IS_OOP(_activeReb)) exitWith {};
 
 	_uav disableTIEquipment true;
 	
-	if (ISLANCETHANDL) then {
+	if (_isLancet) then {
 		false setCamUseTI 0;
 	};
-	_activeRebs call REB_fnc_suppress;
+
+	_activeReb call REB_fnc_suppress;
+};
+REB_fnc_currentJammingReb = {
+
+};
+REB_fnc_isInDeadzone = {
+	
 };
 REB_fnc_off = {
 	true	
@@ -75,10 +81,9 @@ REB_fnc_isDroneInRadius = {
 REB_fnc_selectReb = {
 	params["_reb", ["_checkRadius", true]];
 
-	PR _obj = _reb;
-	R_HASH(_reb);
+	OBJ_REBS_LIST_VAR;
 
-	(GET_HASHS_OBJ_VAL(_reb, "REB_var_hasActiveReb", false, _obj)) && {
+	() && {
 		[
 			_obj, 
 			_uav, 

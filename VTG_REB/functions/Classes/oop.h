@@ -54,9 +54,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define GETVAR(var) (_classID + "_" + var)
 #define GETSVAR(var) (_class + "_" + var)
 #define GETCLASS(className) (NAMESPACE getVariable [className, {nil}])
-#define CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(_oopOriginCall)})
-#define SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
-#define CALLCLASS_FROMCHILD(className,member,args,access,origin) ([_classID, member, SAFE_VAR(args), access, origin] call GETCLASS(className))
+#define LOCAL_CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(_oopOriginCall)})
+#define LOCAL_SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
+#define LOCAL_CALLCLASS_FROMCHILD(className,member,args,access,origin) ([_classID, member, SAFE_VAR(args), access, origin] call GETCLASS(className))
+#define GLOBAL_CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [[_classID, member, SAFE_VAR(args),access], GETCLASS(className)] remoteExec ["call", 0] }else{ [[_classID, member, SAFE_VAR(args),access], GETCLASS(_oopOriginCall)] remoteExec ["call", 0] })
+#define GLOBAL_SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [[_classID, member, SAFE_VAR(args),access], GETCLASS(className)] remoteExec ["spawn", 0] }else{ [[_classID, member, SAFE_VAR(args),access], GETCLASS(_oopOriginCall)] remoteExec ["spawn", 0]})
+#define GLOBAL_CALLCLASS_FROMCHILD(className,member,args,access,origin) ([[_classID, member, SAFE_VAR(args), access, origin], GETCLASS(className)] remoteExec ["call", 0])
+#define CALLCLASS(className,member,args,access) (if (IS_GLOBALY) then {GLOBAL_CALLCLASS(className,member,args,access)} else {LOCAL_CALLCLASS(className,member,args,access)})
+#define SPAWNCLASS(className,member,args,access) (if (IS_GLOBALY) then {GLOBAL_SPAWNCLASS(className,member,args,access)} else {LOCAL_SPAWNCLASS(className,member,args,access)})
+#define CALLCLASS_FROMCHILD(className,member,args,access,origin) (if (IS_GLOBALY) then {GLOBAL_CALLCLASS_FROMCHILD(className,member,args,access,origin)} else {LOCAL_CALLCLASS_FROMCHILD(className,member,args,access,origin)})
 
 #define VAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETVAR(varName), nil]} else {NAMESPACE setVariable [GETVAR(varName), _this, _globaly]};}
 #define UIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETVAR(varName), nil]} else {UINAMESPACE setVariable [GETVAR(varName), _this, _globaly]};}
@@ -233,15 +239,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /*
 	Macro:  NEW(class, args)
-	Instanciate a new object of class with args 
+	Instanciate a new object of class with args
 */
 #define NEW(class, args) ["new", args] call class
+
+/*
+	Macro:  NEW_TARGET(class, args, target)
+	Instanciate a new object of class with args for target clients in MP
+*/
+#define NEW_TARGET(class, args, target) [["new", args], instance] remoteExec ["call", target]
+
+/*
+	Macro:  NEW_GLOBAL(class, args)
+	Instanciate a new object of class with args for all clients in MP
+*/
+#define NEW_GLOBAL(class, args) NEW_TARGET(class, args, 0)
 
 /*
 	Macro: DELETE(class, instance)
 	Delete the instance of object of class
 */
 #define DELETE(instance) "deconstructor" call instance
+
+/*
+	Macro: DELETE_TARGET(instance, target)
+	Delete the instance of object of class for target clients in MP
+*/
+#define DELETE_TARGET(instance, target) ["deconstructor", instance] remoteExec ["call", target]
+
+/*
+	Macro: DELETE_GLOBAL(instance)
+	Delete the instance of object of class for all clients in MP
+*/
+#define DELETE_GLOBAL(instance) DELETE_TARGET(instance, 0)
 
 /*
 	Macro: STATIC_FUNCTION(class, fncName, args)

@@ -10,10 +10,12 @@ class CfgFunctions
 			class compile {
 				preInit = 1;
 			};
-			// class reb {};
-			// class removeReb {};
-			// class setRange {};
-			// class setStrenght {};
+			class reb {};
+			class removeReb {};
+			class setRange {};
+			class setStrenght {};
+			class setValueDialog {};
+			// class aceActions {};
 		};
 	};
 	class DB

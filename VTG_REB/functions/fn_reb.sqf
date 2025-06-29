@@ -11,6 +11,6 @@ EXEC_ON_SERVER
 
 	PR _rebObject = ["new", _this] call OO_REB;
 
-	MSVAR [OBJECT_VAR(_rebObject, Name), _rebObject, true];
+	MSVAR [INSTANCE_VAR(_rebObject, "Name"), _rebObject, true];
 
 EXEC_ON_SERVER_END

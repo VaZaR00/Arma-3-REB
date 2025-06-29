@@ -14,7 +14,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 	PUBLIC FUNCTION("","deconstructor") {};
 
-	PUBLIC FUNCTION("","Add") {
+	PUBLIC FUNCTION("array","Add") {
 		// args types: [string / code / object]
 
 		params["_obj", "_objectReb"];
@@ -24,19 +24,19 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		OBJ_REBS_LIST_VAR_SERVER
 		OBJ_REBS_LIST_VAR
 
-		_objRebs_SERVER set [(hashValue _objectReb), _objectReb];
-		_objRebs set [(hashValue _objectReb), nil];
+		_objRebs_SERVER set [HASHVAL_(_objectReb), _objectReb];
+		_objRebs set [HASHVAL_(_objectReb), nil];
 
-		MEMBER("Set_helper_vars", [_obj C _or]);
+		MEMBER("Set_helper_vars", [_obj C _objectReb]);
 
 		SAVE_OBJ_REBS_LIST_SERVER
 		SAVE_OBJ_REBS_LIST
 	};
 
-	PUBLIC FUNCTION("","Remove") {
+	PUBLIC FUNCTION("array","Remove") {
 		// args types: [string / code / object]
 
-		params["_obj", "_or"];
+		params["_obj", "_objreb"];
 
 		PR _objectReb = MEMBER('Get_object_reb', _this);
 
@@ -45,10 +45,10 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		OBJ_REBS_LIST_VAR_SERVER
 		OBJ_REBS_LIST_VAR
 
-		_objRebs_SERVER deleteAt (hashValue _objectReb);
-		_objRebs deleteAt (hashValue _objectReb);
+		_objRebs_SERVER deleteAt HASHVAL_(_objectReb);
+		_objRebs deleteAt HASHVAL_(_objectReb);
 
-		MEMBER("Set_helper_vars", [_obj C _or C true]);
+		MEMBER("Set_helper_vars", [_obj C _objectReb C true]);
 
 		DELETE(_objectReb);
 
@@ -56,7 +56,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		SAVE_OBJ_REBS_LIST
 	};
 
-	PUBLIC FUNCTION("","Clear") {
+	PUBLIC FUNCTION("array","Clear") {
 		params["_obj"];
 
 		OBJ_REBS_LIST_VAR_SERVER
@@ -69,19 +69,19 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		_obj SV [ROVAR, nil, true];
 	};
 
-	PUBLIC FUNCTION("","Set_helper_vars") {
-		params["_obj", "_or", ["_nil", false]];
+	PUBLIC FUNCTION("array","Set_helper_vars") {
+		params["_obj", "_objreb", ["_nil", false]];
 
 		[
-			INSTANCE_VAR(_or, "Range"),
-			INSTANCE_VAR(_or, "Deadzone"),
-			INSTANCE_VAR(_or, "Strenght"),
-			INSTANCE_VAR(_or, "Is_active"),
-			INSTANCE_VAR(_or, "ratio"),
-			INSTANCE_VAR(_or, "Reb_classname")
+			INSTANCE_VAR(_objreb, "Range"),
+			INSTANCE_VAR(_objreb, "Deadzone"),
+			INSTANCE_VAR(_objreb, "Strenght"),
+			INSTANCE_VAR(_objreb, "Is_active"),
+			INSTANCE_VAR(_objreb, "ratio"),
+			INSTANCE_VAR(_objreb, "Reb_classname")
 		] params ["_range", "_deadzone", "_strenght", "_isActive", "_ratio", "_rebClassname"];
 
-		PR _hashVal = hashValue _or;
+		PR _hshVal = HASHVAL_(_objreb);
 
 		_obj SV [ROVAR_NAME("_range"), IF_ELSE(_nil, nil, _range), true];
 		_obj SV [ROVAR_NAME("_deadzone"), IF_ELSE(_nil, nil, _deadzone), true];
@@ -91,7 +91,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		_obj SV [ROVAR_NAME("_rebClassname"), IF_ELSE(_nil, nil, _rebClassname), true];
 	};
 
-	PUBLIC FUNCTION("","Get_object_reb") {
+	PUBLIC FUNCTION("array","Get_object_reb") {
 		// get OO_OBJECT_REB instance from REB_objectRebs object variable by any reference 
 
 		params["_obj", "_ref"];

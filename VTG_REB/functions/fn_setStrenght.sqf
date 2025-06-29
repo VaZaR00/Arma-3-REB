@@ -24,10 +24,10 @@ PR _onButtonClick = {
     EXEC_ON_SERVER
         params["_obj", "_reb", "_maxStr", "_sliderVal"];
 
-        PR _or = GET_RO_BY_HASH(_obj, _reb);
+        PR _objreb = GET_RO_BY_HASH(_obj, _reb);
         PR _newRange = round (_maxStr * (_sliderVal/10));
 
-        METHOD(_or, "Strenght", _newRange);
+        METHOD(_objreb, "Strenght", _newRange);
     EXEC_ON_SERVER_END
 	
 	REB_currentHandledObj = nil;

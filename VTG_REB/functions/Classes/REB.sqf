@@ -19,15 +19,15 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("scalar","Max_Deadzone");
 	PUBLIC VARIABLE("scalar","Max_Strenght");
 	PUBLIC VARIABLE("scalar","Ratio");
-	PUBLIC VARIABLE("scalar","Is_on");
-	PUBLIC VARIABLE("scalar","Can_modify_range");
-	PUBLIC VARIABLE("scalar","Can_modify_strenght");
+	PUBLIC VARIABLE("bool","Is_on");
+	PUBLIC VARIABLE("bool","Can_modify_range");
+	PUBLIC VARIABLE("bool","Can_modify_strenght");
 	PUBLIC VARIABLE("array","object_reb_list");
 
-	PUBLIC FUNCTION("","constructor") {
+	PUBLIC FUNCTION("array","constructor") {
 		params["_obj", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_can_modify_range", true], ["_can_modify_strenght", true], ["_active", true]];
 
-		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', nil);
+		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
 		PR _initObjClass = IF_ELSE(IS_STR(_obj), _obj, typeOf _obj);
 		PR _ratio = (_radius / _deadzone);
@@ -42,32 +42,34 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("Max_Deadzone", _deadzone);
 		MEMBER("Max_Strenght", _strenght);
 		MEMBER("Ratio", _ratio);
-		MEMBER("Is_on", BOOL_TO_INT(_active));
-		MEMBER("Can_modify_range", BOOL_TO_INT(_can_modify_range));
-		MEMBER("Can_modify_strenght", BOOL_TO_INT(_can_modify_strenght));
+		MEMBER("Is_on", _active);
+		MEMBER("Can_modify_range", _can_modify_range);
+		MEMBER("Can_modify_strenght", _can_modify_strenght);
 		MEMBER("object_reb_list", []);
+
+		MSVAR [_name, _instance];
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
 		if (IS_OBJ(_obj)) then {
-			MEMBER("New_reb_object", _obj);
+			MEMBER("New_object_reb", _obj);
 		};
 	};
 
 	PUBLIC FUNCTION("","deconstructor") {};
 
-	PUBLIC FUNCTION("","Toggle_reb_global") {
+	PUBLIC FUNCTION("bool","Toggle_reb_global") {
 		MEMBER("Is_on", _this);
 	};
 
 	/*
-		Function: New_reb_object
+		Function: New_object_reb
 
 		Description:
-			Sets reb to object
+			Creates new object reb and adds to REB class
 		
 		Arguments:
-			*CODE* OOP Class
+			Object
 	*/
 	PUBLIC FUNCTION("object","New_object_reb") {
 		if (IS_OBJNULL(_this)) EX;

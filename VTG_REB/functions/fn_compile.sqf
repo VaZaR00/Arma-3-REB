@@ -63,8 +63,10 @@ REB_fnc_main = {
 	};
 
 	PR _activeRebStrength = _uav call REB_fnc_currentJammingRebStrength;
-	
+
 	IF_NIL_EX(_activeRebStrength);
+
+	LOG [_activeRebStrength];
 
 	_uav disableTIEquipment true;
 	
@@ -78,8 +80,8 @@ REB_fnc_currentJammingRebStrength = {
 	PR _currentStrength = 0;
 
 	REB_all_rebs apply {
-		PR _obj = _x;
-		PR _d = (_drone distance _obj);
+		PR _obj = _y;
+		PR _d = (_this distance _obj);
 		OBJ_REBS_LIST(_obj) apply {
 			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
 			if (
@@ -98,8 +100,8 @@ REB_fnc_isInDeadzone = {
 	PR _isDead = false;
 
 	REB_all_rebs apply {
-		PR _obj = _x;
-		PR _d = (_drone distance _obj);
+		PR _obj = _y;
+		PR _d = (_this distance _obj);
 		OBJ_REBS_LIST(_obj) apply {
 			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
 			if (
@@ -151,69 +153,38 @@ REB_fnc_rebsInDroneRadius = {
 	};
 };
 
-// REB_fnc_rebItemHandle = {
-// 	//check unit inventory and _container if its replaced
-// 	params ["_isTake", "_args"];
-// 	_args params ["_unit", "_container", "_item"];
+REB_fnc_addRebOnObj = {
+	EXEC_ON_SERVER
+		params['_obj', '_rebObj'];
 
-// 	[_container] spawn REB_fnc_handleContainer;
+		METHOD(GET_REB_INSTANCE(_rebObj), "New_object_reb", _obj);
+	EXEC_ON_SERVER_END
+};
+REB_fnc_removeRebOnObj = {
+	EXEC_ON_SERVER
+		params['_obj', '_rebObj'];
 
-// 	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
-// 		_unit setVariable ["REB_var_currentRebItem", _item, true];
+		METHOD(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", _rebObj);
+	EXEC_ON_SERVER_END
+};
+REB_fnc_rebItemHandle = {
+	//check unit inventory and _container if its replaced
+	params ["_isTake", "_args"];
+	_args params ["_unit", "_container", "_item"];
 
-// 		[_unit, _item, _container] call REB_fnc_changeRebOnObj;
-// 	} else {
-// 		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
-// 		_unit setVariable ["REB_var_currentRebItem", nil, true];
-// 	};
-// };
-// REB_fnc_handleContainer = {
-// 	params["_container", ["_item", ""]];
+	if (_isTake && (RC_PREF(_item) in REB_itemRebsClasses)) then {
+		_unit setVariable ["REB_var_currentRebItem", _item, true];
 
-// 	if (_container isEqualTo objNull) exitWith {};
-
-// 	PR _allContainerItems = (((everyContainer _container) apply {_x#0}) + ((getItemCargo _container)#0)) apply {WITH_PREF(_x)};
-// 	PR _rebsInContainer = (if (STR_EMPTY(_item)) then {(keys REB_all_hashes)} else {[_item]}) select {WITH_PREF(_x) in _allContainerItems};
-
-// 	_rebsInContainer pushBack _container;
-
-// 	PR _rebItem = "";
-// 	PR _hasSet = if (count _rebsInContainer > 0) then {
-// 		PR _rebsSorted = ([
-// 			_rebsInContainer, 
-// 			[], 
-// 			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebMaxRange", 0, _x)}, 
-// 			"DESCEND", 
-// 			{GV_HAS_ACTIVE_REB_TRUE(_x) && (IS_HASH(GET_INIT_HASH(_x)))}
-// 		] call BIS_fnc_sortBy);
-
-// 		if (count _rebsSorted == 0) exitWith {false};
-
-// 		_rebItem = _rebsSorted#0;
-
-// 		if !(IS_HASH(GET_INIT_HASH(_rebItem))) EW {false};
-
-// 		// if !((_container GV ["REB_var_currentRebItem", ""]) isEqualTo _rebItem) EW {false};
-		
-// 		[_container, _rebItem, player] call REB_fnc_changeRebOnObj;
-// 		_container setVariable ["REB_var_currentRebItem", _rebItem, true];
-// 		true
-// 	} else {false};
-
-// 	_rebsInContainer apply {
-// 		[_container, GET_HASH(_x)] remoteExec ["REB_fnc_createAceMenuAction", 0];
-// 	};
-
-// 	if (_hasSet) exitWith {true};
-
-// 	if (_container in REB_all_rebs) then {
-// 		// [_container] call REB_fnc_removeReb;
-// 		[_container, objNull] call REB_fnc_setRebToObj;
-// 	};
-// 	_container setVariable ["REB_var_currentRebItem", nil, true];
-
-// 	false
-// };
+		[_unit, _item] call REB_fnc_addRebOnObj;
+		[_container, _item] call REB_fnc_removeRebOnObj;
+	} else {
+		if (HASHVAL_(_unit) in REB_all_rebs) then {
+			[_unit, _item] call REB_fnc_removeRebOnObj;
+			[_container, _item] call REB_fnc_addRebOnObj;
+		};
+		_unit setVariable ["REB_var_currentRebItem", nil, true];
+	};
+};
 REB_fnc_off = {
 	true	
 };
@@ -233,6 +204,6 @@ REB_fnc_makeRebClassname = {
 	(if (IS_STR(_this)) then {
 		_this
 	} else {
-		hashValue _this;
+		HASHVAL_(_this);
 	});
 };

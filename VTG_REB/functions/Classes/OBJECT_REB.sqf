@@ -16,10 +16,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC VARIABLE("scalar","Range");
 	PUBLIC VARIABLE("scalar","Deadzone");
 	PUBLIC VARIABLE("scalar","Strenght");
-	PUBLIC VARIABLE("scalar","Is_active");
+	PUBLIC VARIABLE("bool","Is_active");
 	PUBLIC VARIABLE("scalar","ratio");
 
-	PUBLIC FUNCTION("","constructor") {
+	PUBLIC FUNCTION("array","constructor") {
 		params["_obj", "_rebClassname", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_active", true], ["_ratio", 100/30]];
 
 		_rebClass = call compile _rebClassname;
@@ -37,10 +37,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 
 		METHOD(IOO_REB_DB, 'Add_reb', _instance);
 
-		METHOD(_rebClass, 'Add_object_reb_to_list', _rebObject);
+		METHOD(_rebClass, 'Add_object_reb_to_list', _instance);
 	};
 
-	PUBLIC FUNCTION("","deconstructor") {
+	PUBLIC FUNCTION("ANY","deconstructor") {
 		METHOD(SELF_VAR('Reb_class'), 'Remove_object_reb_from_list', _this);
 
 		METHOD(IOO_REB_DB, 'Remove_reb', INSTANCE_VAR(_this C "Object"));
@@ -64,11 +64,11 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("Strenght", _this);
 	};
 
-	PUBLIC FUNCTION("","Set_Active") {
-		MEMBER("Is_active", BOOL(_this));
+	PUBLIC FUNCTION("BOOL","Set_Active") {
+		MEMBER("Is_active", _this);
 	};
 
-	PUBLIC FUNCTION("","Is_object_reb") {
+	PUBLIC FUNCTION("ANY","Is_object_reb") {
 		INSTANCE_VAR(_this, "classname") EQTO _class;
 	};
 

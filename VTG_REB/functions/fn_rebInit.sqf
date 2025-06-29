@@ -3,6 +3,8 @@
 #include "Classes\REB_DB.sqf"
 #include "Classes\REB.sqf"
 #include "Classes\OBJECT_REB.sqf"
+#include "Classes\OBJECT_REB_DB.sqf"
+#include "Classes\test_oop.sqf"
 
 IOO_REB_DB = NEW(OO_REB_DB, nil);
 IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
@@ -22,6 +24,6 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
 	_this call REB_fnc_eventHandler;
 }];
 
-call REB_fnc_aceActions;
+// call REB_fnc_aceActions;
 
 MSVAR ["REB_var_INITED", true];

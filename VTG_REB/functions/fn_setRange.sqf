@@ -24,12 +24,12 @@ PR _onButtonClick = {
     EXEC_ON_SERVER
         params["_obj", "_reb", "_maxRng", "_sliderVal"];
 
-        PR _or = GET_RO_BY_HASH(_obj, _reb);
+        PR _objreb = GET_RO_BY_HASH(_obj, _reb);
         PR _newRange = round (_maxRng * (_sliderVal/10));
-        PR _newDeadzone = (_newRange / (INSTANCE_VAR(_or, "ratio")));
+        PR _newDeadzone = (_newRange / (INSTANCE_VAR(_objreb, "ratio")));
 
-        METHOD(_or, "Range", _newRange);
-        METHOD(_or, "Deadzone", _newDeadzone);
+        METHOD(_objreb, "Range", _newRange);
+        METHOD(_objreb, "Deadzone", _newDeadzone);
     EXEC_ON_SERVER_END
 
 	REB_currentHandledObj = nil;

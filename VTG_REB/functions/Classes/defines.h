@@ -3,6 +3,7 @@
 #define REB_CLS_PREF "REB_CLASS_"
 #define REB_VAR_PREF "REB_VAR_"
 #define REB_OBJ_PREF "REB_OBJECT_CLASS_"
+#define RC_PREF(s) (REB_CLS_PREF + s)
 
 #define STR(s) #s
 #define PR private
@@ -53,15 +54,19 @@
 #define ARR_EMPTY(a) (count a == 0)
 #define REB_itemRebsClasses (keys REB_all_classes)
 
+#define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
+
 #define EXEC_ON_SERVER [_this, {
 #define EXEC_ON_SERVER_END }] remoteExec ["call", 2];
+
+#define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
 
 // FOR OOP
 
 #define BOOL(i) (IF_ELSE(IS_INT(i), i == 1, nil))
 #define BOOL_TO_INT(b) (if (b) then {1} else {0})
 #define SET_BOOL(b) (if (IS_BOOL(b)) then {b} else {0})
-#define IS_OOP(s) (IS_CODE(s) && {IS_STR(INSTANCE_VAR(s, "classname"))})
+#define IS_OOP(s) (IS_CODE(s) && {IS_STR(METHOD(s, "classname", nil))})
 
 // #define METHOD_LOCAL(object, method, args) ([method, args] call object)
 // #define METHOD_GLOBAL(object, method, args) ([[method, args], object] remoteExec ["call", 0])
@@ -85,14 +90,20 @@
 
 #define ROVAR "REB_objectRebs"
 #define ROVAR_S "REB_objectRebs_SERVER"
-#define ROVAR_NAME(n) (REB_VAR_PREF + _hashVal + n)
+#define ROVAR_NAME(n) (REB_VAR_PREF + _hshVal + n)
 
 #define SAVE_OBJ_REBS_LIST _obj SV [ROVAR, _objRebs, true];
 #define SAVE_OBJ_REBS_LIST_SERVER _obj SV [ROVAR_S, _objRebs_SERVER];
 
 #define OBJ_REBS_LIST_SERVER(o) (o GV [ROVAR_S, createHashMap])
-#define OBJ_REBS_LIST_VAR_SERVER PR _objRebs_SERVER = OBJ_REBS_LIST_SERVER;
+#define OBJ_REBS_LIST_VAR_SERVER PR _objRebs_SERVER = OBJ_REBS_LIST_SERVER(_obj);
 #define OBJ_REBS_LIST(o) (o GV [ROVAR, createHashMap])
-#define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST;
+#define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST(_obj);
 
 #define GET_RO_BY_HASH(o, h) (OBJ_REBS_LIST(o) get h)
+
+#define GET_REB_INSTANCE(n) (METHOD(IOO_REB_DB, "Get_reb_class", n))
+
+// TEMP
+
+#define HAS_ACTIVE_REB(x) false

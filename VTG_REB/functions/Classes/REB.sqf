@@ -25,11 +25,9 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("array","object_reb_list");
 
 	PUBLIC FUNCTION("","constructor") {
-		GLOBALY
-
 		params["_obj", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_can_modify_range", true], ["_can_modify_strenght", true], ["_active", true]];
 
-		PR _name = METHOD(IOO_REB_DB, Make_reb_classname, nil);
+		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', nil);
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
 		PR _initObjClass = IF_ELSE(IS_STR(_obj), _obj, typeOf _obj);
 		PR _ratio = (_radius / _deadzone);
@@ -49,7 +47,7 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("Can_modify_strenght", BOOL_TO_INT(_can_modify_strenght));
 		MEMBER("object_reb_list", []);
 
-		METHOD(IOO_REB_DB, Add_reb_class, _name);
+		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
 		if (IS_OBJ(_obj)) then {
 			MEMBER("New_reb_object", _obj);
@@ -59,7 +57,6 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC FUNCTION("","deconstructor") {};
 
 	PUBLIC FUNCTION("","Toggle_reb_global") {
-		GLOBALY
 		MEMBER("Is_on", _this);
 	};
 
@@ -77,37 +74,25 @@ CLASS("OO_REB") // IOO_REB
 
 		PR _rebObject = ["new", [
 			_this,
-			SELF_VAR(Name),
-			SELF_VAR(Max_Range),
-			SELF_VAR(Max_Deadzone),
-			SELF_VAR(Max_Strenght),
-			SELF_VAR(Is_on),
-			SELF_VAR(Ratio)
+			SELF_VAR('Name'),
+			SELF_VAR('Max_Range'),
+			SELF_VAR('Max_Deadzone'),
+			SELF_VAR('Max_Strenght'),
+			SELF_VAR('Is_on'),
+			SELF_VAR('Ratio')
 		]] call OO_OBJECT_REB;
 	};
 
 	PUBLIC FUNCTION("CODE","Delete_object_reb") {
-		GLOBALY
-
 		DELETE(_this);
 	};
 
 	PUBLIC FUNCTION("CODE","Add_object_reb_to_list") {
-		GLOBALY
-
-		SELF_VAR(object_reb_list) pushBackUnique _this;
+		SELF_VAR('object_reb_list') pushBackUnique _this;
 	};
 
 	PUBLIC FUNCTION("CODE","Remove_object_reb_from_list") {
-		GLOBALY
-
-		SELF_VAR(object_reb_list) - [_this];
-	};
-
-	PUBLIC FUNCTION("","Remove_object_reb_from_list") {
-		GLOBALY
-
-		SELF_VAR(object_reb_list) - [_this];
+		SELF_VAR('object_reb_list') - [_this];
 	};
 
 ENDCLASS;

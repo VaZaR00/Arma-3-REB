@@ -8,15 +8,16 @@
 #include "defines.h"
 
 #define SAVE_REB_ALL_REBS MSVAR ["REB_all_rebs", REB_all_rebs, true];
-#define SAVE_REB_ALL_CLASSES MSVAR ["REB_all_classes", REB_all_classes, true];
+#define SAVE_REB_ALL_CLASSES MSVAR ["REB_all_classes", REB_all_classes, -2];
 
 CLASS("OO_REB_DB") // IOO_REB_DB
 
 	PUBLIC FUNCTION("","constructor") {
-		// client
-			
 		REB_all_rebs = createHashMap;
 		REB_all_classes = createHashMap;
+		REB_all_classes_SERVER = createHashMap;
+		SAVE_REB_ALL_CLASSES
+		SAVE_REB_ALL_REBS
 	};
 
 	PUBLIC FUNCTION("","deconstructor") {
@@ -24,10 +25,8 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	};
 
 	PUBLIC FUNCTION("","clear_vars") {
-		// client
-
-		REB_all_rebs = nil;
-		REB_all_classes = nil;
+		MSVAR ["REB_all_rebs", nil, true];
+		MSVAR ["REB_all_classes", nil, true];
 	};
 
 	/* 
@@ -35,16 +34,14 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	*/
 
 	PUBLIC FUNCTION("string","Add_reb_class") {
-		// remote
-
-		REB_all_classes set [_this, MGVAR _this];
+		REB_all_classes_SERVER set [_this, MGVAR _this];
+		REB_all_classes set [_this, nil];
 
 		SAVE_REB_ALL_CLASSES
 	};
 
 	PUBLIC FUNCTION("string","Remove_reb_class") {
-		// remote
-
+		REB_all_classes_SERVER deleteAt _this;
 		REB_all_classes deleteAt _this;
 
 		SAVE_REB_ALL_CLASSES
@@ -55,24 +52,26 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	*/
 
 	PUBLIC FUNCTION("","Add_reb") {
-		// remote
-
 		if (IS_CODE(_this)) then {
-			_this = OBJECT_VAR(_this, Object);
+			_this = INSTANCE_VAR(_this, "Object");
 		};
 		if !(IS_OBJ(_this)) EX;
 
 		REB_all_rebs set [hashValue _this, _this];
 
-		SAVE_REB_ALL_REBS
+		MEMBER("Sort_rebs", nil);
 	};
 
 	PUBLIC FUNCTION("","Remove_reb") {
-		// remote
-
 		PR _name = MEMBER("Make_reb_classname", _this);
 
 		REB_all_rebs deleteAt _name;
+
+		MEMBER("Sort_rebs", nil);
+	};
+
+	PUBLIC FUNCTION("","Sort_rebs") {
+		REB_all_rebs = [REB_all_rebs, [], {INSTANCE_VAR((OBJ_REBS_LIST(_x) select 0), "Range")}, "DESCEND"] call BIS_fnc_sortBy;
 
 		SAVE_REB_ALL_REBS
 	};
@@ -82,14 +81,7 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	*/
 
 	PUBLIC FUNCTION("","Make_reb_classname") {
-		if (IS_STR(_this) && {REB_CLS_PREF in _this}) EW {_this};
-
-		REB_CLS_PREF +
-		(if (IS_STR(_this)) then {
-			_this
-		} else {
-			hashValue _this;
-		});
+		call REB_fnc_makeRebClassname
 	};
 
 	PUBLIC FUNCTION("","Get_reb_class") {

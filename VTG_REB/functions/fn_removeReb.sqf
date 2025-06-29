@@ -18,14 +18,16 @@
 */
 #include "defines.h"
 
-params["_obj", ["_operation", (_this#0)]];
+EXEC_ON_SERVER
 
-if !(IS_LOCAL(_obj)) EX;
+	params["_obj", ["_operation", (_this#0)]];	
 
-if !(IS_REB(_obj)) EX;
+	if !(IS_REB(_obj)) EX;
 
-if !(IS_BOOL(_operation) && {_operation}) EW {
-	["Clear", [_obj]] call IOO_OBJECT_REB_DB;
-};
+	if !(IS_BOOL(_operation) && {_operation}) EW {
+		["Clear", [_obj]] call IOO_OBJECT_REB_DB;
+	};
 
-["Remove", [_obj, _obj]] call IOO_OBJECT_REB_DB;
+	["Remove", [_obj, _obj]] call IOO_OBJECT_REB_DB;
+
+EXEC_ON_SERVER_END

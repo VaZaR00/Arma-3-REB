@@ -18,6 +18,27 @@
 #include "defines.h"
 
 
+/*
+	Main functions
+*/
+REB_fnc_eventHandler = {
+	params [
+		"_oldUnit", "_newUnit", "_vehicleIn",
+		"_oldCameraOn", "_newCameraOn", "_uav"
+	];
+
+	REB_noise ppEffectEnable false;
+	_uav = if (_newCameraOn isEqualTo player) then {objNull} else {_newCameraOn};
+	REB_currentUAV = _uav;
+
+	if (!(_uav isEqualTo objNull)) exitWith {
+		[] spawn {
+			while {uiSleep REB_freq; (alive player) && (REB_currentUAV isEqualTo (getConnectedUAV player))} do {
+				call REB_fnc_main;
+			};
+		};
+	};
+};
 REB_fnc_main = {
 	params [["_freq", REB_freq], ["_random", REB_random], ["_noise", REB_noise], ["_uav", GET_PLAYER_DRONE]];
 
@@ -41,9 +62,9 @@ REB_fnc_main = {
 		_uav call REB_fnc_disconectDrone;
 	};
 
-	PR _activeReb = _uav call REB_fnc_currentJammingReb;
+	PR _activeRebStrength = _uav call REB_fnc_currentJammingRebStrength;
 	
-	if !(IS_OOP(_activeReb)) exitWith {};
+	IF_NIL_EX(_activeRebStrength);
 
 	_uav disableTIEquipment true;
 	
@@ -51,45 +72,46 @@ REB_fnc_main = {
 		false setCamUseTI 0;
 	};
 
-	_activeReb call REB_fnc_suppress;
+	_activeRebStrength call REB_fnc_suppress;
 };
-REB_fnc_currentJammingReb = {
+REB_fnc_currentJammingRebStrength = {
+	PR _currentStrength = 0;
 
-};
-REB_fnc_isInDeadzone = {
-	
-};
-REB_fnc_off = {
-	true	
-};
-REB_fnc_isDroneInRadius = {
-	params ["_reb", "_uav", "_radius"];
-
-	PR _attachedToObj = attachedTo _reb;
-
-	// check if reb is loaded in cargo 
-	if !(_attachedToObj isEqualTo objNull) then {
-		if (_reb in (_attachedToObj getVariable ["ace_cargo_loaded", []])) then {
-			_reb = _attachedToObj;
+	REB_all_rebs apply {
+		PR _obj = _x;
+		PR _d = (_drone distance _obj);
+		OBJ_REBS_LIST(_obj) apply {
+			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
+			if (
+				(_d < (_obj GV [(REB_VAR_PREF + _x + "_range"), -1])) &&
+				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false]) &&
+				(_stren > _currentStrength)
+			) then {
+				_currentStrength = _stren;
+			};
 		};
 	};
 
-	_res = ((_reb distance _uav) < _radius);
-
-	_res
+	IF_ELSE(_currentStrength <= 0, nil, _currentStrength);
 };
-REB_fnc_selectReb = {
-	params["_reb", ["_checkRadius", true]];
+REB_fnc_isInDeadzone = {
+	PR _isDead = false;
 
-	OBJ_REBS_LIST_VAR;
+	REB_all_rebs apply {
+		PR _obj = _x;
+		PR _d = (_drone distance _obj);
+		OBJ_REBS_LIST(_obj) apply {
+			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
+			if (
+				(_d < (_obj GV [(REB_VAR_PREF + _x + "_deadzone"), -1])) &&
+				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
+			) EW {
+				_isDead = true;
+			};
+		};
+	};
 
-	() && {
-		[
-			_obj, 
-			_uav, 
-			GET_HASHS_OBJ_VAL(_reb, if (_checkRadius) then {"REB_var_rebRange"} else {"REB_var_rebDeadzone"}, -1, _obj)
-		] call REB_fnc_isDroneInRadius
-	}
+	_isDead
 };
 REB_fnc_disconectDrone = {
 	if (ISLANCETHANDL) exitWith {
@@ -105,108 +127,112 @@ REB_fnc_disconectDrone = {
 		createVehicleCrew _this;
 	};
 };
+REB_fnc_suppress = {
+	PR _effect = (random _random) * _this;
+	
+	_effect call REB_fnc_showEffect;
+};
 REB_fnc_showEffect = {
 	_noise ppEffectEnable true;
 	_noise ppEffectAdjust [_this,0,2,2,2,true];
 	_noise ppEffectCommit 0;
 };
-REB_fnc_suppress = {
-	PR _sortedByStrenght = [_this, [], { (GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebStrength", 0, _x)) }, "DESCEND"] call BIS_fnc_sortBy; 
-
-	PR _activeReb = _sortedByStrenght#0;
-	PR _strenght = GET_HASHS_OBJ_VAL(GET_HASH(_activeReb), "REB_var_rebStrength", 0, _activeReb) ^ (1 / (count _sortedByStrenght));
-	
-	PR _effect = (random _random) * _strenght;
-	
-	_effect call REB_fnc_showEffect;
-};
-REB_fnc_eventHandler = {
-	params [
-		"_oldUnit", "_newUnit", "_vehicleIn",
-		"_oldCameraOn", "_newCameraOn", "_uav"
-	];
-
-	REB_noise ppEffectEnable false;
-	_uav = if (_newCameraOn isEqualTo player) then {objNull} else {_newCameraOn};
-	REB_currentUAV = _uav;
-
-	if (!(_uav isEqualTo objNull)) exitWith {
-		[] spawn {
-			while {uiSleep REB_freq; (alive player) && (REB_currentUAV isEqualTo (getConnectedUAV player))} do {
-				call REB_fnc_main;
-			};
-		};
+REB_fnc_rebsInDroneRadius = {
+	params["_drone", ["_byRange", true]];
+	REB_all_rebs select {
+		PR _obj = _x;
+		PR _d = (_drone distance _obj);
+		count (OBJ_REBS_LIST(_obj) select {
+			(
+				(_d < (_obj GV [(REB_VAR_PREF + _x + IF_ELSE(_byRange, "_range", "_deadzone")), -1])) &&
+				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
+			)
+		}) > 0;
 	};
 };
-REB_fnc_rebItemHandle = {
-	//check unit inventory and _container if its replaced
-	params ["_isTake", "_args"];
-	_args params ["_unit", "_container", "_item"];
 
-	[_container] spawn REB_fnc_handleContainer;
+// REB_fnc_rebItemHandle = {
+// 	//check unit inventory and _container if its replaced
+// 	params ["_isTake", "_args"];
+// 	_args params ["_unit", "_container", "_item"];
 
-	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
-		_unit setVariable ["REB_var_currentRebItem", _item, true];
+// 	[_container] spawn REB_fnc_handleContainer;
 
-		[_unit, _item, _container] call REB_fnc_changeRebOnObj;
-	} else {
-		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
-		_unit setVariable ["REB_var_currentRebItem", nil, true];
-	};
-};
-REB_fnc_handleContainer = {
-	params["_container", ["_item", ""]];
+// 	if (_isTake && (H_PREF(_item) in REB_itemRebsClasses)) then {
+// 		_unit setVariable ["REB_var_currentRebItem", _item, true];
 
-	if (_container isEqualTo objNull) exitWith {};
+// 		[_unit, _item, _container] call REB_fnc_changeRebOnObj;
+// 	} else {
+// 		if (_unit in REB_all_rebs) then {[_unit, objNull] call REB_fnc_setRebToObj};
+// 		_unit setVariable ["REB_var_currentRebItem", nil, true];
+// 	};
+// };
+// REB_fnc_handleContainer = {
+// 	params["_container", ["_item", ""]];
 
-	PR _allContainerItems = (((everyContainer _container) apply {_x#0}) + ((getItemCargo _container)#0)) apply {WITH_PREF(_x)};
-	PR _rebsInContainer = (if (STR_EMPTY(_item)) then {(keys REB_all_hashes)} else {[_item]}) select {WITH_PREF(_x) in _allContainerItems};
+// 	if (_container isEqualTo objNull) exitWith {};
 
-	_rebsInContainer pushBack _container;
+// 	PR _allContainerItems = (((everyContainer _container) apply {_x#0}) + ((getItemCargo _container)#0)) apply {WITH_PREF(_x)};
+// 	PR _rebsInContainer = (if (STR_EMPTY(_item)) then {(keys REB_all_hashes)} else {[_item]}) select {WITH_PREF(_x) in _allContainerItems};
 
-	PR _rebItem = "";
-	PR _hasSet = if (count _rebsInContainer > 0) then {
-		PR _rebsSorted = ([
-			_rebsInContainer, 
-			[], 
-			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebMaxRange", 0, _x)}, 
-			"DESCEND", 
-			{GV_HAS_ACTIVE_REB_TRUE(_x) && (IS_HASH(GET_INIT_HASH(_x)))}
-		] call BIS_fnc_sortBy);
+// 	_rebsInContainer pushBack _container;
 
-		if (count _rebsSorted == 0) exitWith {false};
+// 	PR _rebItem = "";
+// 	PR _hasSet = if (count _rebsInContainer > 0) then {
+// 		PR _rebsSorted = ([
+// 			_rebsInContainer, 
+// 			[], 
+// 			{GET_HASHS_OBJ_VAL(GET_HASH(_x), "REB_var_rebMaxRange", 0, _x)}, 
+// 			"DESCEND", 
+// 			{GV_HAS_ACTIVE_REB_TRUE(_x) && (IS_HASH(GET_INIT_HASH(_x)))}
+// 		] call BIS_fnc_sortBy);
 
-		_rebItem = _rebsSorted#0;
+// 		if (count _rebsSorted == 0) exitWith {false};
 
-		if !(IS_HASH(GET_INIT_HASH(_rebItem))) EW {false};
+// 		_rebItem = _rebsSorted#0;
 
-		// if !((_container GV ["REB_var_currentRebItem", ""]) isEqualTo _rebItem) EW {false};
+// 		if !(IS_HASH(GET_INIT_HASH(_rebItem))) EW {false};
+
+// 		// if !((_container GV ["REB_var_currentRebItem", ""]) isEqualTo _rebItem) EW {false};
 		
-		[_container, _rebItem, player] call REB_fnc_changeRebOnObj;
-		_container setVariable ["REB_var_currentRebItem", _rebItem, true];
-		true
-	} else {false};
+// 		[_container, _rebItem, player] call REB_fnc_changeRebOnObj;
+// 		_container setVariable ["REB_var_currentRebItem", _rebItem, true];
+// 		true
+// 	} else {false};
 
-	_rebsInContainer apply {
-		[_container, GET_HASH(_x)] remoteExec ["REB_fnc_createAceMenuAction", 0];
-	};
+// 	_rebsInContainer apply {
+// 		[_container, GET_HASH(_x)] remoteExec ["REB_fnc_createAceMenuAction", 0];
+// 	};
 
-	if (_hasSet) exitWith {true};
+// 	if (_hasSet) exitWith {true};
 
-	if (_container in REB_all_rebs) then {
-		// [_container] call REB_fnc_removeReb;
-		[_container, objNull] call REB_fnc_setRebToObj;
-	};
-	_container setVariable ["REB_var_currentRebItem", nil, true];
+// 	if (_container in REB_all_rebs) then {
+// 		// [_container] call REB_fnc_removeReb;
+// 		[_container, objNull] call REB_fnc_setRebToObj;
+// 	};
+// 	_container setVariable ["REB_var_currentRebItem", nil, true];
 
-	false
+// 	false
+// };
+REB_fnc_off = {
+	true	
 };
 
-
+/*
+	Misc functions
+*/
 REB_fnc_isReb = {
-	params["_obj"];
-
-	if (ARR_EMPTY(OBJ_REBS_LIST(_obj))) EW {false};
+	if (ARR_EMPTY(OBJ_REBS_LIST(_this))) EW {false};
 
 	true
+};
+REB_fnc_makeRebClassname = {
+	if (IS_STR(_this) && {REB_CLS_PREF in _this}) EW {_this};
+
+	REB_CLS_PREF +
+	(if (IS_STR(_this)) then {
+		_this
+	} else {
+		hashValue _this;
+	});
 };

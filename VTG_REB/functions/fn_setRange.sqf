@@ -1,33 +1,38 @@
 #include "defines.h"
 
-params [["_reb", objNull]];
+params [["_obj", objNull], ["_rebClass", ""], ["_rebClassMaxRange", 0]];
 
-REB_currentHandledReb = _reb;
-REB_currentHandledRebHash = GET_HASH(_reb);
-
-IF_EX(!IS_REB(REB_currentHandledReb));
-IF_EX(!IS_REB_HASH(REB_currentHandledRebHash));
+REB_currentHandledObj = _obj;
+REB_currentHandledReb = _rebClass;
+REB_currentHandledRebMaxRange = _rebClassMaxRange;
 
 PR _textShow = {format ["%1: %2 m", LOC "$STR_REB_VALUE", round _this]};
 
 PR _onSliderPosChanged = {
     params ["_ctrl", "_newValue"];
 	private _disp = ctrlParent _ctrl;
-	_newValue = round ((REB_currentHandledRebHash getDef ["REB_var_rebMaxRange", 100]) * (_newValue/10));
+	_newValue = round (REB_currentHandledRebMaxRange * (_newValue/10));
 	(_disp displayCtrl 11) ctrlSetText (format ["%1: %2 m", LOC "$STR_REB_VALUE", _newValue]);
 };
 
 PR _onButtonClick = {
     private _disp = ctrlParent (_this select 0);
     private _sliderVal = (sliderPosition (_disp displayCtrl 10));
-	private _newRange = round ((REB_currentHandledRebHash get "REB_var_rebMaxRange") * (_sliderVal/10));
-    private _newDeadzone = (_newRange / (REB_currentHandledRebHash get "REB_var_rebRatio"));
 
-    SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebRange", _newRange, REB_currentHandledReb)
-    SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebDeadzone", _newDeadzone, REB_currentHandledReb)
+    _this = [REB_currentHandledObj, REB_currentHandledReb, REB_currentHandledRebMaxRange, _sliderVal];
 
-    UPD_HASH(REB_currentHandledRebHash)
+    EXEC_ON_SERVER
+        params["_obj", "_reb", "_maxRng", "_sliderVal"];
 
+        PR _or = GET_RO_BY_HASH(_obj, _reb);
+        PR _newRange = round (_maxRng * (_sliderVal/10));
+        PR _newDeadzone = (_newRange / (INSTANCE_VAR(_or, "ratio")));
+
+        METHOD(_or, "Range", _newRange);
+        METHOD(_or, "Deadzone", _newDeadzone);
+    EXEC_ON_SERVER_END
+
+	REB_currentHandledObj = nil;
 	REB_currentHandledReb = nil;
 	REB_currentHandledRebHash = nil;
 

@@ -4,21 +4,13 @@
 
 #include "defines.h"
 
-sleep 1;
+sleep 0.1;
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
-params[
-	"_obj", 
-	["_range", 100], 
-	["_deadzone", 30], 
-	["_strenght", 0.6], 
-	["_can_modify_range", true], 
-	["_can_modify_strenght", true], 
-	["_active", true]
-];
+EXEC_ON_SERVER
 
-if !(IS_LOCAL(_obj)) exitWith {};
+	PR _rebObject = ["new", _this] call OO_REB;
 
-PR _rebObject = ["new", _this] call OO_REB;
+	MSVAR [OBJECT_VAR(_rebObject, Name), _rebObject, true];
 
-MSVAR [OBJECT_VAR(_rebObject, Name), _rebObject, true];
+EXEC_ON_SERVER_END

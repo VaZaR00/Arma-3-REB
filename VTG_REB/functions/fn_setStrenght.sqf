@@ -1,32 +1,38 @@
 #include "defines.h"
 
-params [["_reb", objNull]];
+params [["_obj", objNull], ["_rebClass", ""], ["_rebClassMaxStrength", 0]];
 
-REB_currentHandledReb = _reb;
-REB_currentHandledRebHash = GET_HASH(_reb);
-
-IF_EX(!IS_REB(REB_currentHandledReb));
-IF_EX(!IS_REB_HASH(REB_currentHandledRebHash));
+REB_currentHandledObj = _obj;
+REB_currentHandledReb = _rebClass;
+REB_currentHandledRebMaxStrength = _rebClassMaxStrength;
 
 PR _textShow = {format ["%1: %2", LOC "$STR_REB_VALUE", _this]};
 
 PR _onSliderPosChanged = {
     params ["_ctrl", "_newValue"];
 	private _disp = ctrlParent _ctrl;
-	_newValue = ((REB_currentHandledRebHash getDef ["REB_var_rebMaxStrength", 100]) * (_newValue/10)) toFixed 2;
+	_newValue = (REB_currentHandledRebMaxStrength * (_newValue/10)) toFixed 2;
 	(_disp displayCtrl 11) ctrlSetText (format ["%1: %2", LOC "$STR_REB_VALUE", _newValue]);
 };
 
 PR _onButtonClick = {
     private _disp = ctrlParent (_this select 0);
     private _sliderVal = (sliderPosition (_disp displayCtrl 10));
-	private _newStrenght = ((REB_currentHandledRebHash getDef ["REB_var_rebMaxStrength", 0.5]) * (_sliderVal/10));
 
-    SET_HASHS_OBJ_VAL(REB_currentHandledRebHash, "REB_var_rebStrength", _newStrenght, REB_currentHandledReb)
+    _this = [REB_currentHandledObj, REB_currentHandledReb, REB_currentHandledRebMaxStrength, _sliderVal];
 
-    UPD_HASH(REB_currentHandledRebHash)
+    EXEC_ON_SERVER
+        params["_obj", "_reb", "_maxStr", "_sliderVal"];
+
+        PR _or = GET_RO_BY_HASH(_obj, _reb);
+        PR _newRange = round (_maxStr * (_sliderVal/10));
+
+        METHOD(_or, "Strenght", _newRange);
+    EXEC_ON_SERVER_END
 	
-	REB_currentHandledRebHash = nil;
+	REB_currentHandledObj = nil;
+	REB_currentHandledReb = nil;
+	REB_currentHandledRebMaxStrength = nil;
 
     _disp closeDisplay 0;
 };

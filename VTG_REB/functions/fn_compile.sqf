@@ -207,3 +207,47 @@ REB_fnc_makeRebClassname = {
 		HASHVAL_(_this);
 	});
 };
+REB_fnc_initRebItemSystem = {
+	if (REB_var_rebItemsSystemInited) exitWith {};
+
+	if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
+		REB_ON_PUT_EH = player addEventHandler ["Put", {
+			[false, _this] call REB_fnc_rebItemHandle;
+		}];
+	};
+
+	if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
+		REB_ON_TAKE_EH = player addEventHandler ["Take", {
+			[true, _this] call REB_fnc_rebItemHandle;
+		}];
+	};
+
+	if (isServer) then {
+		[] spawn REB_fnc_initRebItems;
+	};
+	
+	REB_var_rebItemsSystemInited = true;
+};
+REB_fnc_initRebItems = {
+	params[["_items", ""]];
+
+	if !(isNil "REB_initingRebItems") exitWith {};
+	REB_initingRebItems = _thisScript;
+
+	if !(IS_ARR(_items)) then {
+		if (STR_EMPTY(_items)) then {
+			_items = keys REB_all_hashes;
+		} else {
+			_items = [_items];
+		};
+	};
+
+	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
+		_o = _x;
+		// IF_(!ISNIL(_o GV "REB_var_hasActiveReb"), SKIP);
+		{
+			if ([_o, _x] call REB_fnc_handleContainer) EX;
+		} forEach _items;
+	};
+	REB_initingRebItems = nil;
+};

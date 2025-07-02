@@ -167,6 +167,7 @@ REB_fnc_rebItemHandle = {
 	_args params ["_unit", "_container", "_item"];
 
 	GET_CURR_ITEMS_VAR(_unit);
+	
 
 	PR _isRebItem = (RC_PREF(_item) in REB_all_classes);
 

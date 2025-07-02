@@ -201,10 +201,10 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		params["_obj", ["_getHash", false], ["_keyIsConatinerHash", false], ["_keyIsClass", false]];
 
-		OBJ_REBS_LIST_VAR_SERVER_P(_this);
+		OBJ_REBS_LIST_VAR_SERVER_P(_obj);
 
 		PR _toArr = _objRebs_SERVER toArray false;
-		MAP(_toArr) { [IF_ELSE(_keyIsClass, (INSTANCE_VAR((_x select 1) C "Reb_classname")), (_x select 0)), [_x#1, INSTANCE_VAR((_x select 1), "item_ref")]] };
+		MAP(_toArr) { [if (_keyIsClass) then {(INSTANCE_VAR((_x select 1), "Reb_classname"))} else {(_x select 0)}, [_x#1, INSTANCE_VAR((_x select 1), "item_ref")]] };
 		
 		PR _res = _toArr select {
 			// hash format: [cls or hashVal, [instance, itemRef]]
@@ -245,7 +245,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		PR _objRebsConatiners = MEMBER("Get_items_object_rebs", [_container C true C true]);
 
 		{
-			_x params ["_holder", "_reb_class", "_holderClass"];
+			_x params ["_holder", "_reb_class", "_holderClass", "_hash"];
 
 			if !((hashValue _holder) in _objRebsConatiners) then {
 				[_container, _reb_class, _holder] call REB_fnc_addRebOnObj;

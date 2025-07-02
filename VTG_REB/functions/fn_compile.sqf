@@ -162,6 +162,7 @@ REB_fnc_removeRebOnObj = {
 };
 REB_fnc_rebItemHandle = {
 	//check unit inventory and _container if its replaced
+	
 	params ["_isTake", "_args"];
 	_args params ["_unit", "_container", "_item"];
 
@@ -170,46 +171,59 @@ REB_fnc_rebItemHandle = {
 	PR _isRebItem = (RC_PREF(_item) in REB_all_classes);
 
 	if (_isTake) then {
+		0 RLOG
 		if (_isRebItem) then {
+		0.1 RLOG
 			ADD_TO_CURR_ITEMS(_item);
 			SAVE_CURR_ITEMS_VAR(_unit);
 
 			[_unit, _item] call REB_fnc_addRebOnObj;
 			[_container, _item] call REB_fnc_removeRebOnObj;
+
+			REB_currentBackpack = [backpack player, backpackContainer player];
 		} else {
-			[_container] call REB_fnc_handleContainer;
+		0.11 RLOG
+			waitUntil { !(isNil "REB_slotChanged") };
+		0.12 RLOG
+			if (REB_slotChanged) then {
+		0.13 RLOG
+				[_container] call REB_fnc_handleContainer;
+			};
 		};
 	} else {
+		1 RLOG
 		if (_isRebItem) then {
+		1.1 RLOG
 			[_unit, _item] call REB_fnc_removeRebOnObj;
 			[_container, _item] call REB_fnc_addRebOnObj;
 		};
 	};
+	REB_slotChanged = nil;
 };
 REB_fnc_initRebItemSystem = {
 	if (REB_var_rebItemsSystemInited) exitWith {};
 
-	// if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
-	// 	REB_ON_PUT_EH = player addEventHandler ["Put", {
-	// 		[false, _this] call REB_fnc_rebItemHandle;
-	// 	}];
-	// };
-
-	// if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
-	// 	REB_ON_TAKE_EH = player addEventHandler ["Take", {
-	// 		[true, _this] call REB_fnc_rebItemHandle;
-	// 	}];
-	// };
-
-	if !((missionNamespace getVariable ["REB_ON_SLOT_CHANGED_EH", ""]) isEqualType 1) then {
-		REB_ON_SLOT_CHANGED_EH = player addEventHandler ["SlotItemChanged", {
-			_this call REB_fnc_rebItemHandle;
+	if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
+		REB_ON_PUT_EH = player addEventHandler ["Put", {
+			[false, _this] spawn REB_fnc_rebItemHandle;
 		}];
 	};
 
-	this addEventHandler ["", {
-		params ["_unit", "_name", "_slot", "_assigned", "_weapon"];
-	}];
+	if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
+		REB_ON_TAKE_EH = player addEventHandler ["Take", {
+			[true, _this] spawn REB_fnc_rebItemHandle;
+		}];
+	};
+
+	if !((missionNamespace getVariable ["REB_ON_SLOT_CHANGED_EH", ""]) isEqualType 1) then {
+		REB_ON_SLOT_CHANGED_EH = player addEventHandler ["SlotItemChanged", {
+			params ["_unit", "_name", "_slot", "_assigned", "_weapon"];
+
+			if (_slot != 901) EX; // handle only backpacks
+
+			REB_slotChanged = true;
+		}];
+	};
 
 	if (isServer) then {
 		[] spawn REB_fnc_initRebItems;
@@ -240,7 +254,7 @@ REB_fnc_handleContainer = {
 	if (IS_OBJNULL(_this#0)) EX;
 
 	EXEC_ON_SERVER_START
-		METHOD(IOO_OBJECT_REB_DB, "Handle_container", [_container]);
+		METHOD(IOO_OBJECT_REB_DB, "Handle_container", [_this#0]);
 	EXEC_ON_SERVER_END
 };
 REB_fnc_setEventHandlers = {

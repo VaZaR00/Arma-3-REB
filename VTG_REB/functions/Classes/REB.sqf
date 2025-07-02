@@ -101,6 +101,8 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER('Add_object_reb_to_list', _objectReb);
 
 		METHOD(IOO_OBJECT_REB_DB, 'Add', [_obj C _objectReb]);
+
+		_objectReb
 	};
 
 	PUBLIC FUNCTION("ARRAY","Delete_object_reb") {
@@ -117,6 +119,8 @@ CLASS("OO_REB") // IOO_REB
 		METHOD(IOO_OBJECT_REB_DB, 'Remove', _this);
 
 		DELETE(_this);
+
+		true
 	};
 
 	PUBLIC FUNCTION("CODE","Add_object_reb_to_list") {

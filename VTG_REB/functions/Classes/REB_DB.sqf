@@ -85,10 +85,10 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	};
 
 	PUBLIC FUNCTION("ANY","Get_reb_class") {
-		if (!IS_OOP(_this)) then {
-			PR _name = MEMBER("Make_reb_classname", _this);
+		PR _name = if (!IS_OOP(_this)) then {
+			MEMBER("Make_reb_classname", _this);
 		} else {
-			_name = INSTANCE_VAR(_this, "Reb_classname");
+			INSTANCE_VAR(_this, "Reb_classname");
 		};
 
 		REB_all_classes_SERVER getDef [_name, {}];

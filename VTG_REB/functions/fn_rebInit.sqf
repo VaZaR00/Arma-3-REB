@@ -4,7 +4,6 @@
 #include "Classes\REB.sqf"
 #include "Classes\OBJECT_REB.sqf"
 #include "Classes\OBJECT_REB_DB.sqf"
-#include "Classes\test_oop.sqf"
 
 IOO_REB_DB = NEW(OO_REB_DB, nil);
 IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);

@@ -139,32 +139,25 @@ REB_fnc_showEffect = {
 	_noise ppEffectAdjust [_this,0,2,2,2,true];
 	_noise ppEffectCommit 0;
 };
-REB_fnc_rebsInDroneRadius = {
-	params["_drone", ["_byRange", true]];
-	REB_all_rebs select {
-		PR _obj = _x;
-		PR _d = (_drone distance _obj);
-		count (OBJ_REBS_LIST(_obj) select {
-			(
-				(_d < (_obj GV [(REB_VAR_PREF + _x + IF_ELSE(_byRange, "_range", "_deadzone")), -1])) &&
-				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
-			)
-		}) > 0;
-	};
+REB_fnc_disableSystem = {
+	true	
 };
 
+/*
+	Handle objects functions
+*/
 REB_fnc_addRebOnObj = {
-	EXEC_ON_SERVER
-		params['_obj', '_rebObj'];
+	EXEC_ON_SERVER_START
+		params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-		METHOD(GET_REB_INSTANCE(_rebObj), "New_object_reb", _obj);
+		METHOD(GET_REB_INSTANCE(_rebObj), "New_object_reb", [_obj C _itemRef]);
 	EXEC_ON_SERVER_END
 };
 REB_fnc_removeRebOnObj = {
-	EXEC_ON_SERVER
-		params['_obj', '_rebObj'];
+	EXEC_ON_SERVER_START 
+		params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-		METHOD(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", _rebObj);
+		METHOD(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", [_obj C _itemRef]);
 	EXEC_ON_SERVER_END
 };
 REB_fnc_rebItemHandle = {
@@ -172,21 +165,116 @@ REB_fnc_rebItemHandle = {
 	params ["_isTake", "_args"];
 	_args params ["_unit", "_container", "_item"];
 
-	if (_isTake && (RC_PREF(_item) in REB_itemRebsClasses)) then {
-		_unit setVariable ["REB_var_currentRebItem", _item, true];
+	GET_CURR_ITEMS_VAR(_unit);
 
-		[_unit, _item] call REB_fnc_addRebOnObj;
-		[_container, _item] call REB_fnc_removeRebOnObj;
+	PR _isRebItem = (RC_PREF(_item) in REB_all_classes);
+
+	if (_isTake) then {
+		if (_isRebItem) then {
+			ADD_TO_CURR_ITEMS(_item);
+			SAVE_CURR_ITEMS_VAR(_unit);
+
+			[_unit, _item] call REB_fnc_addRebOnObj;
+			[_container, _item] call REB_fnc_removeRebOnObj;
+		} else {
+			[_container] call REB_fnc_handleContainer;
+		};
 	} else {
-		if (HASHVAL_(_unit) in REB_all_rebs) then {
+		if (_isRebItem) then {
 			[_unit, _item] call REB_fnc_removeRebOnObj;
 			[_container, _item] call REB_fnc_addRebOnObj;
 		};
-		_unit setVariable ["REB_var_currentRebItem", nil, true];
 	};
 };
-REB_fnc_off = {
-	true	
+REB_fnc_initRebItemSystem = {
+	if (REB_var_rebItemsSystemInited) exitWith {};
+
+	// if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
+	// 	REB_ON_PUT_EH = player addEventHandler ["Put", {
+	// 		[false, _this] call REB_fnc_rebItemHandle;
+	// 	}];
+	// };
+
+	// if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
+	// 	REB_ON_TAKE_EH = player addEventHandler ["Take", {
+	// 		[true, _this] call REB_fnc_rebItemHandle;
+	// 	}];
+	// };
+
+	if !((missionNamespace getVariable ["REB_ON_SLOT_CHANGED_EH", ""]) isEqualType 1) then {
+		REB_ON_SLOT_CHANGED_EH = player addEventHandler ["SlotItemChanged", {
+			_this call REB_fnc_rebItemHandle;
+		}];
+	};
+
+	this addEventHandler ["", {
+		params ["_unit", "_name", "_slot", "_assigned", "_weapon"];
+	}];
+
+	if (isServer) then {
+		[] spawn REB_fnc_initRebItems;
+	};
+	
+	REB_var_rebItemsSystemInited = true;
+};
+REB_fnc_initRebItems = {
+	params[["_items", ""]];
+
+	if !(isNil "REB_initingRebItems") exitWith {};
+	REB_initingRebItems = _thisScript;
+
+	if !(IS_ARR(_items)) then {
+		if (STR_EMPTY(_items)) then {
+			_items = keys REB_all_classes;
+		} else {
+			_items = [_items];
+		};
+	};
+
+	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
+		[_x] call REB_fnc_handleContainer
+	};
+	REB_initingRebItems = nil;
+};
+REB_fnc_handleContainer = {
+	if (IS_OBJNULL(_this#0)) EX;
+
+	EXEC_ON_SERVER_START
+		METHOD(IOO_OBJECT_REB_DB, "Handle_container", [_container]);
+	EXEC_ON_SERVER_END
+};
+REB_fnc_setEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
+	if !((_obj getVariable ["REB_DELETED_EH", ""]) isEqualType 1) then {
+		private _eh = _obj addEventHandler ["Deleted", {
+			params ["_entity"];
+			[_entity, true] call REB_fnc_removeReb;
+		}];
+		_obj setVariable ["REB_DELETED_EH", _eh];
+	};
+
+	if !((_obj getVariable ["REB_KILLED_EH", ""]) isEqualType 1) then {
+		private _eh = _obj addEventHandler ["Killed", {
+			params ["_unit", "_killer", "_instigator", "_useEffects"];
+			[_unit, true] call REB_fnc_removeReb;
+		}];
+
+		_obj setVariable ["REB_KILLED_EH", _eh];
+	};
+};
+REB_fnc_removeEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
+	_obj removeEventHandler ["Deleted", (_obj getVariable ["REB_DELETED_EH", -1])];
+	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_KILLED_EH", -1])];
+
+	_obj setVariable ["REB_DELETED_EH", nil];
+	_obj setVariable ["REB_KILLED_EH", nil];
 };
 
 /*
@@ -207,47 +295,16 @@ REB_fnc_makeRebClassname = {
 		HASHVAL_(_this);
 	});
 };
-REB_fnc_initRebItemSystem = {
-	if (REB_var_rebItemsSystemInited) exitWith {};
-
-	if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
-		REB_ON_PUT_EH = player addEventHandler ["Put", {
-			[false, _this] call REB_fnc_rebItemHandle;
-		}];
+REB_fnc_rebsInDroneRadius = {
+	params["_drone", ["_byRange", true]];
+	REB_all_rebs select {
+		PR _obj = _x;
+		PR _d = (_drone distance _obj);
+		count (OBJ_REBS_LIST(_obj) select {
+			(
+				(_d < (_obj GV [(REB_VAR_PREF + _x + IF_ELSE(_byRange, "_range", "_deadzone")), -1])) &&
+				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
+			)
+		}) > 0;
 	};
-
-	if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
-		REB_ON_TAKE_EH = player addEventHandler ["Take", {
-			[true, _this] call REB_fnc_rebItemHandle;
-		}];
-	};
-
-	if (isServer) then {
-		[] spawn REB_fnc_initRebItems;
-	};
-	
-	REB_var_rebItemsSystemInited = true;
-};
-REB_fnc_initRebItems = {
-	params[["_items", ""]];
-
-	if !(isNil "REB_initingRebItems") exitWith {};
-	REB_initingRebItems = _thisScript;
-
-	if !(IS_ARR(_items)) then {
-		if (STR_EMPTY(_items)) then {
-			_items = keys REB_all_hashes;
-		} else {
-			_items = [_items];
-		};
-	};
-
-	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
-		_o = _x;
-		// IF_(!ISNIL(_o GV "REB_var_hasActiveReb"), SKIP);
-		{
-			if ([_o, _x] call REB_fnc_handleContainer) EX;
-		} forEach _items;
-	};
-	REB_initingRebItems = nil;
 };

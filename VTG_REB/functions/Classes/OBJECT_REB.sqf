@@ -18,9 +18,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC VARIABLE("scalar","Strenght");
 	PUBLIC VARIABLE("bool","Is_active");
 	PUBLIC VARIABLE("scalar","ratio");
+	PUBLIC VARIABLE("object","item_ref"); // reference to dummyweapon placeholder for backpack
 
 	PUBLIC FUNCTION("array","constructor") {
-		params["_obj", "_rebClassname", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_active", true], ["_ratio", 100/30]];
+		params["_obj", "_rebClassname", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_active", true], ["_ratio", 100/30], ["_itemRef", objNull]];
 
 		_rebClass = call compile _rebClassname;
 
@@ -32,18 +33,15 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("Strenght", _strenght);
 		MEMBER("Is_active", _active);
 		MEMBER("ratio", _ratio);
+		MEMBER("item_ref", _itemRef);
 
-		METHOD(IOO_OBJECT_REB_DB, 'Add', [_obj C _instance]);
+		[_obj] call REB_fnc_setEventHandlers;
 
-		METHOD(IOO_REB_DB, 'Add_reb', _instance);
-
-		METHOD(_rebClass, 'Add_object_reb_to_list', _instance);
+		_instance
 	};
 
 	PUBLIC FUNCTION("ANY","deconstructor") {
-		METHOD(SELF_VAR('Reb_class'), 'Remove_object_reb_from_list', _this);
-
-		METHOD(IOO_REB_DB, 'Remove_reb', INSTANCE_VAR(_this C "Object"));
+		[SELF_VAR("Object")] call REB_fnc_removeEventHandlers;
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Range") {

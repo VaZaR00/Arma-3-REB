@@ -34,7 +34,7 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	*/
 
 	PUBLIC FUNCTION("string","Add_reb_class") {
-		REB_all_classes_SERVER set [_this, compile _this];
+		REB_all_classes_SERVER set [_this, call compile _this];
 		REB_all_classes set [_this, nil];
 
 		SAVE_REB_ALL_CLASSES
@@ -85,15 +85,19 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	};
 
 	PUBLIC FUNCTION("ANY","Get_reb_class") {
-		PR _name = MEMBER("Make_reb_classname", _this);
+		if (!IS_OOP(_this)) then {
+			PR _name = MEMBER("Make_reb_classname", _this);
+		} else {
+			_name = INSTANCE_VAR(_this, "Reb_classname");
+		};
 
-		REB_all_classes get _name;
+		REB_all_classes_SERVER getDef [_name, {}];
 	};
 
 	PUBLIC FUNCTION("ANY","Get_reb_classname") {
 		PR _name = MEMBER("Make_reb_classname", _this);
 
-		if (_name in REB_all_classes) then {_name};
+		if (_name in REB_all_classes_SERVER) then {_name};
 	};
 
 ENDCLASS;

@@ -18,7 +18,7 @@
 */
 #include "defines.h"
 
-EXEC_ON_SERVER
+EXEC_ON_SERVER_START
 
 	params["_obj", ["_operation", (_this#0)]];	
 
@@ -28,6 +28,6 @@ EXEC_ON_SERVER
 		["Clear", [_obj]] call IOO_OBJECT_REB_DB;
 	};
 
-	["Remove", [_obj, _obj]] call IOO_OBJECT_REB_DB;
+	["Remove", _obj] call IOO_OBJECT_REB_DB;
 
 EXEC_ON_SERVER_END

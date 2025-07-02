@@ -21,7 +21,7 @@ PR _onButtonClick = {
 
     _this = [REB_currentHandledObj, REB_currentHandledReb, REB_currentHandledRebMaxStrength, _sliderVal];
 
-    EXEC_ON_SERVER
+    EXEC_ON_SERVER_START
         params["_obj", "_reb", "_maxStr", "_sliderVal"];
 
         PR _objreb = GET_RO_BY_HASH(_obj, _reb);

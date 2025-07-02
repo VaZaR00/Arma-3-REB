@@ -17,6 +17,7 @@
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
 #define NOLOG MSVAR ["TEMP_DO_LOG", false];
+#define CRTHSH createHashMap
 
 #define GET_PLAYER_DRONE (vehicle (remoteControlled player))
 
@@ -29,6 +30,7 @@
 #define EQTYPE isEqualType
 #define EQTO isEqualTo
 #define ISNIL(v) isNil STR(v)
+#define MAP(v) v = v apply 
 #define IF_(c, t) if (c) then {t}
 #define IF_ELSE(c, t, t1) if (c) then {t} else {t1}
 #define IF_EX(c) if (c) exitWith {}
@@ -52,12 +54,15 @@
 #define IS_LOCAL(o) ((IS_OBJ(o) && {local o}) || isServer)
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
-#define REB_itemRebsClasses (keys REB_all_classes)
+// #define REB_itemRebsClasses (keys REB_all_classes)
 
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
 
-#define EXEC_ON_SERVER [_this, {
-#define EXEC_ON_SERVER_END }] remoteExec ["call", 2];
+// for server execuiton
+// #define EXEC_ON_SERVER_START [_this, {
+// #define EXEC_ON_SERVER_END }] remoteExec ["call", 2];
+#define EXEC_ON_SERVER_START PR _codeForServer = {
+#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[_this, _codeForServer] remoteExec ["call", 2]};
 
 #define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
 
@@ -72,8 +77,8 @@
 // #define METHOD_GLOBAL(object, method, args) ([[method, args], object] remoteExec ["call", 0])
 #define METHOD(object, method, args) ([method, args] call object)
 // #define METHOD(object, method, args) (IF_ELSE(IS_GLOBALY, METHOD_GLOBAL(object, method, args), METHOD_LOCAL(object, method, args)))
-#define SELF_VAR(var) MEMBER(var, nil)
-#define INSTANCE_VAR(object, var) METHOD(object, var, nil)
+#define SELF_VAR(var) (MEMBER(var, nil))
+#define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
 #define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
 #define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
 
@@ -86,6 +91,14 @@
 #define EXEC_GLOBAL(code) _tempGlobaly = _globaly; SET_GLOBALY(true); code LOCALY; SET_GLOBALY(_tempGlobaly);
 #define EXEC_LOCAL(code) _tempGlobaly = _globaly; SET_GLOBALY(false); code LOCALY; SET_GLOBALY(_tempGlobaly);
 
+// for player REB_var_currentRebItems
+
+#define GET_CURR_ITEMS(p) (p GV ["REB_var_currentRebItems", CRTHSH])
+#define GET_CURR_ITEMS_VAR(p) PR _currRebItems = GET_CURR_ITEMS(p);
+#define SAVE_CURR_ITEMS_VAR(p) (p SV ["REB_var_currentRebItems", _currRebItems, true])
+#define ADD_TO_CURR_ITEMS(i) _currRebItems set [i, nil];
+#define REMOVE_FROM_CURR_ITEMS(i) _currRebItems deleteAt i;
+
 // for OO_OBJECT_REB_DB
 
 #define ROVAR "REB_objectRebs"
@@ -96,7 +109,8 @@
 #define SAVE_OBJ_REBS_LIST_SERVER _obj SV [ROVAR_S, _objRebs_SERVER];
 
 #define OBJ_REBS_LIST_SERVER(o) (o GV [ROVAR_S, createHashMap])
-#define OBJ_REBS_LIST_VAR_SERVER PR _objRebs_SERVER = OBJ_REBS_LIST_SERVER(_obj);
+#define OBJ_REBS_LIST_VAR_SERVER_P(o) PR _objRebs_SERVER = OBJ_REBS_LIST_SERVER(o);
+#define OBJ_REBS_LIST_VAR_SERVER OBJ_REBS_LIST_VAR_SERVER_P(_obj)
 #define OBJ_REBS_LIST(o) (o GV [ROVAR, createHashMap])
 #define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST(_obj);
 

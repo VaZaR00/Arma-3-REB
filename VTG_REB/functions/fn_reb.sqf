@@ -7,7 +7,7 @@
 sleep 0.1;
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
-EXEC_ON_SERVER
+EXEC_ON_SERVER_START
 
 	PR _rebObject = ["new", _this] call OO_REB;
 

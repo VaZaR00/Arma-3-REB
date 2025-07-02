@@ -23,6 +23,7 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","Can_modify_range");
 	PUBLIC VARIABLE("bool","Can_modify_strenght");
 	PUBLIC VARIABLE("array","object_reb_list");
+	PUBLIC VARIABLE("bool","Is_item");
 
 	PUBLIC FUNCTION("array","constructor") {
 		params["_obj", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_can_modify_range", true], ["_can_modify_strenght", true], ["_active", true]];
@@ -30,10 +31,10 @@ CLASS("OO_REB") // IOO_REB
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
 		PR _initObjClass = IF_ELSE(IS_STR(_obj), _obj, typeOf _obj);
-		PR _ratio = (_radius / _deadzone);
+		PR _ratio = (_range / _deadzone);
 
 		_strenght = (_strenght max 0) min 1;
-		_deadzone = _radius min _deadzone;
+		_deadzone = _range min _deadzone;
 
 		MEMBER("Name", _name);
 		MEMBER("Init_object", _initObj);
@@ -46,13 +47,18 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("Can_modify_range", _can_modify_range);
 		MEMBER("Can_modify_strenght", _can_modify_strenght);
 		MEMBER("object_reb_list", []);
+		MEMBER("Is_item", IS_STR(_obj));
 
 		MSVAR [_name, _instance];
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
 		if (IS_OBJ(_obj)) then {
-			MEMBER("New_object_reb", _obj);
+			MEMBER("New_object_reb", [_obj]);
+		};
+
+		if !(REB_var_rebItemsSystemInited) then {
+			[] call REB_fnc_initRebItemSystem;
 		};
 	};
 
@@ -69,23 +75,47 @@ CLASS("OO_REB") // IOO_REB
 			Creates new object reb and adds to REB class
 		
 		Arguments:
-			Object
+			[Object, itemRef (container of backpack)]
 	*/
-	PUBLIC FUNCTION("object","New_object_reb") {
-		if (IS_OBJNULL(_this)) EX;
+	PUBLIC FUNCTION("ARRAY","New_object_reb") {
+		params["_obj", ["_itemRef", objNull]];
 
-		PR _rebObject = ["new", [
-			_this,
+		if (IS_OBJNULL(_obj)) EX;
+		if (!IS_OBJ(_itemRef)) EX;
+
+		PR _params = [
+			_obj,
 			SELF_VAR('Name'),
 			SELF_VAR('Max_Range'),
 			SELF_VAR('Max_Deadzone'),
 			SELF_VAR('Max_Strenght'),
 			SELF_VAR('Is_on'),
-			SELF_VAR('Ratio')
-		]] call OO_OBJECT_REB;
+			SELF_VAR('Ratio'),
+			_itemRef
+		];
+
+		if (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])) EX;
+
+		PR _objectReb = ["new", _params] call OO_OBJECT_REB;
+
+		MEMBER('Add_object_reb_to_list', _objectReb);
+
+		METHOD(IOO_OBJECT_REB_DB, 'Add', [_obj C _objectReb]);
 	};
 
-	PUBLIC FUNCTION("CODE","Delete_object_reb") {
+	PUBLIC FUNCTION("ARRAY","Delete_object_reb") {
+		params["_obj", ["_itemRef", objNull]];
+
+		_this = METHOD(IOO_OBJECT_REB_DB, "Get_object_reb", [_obj C _obj C _itemRef]);
+
+		IF_NIL_EX(_this);
+
+		if !(IS_OOP(_this)) EX;
+
+		MEMBER('Remove_object_reb_from_list', _this);
+
+		METHOD(IOO_OBJECT_REB_DB, 'Remove', _this);
+
 		DELETE(_this);
 	};
 

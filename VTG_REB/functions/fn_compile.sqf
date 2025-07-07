@@ -200,19 +200,20 @@ REB_fnc_rebItemHandle = {
 		};
 	};
 	REB_slotChanged = nil;
+	REB_fnc_rebItemHandle_handler = nil;
 };
 REB_fnc_initRebItemSystem = {
 	if (REB_var_rebItemsSystemInited) exitWith {};
 
 	if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
 		REB_ON_PUT_EH = player addEventHandler ["Put", {
-			[false, _this] spawn REB_fnc_rebItemHandle;
+			[false, _this] SPAWN_ONCE(REB_fnc_rebItemHandle);
 		}];
 	};
 
 	if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
 		REB_ON_TAKE_EH = player addEventHandler ["Take", {
-			[true, _this] spawn REB_fnc_rebItemHandle;
+			[true, _this] SPAWN_ONCE(REB_fnc_rebItemHandle);
 		}];
 	};
 
@@ -227,16 +228,13 @@ REB_fnc_initRebItemSystem = {
 	};
 
 	if (isServer) then {
-		[] spawn REB_fnc_initRebItems;
+		[] SPAWN_ONCE(REB_fnc_initRebItems);
 	};
 	
 	REB_var_rebItemsSystemInited = true;
 };
 REB_fnc_initRebItems = {
 	params[["_items", ""]];
-
-	if !(isNil "REB_initingRebItems") exitWith {};
-	REB_initingRebItems = _thisScript;
 
 	if !(IS_ARR(_items)) then {
 		if (STR_EMPTY(_items)) then {
@@ -249,7 +247,6 @@ REB_fnc_initRebItems = {
 	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
 		[_x] call REB_fnc_handleContainer
 	};
-	REB_initingRebItems = nil;
 };
 REB_fnc_handleContainer = {
 	if (IS_OBJNULL(_this#0)) EX;

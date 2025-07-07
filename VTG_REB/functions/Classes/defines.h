@@ -22,6 +22,7 @@
 #define GET_PLAYER_DRONE (vehicle (remoteControlled player))
 
 #define LOC  
+#define DOUBLE(v1, v2) v1##v2
 // #define LOC localize
 #define SKIP continue
 #define EW exitWith
@@ -55,6 +56,11 @@
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
 // #define REB_itemRebsClasses (keys REB_all_classes)
+
+// for handling scripts
+#define SCR_HNDLR(s) DOUBLE(s, _scriptHandler)
+#define SCR_HNDLR_VAR(s) (MGVAR [STR(SCR_HNDLR(s)), scriptNull])
+#define SPAWN_ONCE(s) call (if (scriptDone SCR_HNDLR_VAR(s)) then {{SCR_HNDLR(s) = _this spawn s;}} else {{}})
 
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
 

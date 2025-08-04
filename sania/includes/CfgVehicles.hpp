@@ -78,6 +78,26 @@ class CfgVehicles
 				typeName = "STRING";
 				validate = "none";
 			};
+			class REB_canChangeRange
+			{
+				displayName = "$REB_canChangeRange";
+				tooltip = "$REB_canChangeRange";
+				property = "REB_canChangeRange";
+				control = "CheckboxNumber";
+				expression = "_this setVariable ['REB_var_canChangeRange', (_value isEqualTo 1) , true];";
+				defaultValue = "1";
+				validate = "number";
+			};
+			class REB_canChangeStrength
+			{
+				displayName = "$REB_canChangeStrength";
+				tooltip = "$REB_canChangeStrength";
+				property = "REB_canChangeStrength";
+				control = "CheckboxNumber";
+				expression = "_this setVariable ['REB_var_canChangeStrength', (_value isEqualTo 1) , true];";
+				defaultValue = "1";
+				validate = "number";
+			};
 		};
 
 		// Dragging

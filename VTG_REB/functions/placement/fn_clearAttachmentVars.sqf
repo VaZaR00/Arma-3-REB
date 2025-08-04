@@ -5,7 +5,7 @@ player setVariable ["REB_currentAttachItem", nil];
 player setVariable ["REB_attachmentTempObj", nil];
 
 player action ["WeaponInHand", player];
-player allowSprint true;
+player forceWalk false;
 
 // Удаление действий
 [player, (missionNamespace getVariable ["REB_TEMP_placement_attachAction", -1])] call BIS_fnc_holdActionRemove;

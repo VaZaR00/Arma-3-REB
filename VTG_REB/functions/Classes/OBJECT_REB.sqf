@@ -41,7 +41,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	};
 
 	PUBLIC FUNCTION("ANY","deconstructor") {
-		[SELF_VAR("Object")] call REB_fnc_removeEventHandlers;
+		PR _obj = SELF_VAR("Object");
+		// if (IS_REB(_obj)) exitWith {};
+		[_obj] call REB_fnc_removeEventHandlers;
+		// [_obj, false] call REB_fnc_isAttachable;
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Range") {

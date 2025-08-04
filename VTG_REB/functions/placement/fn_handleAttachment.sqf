@@ -29,7 +29,7 @@ if (_item != "") then {
 };
 
 _player action ["SwitchWeapon", _player, _player, 100];
-_player allowSprint false;
+_player forceWalk true;
 
 _object disableCollisionWith _player;
 
@@ -39,8 +39,8 @@ REB_TEMP_placement_attachAction = [
     "<t color='#0ed145'>Attach</t>",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
-    '!(isNull (player getVariable ["REB_currentAttachObj", objNull]))',
-    nil,
+    '(alive _target) && {!(isNull (player getVariable ["REB_currentAttachObj", objNull])) && {(_this distance _target < 3)}}',
+    '(alive _target) && {!(isNull (player getVariable ["REB_currentAttachObj", objNull])) && {(_this distance _target < 3)}}',
     {},
     {},
     { call REB_fnc_placeAttachment; },

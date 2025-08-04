@@ -348,6 +348,7 @@ REB_fnc_removeEventHandlers = {
 	params[["_obj", 0]];
 
 	if !(IS_OBJ(_obj)) exitWith {};
+	if (IS_REB(_obj)) exitWith {};
 
 	_obj removeEventHandler ["Deleted", (_obj getVariable ["REB_DELETED_EH", -1])];
 	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_KILLED_EH", -1])];

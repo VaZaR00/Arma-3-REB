@@ -5,6 +5,7 @@
 #include "Classes\OBJECT_REB.sqf"
 #include "Classes\OBJECT_REB_DB.sqf"
 
+// main classes instanciation
 IOO_REB_DB = NEW(OO_REB_DB, nil);
 IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 
@@ -26,5 +27,21 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
 }];
 
 // call REB_fnc_aceActions;
+
+[] spawn {
+    waitUntil { !isNull findDisplay 46 };
+
+    findDisplay 46 displayAddEventHandler ["KeyDown", {
+        private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
+    
+        if (isNull (_player getVariable ["REB_currentAttachObj", objNull])) exitWith {};
+
+        private _lockedActions = ["binocular", "SwitchPrimary", "SwitchHandgun", "SwitchSecondary", "SwitchWeaponGrp1", "SwitchWeaponGrp2", "SwitchWeaponGrp3", "SwitchWeaponGrp4", "throw"];
+
+        if (_lockedActions findIf { (inputAction _x) != 0 } != -1) then {
+            true;
+        };
+    }];
+};
 
 MSVAR ["REB_var_INITED", true];

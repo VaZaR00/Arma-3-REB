@@ -19,7 +19,6 @@ if (!isNull _object) then {
         _object enableCollisionWith _player;
         private _dir = getDir _player;
         private _pos = _player modelToWorld [0,1.5,0]; // 1.5 метра перед игроком на уровне рук
-        _object setPosATL _pos;
-        // Если это был реальный объект — просто отпускаем (ничего не делаем)
+        _object setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
     };
 };

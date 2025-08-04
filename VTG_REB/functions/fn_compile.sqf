@@ -32,7 +32,7 @@ REB_fnc_eventHandler = {
 	REB_currentUAV = _uav;
 
 	if (!(_uav isEqualTo objNull)) exitWith {
-		[] spawn {
+		REB_main_handler = [] spawn {
 			while {uiSleep REB_freq; (alive player) && (REB_currentUAV isEqualTo (getConnectedUAV player))} do {
 				call REB_fnc_main;
 			};
@@ -65,8 +65,6 @@ REB_fnc_main = {
 	PR _activeRebStrength = _uav call REB_fnc_currentJammingRebStrength;
 
 	IF_NIL_EX(_activeRebStrength);
-
-	LOG [_activeRebStrength];
 
 	_uav disableTIEquipment true;
 	
@@ -147,6 +145,10 @@ REB_fnc_disableSystem = {
 	Handle objects functions
 */
 REB_fnc_addRebOnObj = {
+	if (IS_ARR(_this select 1)) then {
+		_this = [_this#0, _this#1#0, _this#1#1];
+	};
+
 	EXEC_ON_SERVER_START
 		params['_obj', '_rebObj', ['_itemRef', objNull]];
 
@@ -154,6 +156,10 @@ REB_fnc_addRebOnObj = {
 	EXEC_ON_SERVER_END
 };
 REB_fnc_removeRebOnObj = {
+	if (IS_ARR(_this select 1)) then {
+		_this = [_this#0, _this#1#0, _this#1#1];
+	};
+
 	EXEC_ON_SERVER_START 
 		params['_obj', '_rebObj', ['_itemRef', objNull]];
 
@@ -166,66 +172,93 @@ REB_fnc_rebItemHandle = {
 	params ["_isTake", "_args"];
 	_args params ["_unit", "_container", "_item"];
 
-	GET_CURR_ITEMS_VAR(_unit);
-	
-
 	PR _isRebItem = (RC_PREF(_item) in REB_all_classes);
+	
+	if (_isTake && _isRebItem) EW {
+		private _backpackInfo = [backpack player, backpackContainer player];
 
-	if (_isTake) then {
-		0 RLOG
-		if (_isRebItem) then {
-		0.1 RLOG
-			ADD_TO_CURR_ITEMS(_item);
-			SAVE_CURR_ITEMS_VAR(_unit);
+		if (_item != (_backpackInfo#0)) EX; // we work only with backpacks
 
-			[_unit, _item] call REB_fnc_addRebOnObj;
-			[_container, _item] call REB_fnc_removeRebOnObj;
+		REB_currentPlayerBackpack = _backpackInfo;
 
-			REB_currentBackpack = [backpack player, backpackContainer player];
-		} else {
-		0.11 RLOG
-			waitUntil { !(isNil "REB_slotChanged") };
-		0.12 RLOG
-			if (REB_slotChanged) then {
-		0.13 RLOG
-				[_container] call REB_fnc_handleContainer;
-			};
-		};
-	} else {
-		1 RLOG
-		if (_isRebItem) then {
-		1.1 RLOG
-			[_unit, _item] call REB_fnc_removeRebOnObj;
-			[_container, _item] call REB_fnc_addRebOnObj;
-		};
+		[_unit, _backpackInfo] call REB_fnc_addRebOnObj;
+		[_container, _backpackInfo] call REB_fnc_removeRebOnObj;
 	};
-	REB_slotChanged = nil;
-	REB_fnc_rebItemHandle_handler = nil;
+	[_unit, _container] call REB_fnc_handleContainer;
 };
 REB_fnc_initRebItemSystem = {
 	if (REB_var_rebItemsSystemInited) exitWith {};
 
 	if !((missionNamespace getVariable ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
 		REB_ON_PUT_EH = player addEventHandler ["Put", {
-			[false, _this] SPAWN_ONCE(REB_fnc_rebItemHandle);
+			[false, _this] call (REB_fnc_rebItemHandle);
 		}];
 	};
 
 	if !((missionNamespace getVariable ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
 		REB_ON_TAKE_EH = player addEventHandler ["Take", {
-			[true, _this] SPAWN_ONCE(REB_fnc_rebItemHandle);
+			[true, _this] call (REB_fnc_rebItemHandle);
 		}];
 	};
 
-	if !((missionNamespace getVariable ["REB_ON_SLOT_CHANGED_EH", ""]) isEqualType 1) then {
-		REB_ON_SLOT_CHANGED_EH = player addEventHandler ["SlotItemChanged", {
-			params ["_unit", "_name", "_slot", "_assigned", "_weapon"];
+	if !((missionNamespace getVariable ["REB_ON_INV_OPEN_EH", ""]) isEqualType 1) then {
+		REB_ON_INV_OPEN_EH = player addEventHandler ["InventoryOpened", {
+			params ["_unit", "_primaryContainer", "_secondaryContainer"];
 
-			if (_slot != 901) EX; // handle only backpacks
+			if (_primaryContainer isEqualTo _unit) EX;
 
-			REB_slotChanged = true;
+			REB_TEMP_primaryContainer = _primaryContainer;
+			REB_TEMP_secondaryContainer = if 
+				(_primaryContainer isEqualTo _secondaryContainer) 
+			then {
+				objNull
+			} else {
+				REB_TEMP_secondaryContainer_items = everyBackpack _secondaryContainer;
+				_secondaryContainer
+			};
+
+			// {
+			// 	if !((_x GV ["REB_ON_PUT_EH", ""]) isEqualType 1) then {
+			// 		PR _REB_ON_PUT_EH = _x addEventHandler ["Put", {
+			// 			[false, _this] call (REB_fnc_rebItemHandle);
+			// 		}];
+			// 		_x SV ["REB_ON_PUT_EH", _REB_ON_PUT_EH];
+			// 	};
+
+			// 	if !((_x GV ["REB_ON_TAKE_EH", ""]) isEqualType 1) then {
+			// 		PR _REB_ON_TAKE_EH = _x addEventHandler ["Take", {
+			// 			[true, _this] call (REB_fnc_rebItemHandle);
+			// 		}];
+			// 		_x SV ["REB_ON_TAKE_EH", _REB_ON_TAKE_EH];
+			// 	};
+			// } forEach [_primaryContainer, _secondaryContainer];
 		}];
 	};
+
+	if !((missionNamespace getVariable ["REB_ON_INV_CLOSE_EH", ""]) isEqualType 1) then {
+		REB_ON_INV_CLOSE_EH = player addEventHandler ["InventoryClosed", {
+			params ["_unit", "_container"];
+
+			// fully scan containers only if player have moved items between two containers
+
+			if (
+				!(ARR_EMPTY(REB_TEMP_secondaryContainer_items)) && 
+				!(REB_TEMP_secondaryContainer_items isEqualTo (everyBackpack REB_TEMP_secondaryContainer))
+			) then {
+				[_unit, REB_TEMP_primaryContainer] call REB_fnc_handleContainerFull;
+				[_unit, REB_TEMP_secondaryContainer] call REB_fnc_handleContainerFull;
+			};
+
+			REB_TEMP_primaryContainer = objNull;
+			REB_TEMP_secondaryContainer = objNull;
+			REB_TEMP_secondaryContainer_items = [];
+		}];
+	};
+
+	REB_TEMP_primaryContainer = objNull;
+	REB_TEMP_secondaryContainer = objNull;
+	REB_TEMP_secondaryContainer_items = [];
+	REB_currentPlayerBackpack = [];
 
 	if (isServer) then {
 		[] SPAWN_ONCE(REB_fnc_initRebItems);
@@ -245,15 +278,49 @@ REB_fnc_initRebItems = {
 	};
 
 	(allUnits + vehicles + ("GroundWeaponHolder" allObjects 0)) apply {
-		[_x] call REB_fnc_handleContainer
+		[_x] call REB_fnc_handleContainerFull
 	};
 };
-REB_fnc_handleContainer = {
-	if (IS_OBJNULL(_this#0)) EX;
+REB_fnc_disableRebItemSystem = {
+	if !(REB_var_rebItemsSystemInited) exitWith {};
 
-	EXEC_ON_SERVER_START
-		METHOD(IOO_OBJECT_REB_DB, "Handle_container", [_this#0]);
-	EXEC_ON_SERVER_END
+	player removeEventHandler ["Put", MGVAR ["REB_ON_PUT_EH", -1]];
+	player removeEventHandler ["Take", MGVAR ["REB_ON_TAKE_EH", -1]];
+	player removeEventHandler ["InventoryOpened", MGVAR ["REB_ON_INV_OPEN_EH", -1]];
+	player removeEventHandler ["InventoryClosed", MGVAR ["REB_ON_INV_CLOSE_EH", -1]];
+
+	REB_var_rebItemsSystemInited = false;
+};
+REB_fnc_handleContainer = {
+	params["_unit", ["_container", objNull]];
+
+	if (IS_OBJNULL(_container)) EX;
+
+	if ((REB_currentPlayerBackpack in (everyContainer _container)) || {(backpackContainer _container) in REB_currentPlayerBackpack}) EW {
+		[_unit, REB_currentPlayerBackpack] call REB_fnc_removeRebOnObj;
+		[_container, REB_currentPlayerBackpack] call REB_fnc_addRebOnObj;
+		REB_currentPlayerBackpack = [];
+	};
+};
+REB_fnc_handleContainerFull = {
+	params["_obj"];
+
+	if (IS_OBJNULL(_obj)) EX;
+
+	private _containersInfo = if (_obj in allUnits) then {[[backpack _obj, backpackContainer _obj]]} else {everyContainer _obj};
+	private _containersInfoItemRefs = _containersInfo apply {_x#1};
+	OBJ_REBS_LIST_VAR
+
+	{
+		if (_y in _containersInfoItemRefs) then {
+			[_obj, _obj, _y] call REB_fnc_removeRebOnObj;
+		};
+	} forEach _objRebs;
+	{
+		if (RC_PREF((_x select 0)) in REB_all_classes) then {
+			[_obj, _x] call REB_fnc_addRebOnObj;
+		};
+	} forEach _containersInfo;
 };
 REB_fnc_setEventHandlers = {
 	params[["_obj", 0]];
@@ -287,6 +354,29 @@ REB_fnc_removeEventHandlers = {
 
 	_obj setVariable ["REB_DELETED_EH", nil];
 	_obj setVariable ["REB_KILLED_EH", nil];
+};
+
+/*
+	Handle REB player actions
+*/
+REB_fnc_makeAttachable = {
+	params[["_obj"]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+	if !(IS_REB(_obj)) exitWith {};
+
+	PR _action = _obj addAction [
+		LOC "$STR_REB_ATTACH",
+		{
+			params ["_target", ["_player", player], ["_params", []]];
+			[_target] call REB_fnc_attachReb;
+		},
+		[],
+		0, true, true, "", 
+		"true"
+	];
+
+	_obj setVariable ["REB_ATTACH_ACTION", _action];
 };
 
 /*

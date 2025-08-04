@@ -11,6 +11,7 @@ IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 REB_var_rebItemsSystemInited = false;
 REB_createUavCrewOnDisconectTime = 5;
 REB_var_rebItemsClasses = [];
+REB_attach_actionTime = 5; // time in seconds for hold action to attach object
 
 PR _defaultRandom = [0.3, 0.5, 1];
 REB_freq = param[0, 0.1];

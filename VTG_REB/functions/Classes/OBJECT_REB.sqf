@@ -66,8 +66,4 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("Is_active", _this);
 	};
 
-	PUBLIC FUNCTION("ANY","Is_object_reb") {
-		INSTANCE_VAR(_this, "classname") EQTO _class;
-	};
-
 ENDCLASS;

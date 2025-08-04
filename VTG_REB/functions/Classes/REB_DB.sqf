@@ -63,7 +63,8 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	};
 
 	PUBLIC FUNCTION("ANY","Remove_reb") {
-		PR _name = MEMBER("Make_reb_classname", _this);
+		// PR _name = MEMBER("Make_reb_classname", _this);
+		PR _name = METHOD(IOO_OBJECT_REB_DB, "Get_object_hash", _this);
 
 		REB_all_rebs deleteAt _name;
 

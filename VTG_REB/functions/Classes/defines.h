@@ -14,6 +14,7 @@
 #define MSVAR MN SV
 #define LOG hint str 
 #define RLOG call {hint str _this; diag_log str _this};
+#define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
 #define NOLOG MSVAR ["TEMP_DO_LOG", false];
@@ -25,6 +26,7 @@
 #define DOUBLE(v1, v2) v1##v2
 // #define LOC localize
 #define SKIP continue
+#define ONUL objNull
 #define EW exitWith
 #define EX EW {};
 #define C , 
@@ -58,9 +60,12 @@
 // #define REB_itemRebsClasses (keys REB_all_classes)
 
 // for handling scripts
-#define SCR_HNDLR(s) DOUBLE(s, _scriptHandler)
+#define SCR_HNDLR(s) DOUBLE(s,_scriptHandler)
 #define SCR_HNDLR_VAR(s) (MGVAR [STR(SCR_HNDLR(s)), scriptNull])
 #define SPAWN_ONCE(s) call (if (scriptDone SCR_HNDLR_VAR(s)) then {{SCR_HNDLR(s) = _this spawn s;}} else {{}})
+#define WAITVAR(v) waitUntil { !ISNIL(v) };
+#define WAITVAR_OR_EX_T(v, t) _thisScript spawn {sleep t; terminate _this}; WAITVAR(v)
+#define WAITVAR_OR_EX(v) WAITVAR_OR_EX_T(v, 0.5)
 
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
 
@@ -87,6 +92,7 @@
 #define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
 #define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
 #define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
+#define GET_OR_OBJ(i) (IF_ELSE(IS_OBJ(i), i, (INSTANCE_VAR(i, "Object"))))
 
 #define GLOBALY_DEFAULT false
 

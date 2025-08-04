@@ -17,6 +17,17 @@ class CfgFunctions
 			class setValueDialog {};
 			// class aceActions {};
 		};
+		class REBplacement
+        {
+			recompile=1;
+            file = "VTG_REB\functions\placement";
+			class releaseAttachment {};
+			class updateAttachmentPosition {};	
+			class placeAttachment {};
+			class handleAttachment {};
+			class clearAttachmentVars {};
+			class isAttachable {};
+		};
 	};
 	class DB
 	{

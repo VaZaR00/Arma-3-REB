@@ -1,16 +1,20 @@
-//reb - [object, radius, deadzone, strenght]
+//reb - [object, radius, deadzone, strenght, attachable]
 
-// [_this, 100, 30, 0.5] spawn REB_fnc_reb;
+// [_this, 100, 30, 0.5, true] call REB_fnc_reb;
 
 #include "defines.h"
 
-sleep 0.1;
-waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
+_this spawn {
 
-EXEC_ON_SERVER_START
+	sleep 0.1;
+	waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
-	PR _rebObject = ["new", _this] call OO_REB;
+	EXEC_ON_SERVER_START
 
-	MSVAR [INSTANCE_VAR(_rebObject, "Name"), _rebObject, true];
+		PR _rebObject = ["new", _this] call OO_REB;
 
-EXEC_ON_SERVER_END
+		MSVAR [INSTANCE_VAR(_rebObject, "Name"), _rebObject, true];
+
+	EXEC_ON_SERVER_END
+
+};

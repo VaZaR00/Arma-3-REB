@@ -277,13 +277,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		switch (_this select 0) do { \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
-			private _code = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', (className + "_" + str(GET_AUTO_INC(className)))]; \
-			ENSURE_INDEX(1,nil); \
 			private _classID = className + "_" + str(GET_AUTO_INC(className)); \
-			NAMESPACE setVariable [format ['%1_this', _classID], _code]; \
-			private _instance = _code; \
-			[CONSTRUCTOR_METHOD, (_this select 1)] call _code; \
-			_code; \
+			private _instanceName = format ['%1_this', _classID]; \
+			private _instance = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _instance = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', (className + "_" + str(GET_AUTO_INC(className))), _instanceName]; \
+			ENSURE_INDEX(1,nil); \
+			NAMESPACE setVariable [_instanceName, _instance]; \
+			[CONSTRUCTOR_METHOD, (_this select 1)] call _instance; \
+			_instance; \
 		}; \
 		case "static":{ \
 			private _code = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', className]; \

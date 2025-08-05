@@ -13,7 +13,10 @@ if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
 	_reb getVariable ['REB_var_rebMaxRange', 200], 
 	_reb getVariable ['REB_var_rebMaxDeadzone', 100], 
 	_reb getVariable ['REB_var_rebMaxStrength', 0.8],
-	_reb getVariable ['REB_var_hasActiveReb', true]
+	nil,
+	_reb getVariable ['REB_var_canChangeRange', true],
+	_reb getVariable ['REB_var_canChangeStrength', true]
+	_reb getVariable ['REB_var_hasActiveReb', true],
 ] spawn REB_fnc_reb;
 
 };

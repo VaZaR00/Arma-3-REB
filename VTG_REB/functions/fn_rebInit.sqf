@@ -12,7 +12,7 @@ IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 REB_var_rebItemsSystemInited = false;
 REB_createUavCrewOnDisconectTime = 5;
 REB_var_rebItemsClasses = [];
-REB_attach_actionTime = 5; // time in seconds for hold action to attach object
+REB_attach_actionTime = 0.5; // time in seconds for hold action to attach object
 
 PR _defaultRandom = [0.3, 0.5, 1];
 REB_freq = param[0, 0.1];
@@ -34,7 +34,7 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
     findDisplay 46 displayAddEventHandler ["KeyDown", {
         private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
     
-        if (isNull (_player getVariable ["REB_currentAttachObj", objNull])) exitWith {};
+        if (isNull (_player getVariable ["REB_attachmentTempObj", objNull])) exitWith {};
 
         private _lockedActions = ["binocular", "SwitchPrimary", "SwitchHandgun", "SwitchSecondary", "SwitchWeaponGrp1", "SwitchWeaponGrp2", "SwitchWeaponGrp3", "SwitchWeaponGrp4", "throw"];
 

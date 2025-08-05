@@ -15,7 +15,6 @@ class CfgFunctions
 			class setRange {};
 			class setStrenght {};
 			class setValueDialog {};
-			// class aceActions {};
 		};
 		class REBplacement
         {
@@ -26,7 +25,14 @@ class CfgFunctions
 			class placeAttachment {};
 			class handleAttachment {};
 			class clearAttachmentVars {};
-			class isAttachable {};
+			class setAttachable {};
+		};
+		class ace_actions
+		{
+			recompile=1;
+			file = "VTG_REB\functions\ace_actions";
+			class createAceActionsForObjectReb {};
+			class removeAceActionsForObjectReb {};
 		};
 	};
 	class DB

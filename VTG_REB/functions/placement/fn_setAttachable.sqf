@@ -1,0 +1,36 @@
+#include "..\defines.h"
+
+params["_object", ["_can", true]];
+
+if (isNull _object) exitWith {};
+
+_object setVariable ["REB_attachable", _can, true];
+
+// we add action only once
+if (_can && (_object getVariable ["REB_attachable", false])) then {
+	[
+		_object, 
+		"<t color='#0ed145'>Attach Object</t>", 
+		"\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa", 
+		"\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa", 
+		'(vehicle player isEqualTo player) && (alive _target) && {(isNull (player getVariable ["REB_attachmentTempObj", objNull])) && (_target getVariable ["REB_attachable", false]) && {(_this distance _target < 3)}}', 
+		'(speed player == 0) && (vehicle player isEqualTo player) && (alive _target) && {(isNull (player getVariable ["REB_attachmentTempObj", objNull])) && (_target getVariable ["REB_attachable", false]) && {(_this distance _target < 3)}}', 
+		{}, 
+		{}, 
+		{ [_target] call REB_fnc_handleAttachment }, 
+		{}, 
+		[], 
+		(missionNamespace getVariable ["REB_attach_actionTime", 5]), 
+		0, 
+		false, 
+		false
+	] remoteExec ["BIS_fnc_holdActionAdd", 0, true];
+
+	// add ACE dragging and carrying
+	if !(_object getVariable ["ace_dragging_candrag", false]) then {
+		[_object, true, [0, 1.5, 0], 0, false, true] call ace_dragging_fnc_setDraggable;
+	};
+	if !(_object getVariable ["ace_dragging_cancarry", false]) then {
+		[_object, true, [0, 1.5, 0], 0, false, true] call ace_dragging_fnc_setCarryable;
+	};
+};

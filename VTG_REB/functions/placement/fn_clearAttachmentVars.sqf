@@ -1,3 +1,7 @@
+#include "..\defines.h"
+
+// private _object = player getVariable ["REB_attachmentTempObj", objNull];
+
 // Очистка переменных
 player setVariable ["REB_currentAttachObj", nil];
 player setVariable ["REB_currentAttachObjType", nil];

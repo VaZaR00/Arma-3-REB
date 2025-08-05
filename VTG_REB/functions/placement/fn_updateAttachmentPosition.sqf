@@ -1,3 +1,5 @@
+#include "..\defines.h"
+
 params ["_object"];
 
 private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
@@ -10,7 +12,7 @@ private _attachFunction = {
     private _direction = getDirVisual _currentPlayer + 90;
 
     if (
-        (isNull (player getVariable ["REB_currentAttachObj", objnull])) ||
+        (isNull (player getVariable ["REB_attachmentTempObj", objnull])) ||
         vehicle _currentPlayer != _currentPlayer ||
         !alive _currentPlayer ||
         (_currentPlayer getVariable ["ACE_isUnconscious", false]) ||
@@ -20,6 +22,21 @@ private _attachFunction = {
         [_handle] call CBA_fnc_removePerFrameHandler;
         [] call VTG_REB_fnc_REB_releaseAttachment;
     };
+
+    // if (isNil "REB_TEMP_updateNearCollisions") then {
+    //     REB_TEMP_updateNearCollisions = [] spawn {
+    //         private _currentPlayer = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
+    //         private _nearObjects = nearestObjects [_currentPlayer, [], 10];
+
+    //         {
+    //             if (isNull _x) exitWith {};
+    //             if (alive _x && (_x != _currentPlayer)) then {
+    //                 _x disableCollisionWith _currentPlayer;
+    //                 _currentPlayer disableCollisionWith _x;
+    //             };
+    //         } forEach _nearObjects;
+    //     };
+    // };
 
     private _intersections = lineIntersectsSurfaces [
         AGLToASL positionCameraToWorld [0,0,0],
@@ -36,7 +53,7 @@ private _attachFunction = {
     _object setDir _direction;
 
     if (_intersections isEqualTo []) exitWith {
-        _object setPosASL (_currentPlayer modelToWorldWorld [0, 1.5, 1.2]);
+        _object setPosASL (_currentPlayer modelToWorldWorld [0, 1.5, 0.7]);
     };
 
     private _intersectObject = (_intersections # 0 # 2);

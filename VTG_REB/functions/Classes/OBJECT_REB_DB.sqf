@@ -19,9 +19,9 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 	};
 
 	PUBLIC FUNCTION("array","Add") {
-		params["_obj", "_instance"];
+		params["_obj", "_rebinstance"];
 		
-		MEMBER('Add_to_object', [_obj C _instance]);
+		MEMBER('Add_to_object', [_obj C _rebinstance]);
 
 		METHOD(IOO_REB_DB, 'Add_reb', _obj);
 	};
@@ -58,7 +58,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		_objRebs set [_hsh, INSTANCE_VAR(_objectReb, "item_ref")];
 		REB_ALL_OBJECT_REBS set [_hsh, _objectReb];
 
-		MEMBER("Set_object_helper_vars", [_obj C _objectReb]);
+		MEMBER("Set_object_helper_vars", [_objectReb]);
 
 		SAVE_OBJ_REBS_LIST_SERVER
 		SAVE_OBJ_REBS_LIST
@@ -89,7 +89,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		_objRebs deleteAt _hsh;
 		REB_ALL_OBJECT_REBS deleteAt _hsh;
 
-		MEMBER("Set_object_helper_vars", [_obj C _objectReb C true]);
+		MEMBER("Set_object_helper_vars", [_objectReb C true]);
 
 		DELETE(_objectReb);
 
@@ -112,7 +112,11 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 	};
 
 	PUBLIC FUNCTION("array","Set_object_helper_vars") {
-		params["_obj", "_objreb", ["_nil", false]];
+		params["_objreb", ["_nil", false]];
+
+		if (!IS_OOP(_objreb)) EX;
+
+		PR _obj = INSTANCE_VAR(_objreb, "Object");
 
 		[
 			INSTANCE_VAR(_objreb, "Range"),

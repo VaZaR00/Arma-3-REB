@@ -1,6 +1,6 @@
 #include "defines.h"
 
-params [["_onBtnClick", {}], ["_onSliderPosChanged", {}], ["_showText", {}]];
+params [["_onBtnClick", {}], ["_onSliderPosChanged", {}], ["_showText", {}], ["_sliderStartPos", 0]];
 
 
 private _display = findDisplay 46 createDisplay "RscDisplayEmpty";
@@ -12,7 +12,10 @@ _slider ctrlSetPosition [
     0.2 * safezoneW,
     0.03 * safezoneH
 ];
+_slider ctrlAddEventHandler ["SliderPosChanged", _onSliderPosChanged];
+_slider sliderSetPosition _sliderStartPos;
 _slider ctrlCommit 0;
+
 
 private _text = _display ctrlCreate ["RscText", 11];
 _text ctrlSetPosition [
@@ -24,7 +27,6 @@ _text ctrlSetPosition [
 _text ctrlSetText ((sliderPosition _slider) call _showText);
 _text ctrlCommit 0;
 
-_slider ctrlAddEventHandler ["SliderPosChanged", _onSliderPosChanged];
 
 private _button = _display ctrlCreate ["RscButton", 12];
 _button ctrlSetText "OK";
@@ -36,3 +38,5 @@ _button ctrlSetPosition [
 ];
 _button ctrlCommit 0;
 _button ctrlAddEventHandler ["ButtonClick", _onBtnClick];
+
+[_slider, _sliderStartPos] call _onSliderPosChanged;

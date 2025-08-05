@@ -1,10 +1,14 @@
 #include "defines.h"
 
-params [["_obj", objNull], ["_rebClass", ""], ["_rebClassMaxStrength", 0]];
+params [["_objectReb", {}]];
 
-REB_currentHandledObj = _obj;
-REB_currentHandledReb = _rebClass;
-REB_currentHandledRebMaxStrength = _rebClassMaxStrength;
+if (!IS_OOP(_objectReb)) exitWith {};
+
+REB_currentHandledReb = _objectReb;
+REB_currentHandledRebClass = INSTANCE_VAR(_objectReb, "Reb_class");
+REB_currentHandledRebMaxStrength = INSTANCE_VAR(REB_currentHandledRebClass, "Max_Strenght");
+private _strenght = INSTANCE_VAR(REB_currentHandledReb, "Strenght");
+private _startPos = if (_strenght == 0) then {0} else {_strenght * (10 / REB_currentHandledRebMaxStrength)};
 
 PR _textShow = {format ["%1: %2", LOC "$STR_REB_VALUE", _this]};
 
@@ -19,22 +23,21 @@ PR _onButtonClick = {
     private _disp = ctrlParent (_this select 0);
     private _sliderVal = (sliderPosition (_disp displayCtrl 10));
 
-    _this = [REB_currentHandledObj, REB_currentHandledReb, REB_currentHandledRebMaxStrength, _sliderVal];
+    _this = [REB_currentHandledReb, REB_currentHandledRebClass, REB_currentHandledRebMaxStrength, _sliderVal];
 
     EXEC_ON_SERVER_START
-        params["_obj", "_reb", "_maxStr", "_sliderVal"];
+        params["_reb", "_rebclass", "_maxStr", "_sliderVal"];
 
-        PR _objreb = GET_RO_BY_HASH(_obj, _reb);
-        PR _newRange = round (_maxStr * (_sliderVal/10));
+        PR _newStrenght = (_maxStr * (_sliderVal/10));
 
-        METHOD(_objreb, "Strenght", _newRange);
+        METHOD(_reb, "Set_Strenght", _newStrenght);
     EXEC_ON_SERVER_END
 	
-	REB_currentHandledObj = nil;
 	REB_currentHandledReb = nil;
+	REB_currentHandledRebClass = nil;
 	REB_currentHandledRebMaxStrength = nil;
 
     _disp closeDisplay 0;
 };
 
-[_onButtonClick, _onSliderPosChanged, _textShow] call REB_fnc_setValueDialog;
+[_onButtonClick, _onSliderPosChanged, _textShow, _startPos] call REB_fnc_setValueDialog;

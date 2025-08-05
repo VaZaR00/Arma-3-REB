@@ -131,18 +131,18 @@ class CfgVehicles
 
 		class UserActions
 		{
-			class DisassembleJammer
-			{
-				displayName="Put in inventory";
-				priority=0.5;
-				radius=7;
-				position=;
-				showWindow=0;
-				onlyForPlayer=1;
-				icon=;
-				condition="this call DB_fnc_jammerCanDisassembly";
-				statement="this call DB_fnc_addJammerToInventory";
-			};
+			// class DisassembleJammer
+			// {
+			// 	displayName="Put in inventory";
+			// 	priority=0.5;
+			// 	radius=7;
+			// 	position=;
+			// 	showWindow=0;
+			// 	onlyForPlayer=1;
+			// 	icon=;
+			// 	condition="this call DB_fnc_jammerCanDisassembly";
+			// 	statement="this call DB_fnc_addJammerToInventory";
+			// };
 		};
     };
 	class Sania_with_tripod : Sania_Base

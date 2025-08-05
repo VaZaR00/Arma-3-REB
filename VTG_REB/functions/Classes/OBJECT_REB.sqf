@@ -19,6 +19,7 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC VARIABLE("bool","Is_active");
 	PUBLIC VARIABLE("scalar","ratio");
 	PUBLIC VARIABLE("object","item_ref"); // reference to dummyweapon placeholder for backpack
+	PUBLIC VARIABLE("array","Ace_actions");
 
 	PUBLIC FUNCTION("array","constructor") {
 		params["_obj", "_rebClassname", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_active", true], ["_ratio", 100/30], ["_itemRef", objNull]];
@@ -34,8 +35,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("Is_active", _active);
 		MEMBER("ratio", _ratio);
 		MEMBER("item_ref", _itemRef);
+		MEMBER("Ace_actions", []);
 
-		[_obj] call REB_fnc_setEventHandlers;
+		[_obj] remoteExec ["REB_fnc_setEventHandlers", 0, true];
+		[_instance] remoteExec ["REB_fnc_createAceActionsForObjectReb", 0, true];
 
 		_instance
 	};
@@ -43,8 +46,9 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC FUNCTION("ANY","deconstructor") {
 		PR _obj = SELF_VAR("Object");
 		// if (IS_REB(_obj)) exitWith {};
-		[_obj] call REB_fnc_removeEventHandlers;
-		// [_obj, false] call REB_fnc_isAttachable;
+		[_obj] remoteExec ["REB_fnc_removeEventHandlers", 0, true];
+		[_instance] remoteExecCall ["REB_fnc_removeAceActionsForObjectReb", 0, true];
+		// [_obj, false] call REB_fnc_setAttachable;
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Range") {
@@ -56,6 +60,8 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 
 		MEMBER("Range", _this);
 		MEMBER("Deadzone", _newDeadzone);
+
+		METHOD(IOO_OBJECT_REB_DB, "Set_object_helper_vars", [_instance]);
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Strenght") {
@@ -63,10 +69,14 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			hint LOC "$STR_REB_STRENGHT_EXCEED_MAX";
 		};
 		MEMBER("Strenght", _this);
+
+		METHOD(IOO_OBJECT_REB_DB, "Set_object_helper_vars", [_instance]);
 	};
 
 	PUBLIC FUNCTION("BOOL","Set_Active") {
 		MEMBER("Is_active", _this);
+
+		METHOD(IOO_OBJECT_REB_DB, "Set_object_helper_vars", [_instance]);
 	};
 
 ENDCLASS;

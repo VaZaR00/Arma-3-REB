@@ -1,26 +1,29 @@
+#include "..\defines.h"
+
 params [["_object", objNull], ["_item", ""]];
 
 if ((_object isEqualTo objNull) || (_object isEqualTo "")) exitWith {};
 
 private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
 
-private _objectType = _object;
+private _objectType = if (_object isEqualType "") then {_object} else {typeOf _object};
 
-if (_object isEqualType "") then {
-    _object = createSimpleObject [_objectType, [0, 0, 0], true];
-    if !(_object isEqualTo objNull) then {
-        _player setVariable ["REB_attachmentTempObj", _object];
-    };
-} else {
+// new temporary object for preview
+private _tempObject = createSimpleObject [_objectType, [0, 0, 0], true];
+
+if (_tempObject isEqualTo objNull) exitWith {};
+
+if (_object isEqualType objNull) then {
+    // save old object
     if !(isNull (attachedTo _object)) then {
         detach _object;
     };
-    _objectType = typeOf _object;
+    [_object, false] remoteExec ["enableSimulationGlobal", 2];
+    _object setPos [0,0,-5000];
+    _player setVariable ["REB_currentAttachObj", _object];
 };
 
-if (_object isEqualTo objNull) exitWith {};
-
-_player setVariable ["REB_currentAttachObj", _object];
+_player setVariable ["REB_attachmentTempObj", _tempObject];
 _player setVariable ["REB_currentAttachObjType", _objectType];
 _player setVariable ["REB_currentAttachItem", _item];
 
@@ -31,7 +34,7 @@ if (_item != "") then {
 _player action ["SwitchWeapon", _player, _player, 100];
 _player forceWalk true;
 
-_object disableCollisionWith _player;
+_tempObject disableCollisionWith _player;
 
 // Attach action
 REB_TEMP_placement_attachAction = [
@@ -39,8 +42,8 @@ REB_TEMP_placement_attachAction = [
     "<t color='#0ed145'>Attach</t>",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
     "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa",
-    '(alive _target) && {!(isNull (player getVariable ["REB_currentAttachObj", objNull])) && {(_this distance _target < 3)}}',
-    '(alive _target) && {!(isNull (player getVariable ["REB_currentAttachObj", objNull])) && {(_this distance _target < 3)}}',
+    '(vehicle player isEqualTo player) && (alive _target) && {!(isNull (player getVariable ["REB_attachmentTempObj", objNull])) && {(_this distance _target < 3)}}',
+    '(vehicle player isEqualTo player) && (alive _target) && {!(isNull (player getVariable ["REB_attachmentTempObj", objNull])) && {(_this distance _target < 3)}}',
     {},
     {},
     { call REB_fnc_placeAttachment; },
@@ -58,7 +61,7 @@ REB_TEMP_placement_releaseAction = _player addAction [
     {
         call REB_fnc_releaseAttachment;
     },
-    nil, 1.5, true, true, "", '!(isNull (player getVariable ["REB_currentAttachObj", objNull]))'
+    nil, 1.5, true, true, "", '!(isNull (player getVariable ["REB_attachmentTempObj", objNull]))'
 ];
 
-[_object] call REB_fnc_updateAttachmentPosition;
+[_tempObject] call REB_fnc_updateAttachmentPosition;

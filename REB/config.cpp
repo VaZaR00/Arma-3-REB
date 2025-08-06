@@ -1,5 +1,5 @@
 class CfgPatches {
-	class VTG_REB {
+	class REB {
 		name = "VTG REB";
 		author = "Vazar";
 		requiredAddons[] = {

@@ -67,11 +67,16 @@
 #define RC_PREF(s) (REB_CLS_PREF + s)
 
 // for handling scripts
+#define THIS_FUNC_NAME ((__FILE_SHORT__ splitString "_") select -1)
 #define SCR_HNDLR(s) DOUBLE(s,_scriptHandler)
 #define SCR_HNDLR_VAR(s) (MGVAR [STR(SCR_HNDLR(s)), scriptNull])
 #define SPAWN_ONCE(s) call (if (scriptDone SCR_HNDLR_VAR(s)) then {{SCR_HNDLR(s) = _this spawn s;}} else {{}})
 #define SPAWN_NWAIT(c) PR _thndl = [] spawn c; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define SPAWNF_NWAIT(a, f) PR _thndl = a spawn f; waitUntil {scriptDone _thndl}; _thndl = nil;
+#define WAIT_THIS_SCRIPT \
+    waitUntil { scriptDone (missionNamespace getVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, scriptNull]) }; \
+	missionNamespace setVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, _thisScript]; \
+
 #define WAITVAR(v) waitUntil { !ISNIL(v) };
 #define WAITSVAR(v) waitUntil { !isNil v };
 #define WAITVAR_OR_EX_T(v, t) _thisScript spawn {sleep t; terminate _this}; WAITVAR(v)
@@ -81,7 +86,7 @@ if (!canSuspend) EW { \
     _this spawn fnc; \
 }; \
 
-#define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC((__FILE_SHORT__ splitString "_") select -1))
+#define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC(THIS_FUNC_NAME))
 
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
 
@@ -90,12 +95,12 @@ if (!canSuspend) EW { \
 #define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]};
 #define EXEC_ON_SERVER_END_RESULT }; \
 PR _serverExecResult = if (isServer) then { \
-	_args call _codeForServer \
+	_this call _codeForServer \
 } else { \
     private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", time]; \
-    [[_args, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
+    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
     WAITSVAR(_tempVarName); \
-    _tempVarName \
+    MGVAR _tempVarName; \
 }; \
 _serverExecResult; \
 

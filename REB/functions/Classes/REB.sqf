@@ -27,7 +27,16 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","Is_item");
 
 	PUBLIC FUNCTION("array","constructor") {
-		params["_obj", ["_range", 100], ["_deadzone", 30], ["_strenght", 0.6], ["_isAttachable", false], ["_can_modify_range", true], ["_can_modify_strenght", true], ["_active", true]];
+		params[
+			"_obj", 
+			["_range", 100], 
+			["_deadzone", 30], 
+			["_strenght", 0.6], 
+			["_isAttachable", false], 
+			["_can_modify_range", true], 
+			["_can_modify_strenght", true], 
+			["_active", true]
+		];
 
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);

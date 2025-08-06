@@ -6,8 +6,10 @@
 #include "Classes\OBJECT_REB_DB.sqf"
 
 // main classes instanciation
-IOO_REB_DB = NEW(OO_REB_DB, nil);
-IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
+if (isServer) then {
+    IOO_REB_DB = NEW(OO_REB_DB, nil);
+    IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
+};
 
 REB_var_rebItemsSystemInited = false;
 REB_createUavCrewOnDisconectTime = 5;
@@ -26,12 +28,12 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
 	_this call REB_fnc_eventHandler;
 }];
 
-// call REB_fnc_aceActions;
+[] spawn {  
+    if !(isNil "REB_ON_KeyDown_EH") exitWith {};
 
-[] spawn {
     waitUntil { !isNull findDisplay 46 };
 
-    findDisplay 46 displayAddEventHandler ["KeyDown", {
+    REB_ON_KeyDown_EH = findDisplay 46 displayAddEventHandler ["KeyDown", {
         private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_unit", player];
     
         if (isNull (_player getVariable ["REB_attachmentTempObj", objNull])) exitWith {};
@@ -43,5 +45,7 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
         };
     }];
 };
+
+call REB_fnc_compile;
 
 MSVAR ["REB_var_INITED", true];

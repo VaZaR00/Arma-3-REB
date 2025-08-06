@@ -7,14 +7,13 @@ class CfgFunctions
 			recompile=1;
             file = "VTG_REB\functions";
 			class rebInit {};
-			class compile {
-				preInit = 1;
-			};
+			class compile {};
 			class reb {};
 			class removeReb {};
 			class setRange {};
 			class setStrenght {};
 			class setValueDialog {};
+			class remoteCall {};
 		};
 		class REBplacement
         {

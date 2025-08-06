@@ -1,10 +1,5 @@
 #include "oop.h"
 
-#define REB_CLS_PREF "REB_CLASS_"
-#define REB_VAR_PREF "REB_VAR_"
-#define REB_OBJ_PREF "REB_OBJECT_CLASS_"
-#define RC_PREF(s) (REB_CLS_PREF + s)
-
 #define STR(s) #s
 #define PR private
 #define GV getVariable
@@ -59,21 +54,56 @@
 #define ARR_EMPTY(a) (count a == 0)
 // #define REB_itemRebsClasses (keys REB_all_classes)
 
+/*
+    MAIN REB MACRO DEFINES
+*/
+#define PREF REB
+#define PREF_FNC PREF##_fnc_
+#define FUNC(f) PREF_FNC##f
+#define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
+#define REB_CLS_PREF "REB_CLASS_"
+#define REB_VAR_PREF "REB_VAR_"
+#define REB_OBJ_PREF "REB_OBJECT_CLASS_"
+#define RC_PREF(s) (REB_CLS_PREF + s)
+
 // for handling scripts
 #define SCR_HNDLR(s) DOUBLE(s,_scriptHandler)
 #define SCR_HNDLR_VAR(s) (MGVAR [STR(SCR_HNDLR(s)), scriptNull])
 #define SPAWN_ONCE(s) call (if (scriptDone SCR_HNDLR_VAR(s)) then {{SCR_HNDLR(s) = _this spawn s;}} else {{}})
+#define SPAWN_NWAIT(c) PR _thndl = [] spawn c; waitUntil {scriptDone _thndl}; _thndl = nil;
+#define SPAWNF_NWAIT(a, f) PR _thndl = a spawn f; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define WAITVAR(v) waitUntil { !ISNIL(v) };
+#define WAITSVAR(v) waitUntil { !isNil v };
 #define WAITVAR_OR_EX_T(v, t) _thisScript spawn {sleep t; terminate _this}; WAITVAR(v)
 #define WAITVAR_OR_EX(v) WAITVAR_OR_EX_T(v, 0.5)
+#define ONLY_SPAWN(fnc) \
+if (!canSuspend) EW { \
+    _this spawn fnc; \
+}; \
+
+#define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC((__FILE_SHORT__ splitString "_") select -1))
 
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
 
 // for server execuiton
-// #define EXEC_ON_SERVER_START [_this, {
-// #define EXEC_ON_SERVER_END }] remoteExec ["call", 2];
 #define EXEC_ON_SERVER_START PR _codeForServer = {
-#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[_this, _codeForServer] remoteExec ["call", 2]};
+#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]};
+#define EXEC_ON_SERVER_END_RESULT }; \
+PR _serverExecResult = if (isServer) then { \
+	_args call _codeForServer \
+} else { \
+    private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", time]; \
+    [[_args, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
+    WAITSVAR(_tempVarName); \
+    _tempVarName \
+}; \
+_serverExecResult; \
+
+#define GET_SERVER_VAL(v, c) \
+    EXEC_ON_SERVER_START \
+        c; \
+    EXEC_ON_SERVER_END_RESULT \
+    v = _serverExecResult; \
 
 #define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
 

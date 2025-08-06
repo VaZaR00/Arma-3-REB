@@ -5,10 +5,13 @@
 
 #include "..\defines.h"
 
+FILE_ONLY_SPAWN
+
 params ["_objectReb"];
 
-private _object = METHOD(_objectReb, "Object", nil);
-private _rebClassname = METHOD(_objectReb, "Reb_classname", nil);
+GET_SERVER_VAL(private _object, INSTANCE_VAR(_objectReb C "Object"));
+GET_SERVER_VAL(private _rebClassname, INSTANCE_VAR(_objectReb C "Reb_classname"));
+
 private _addToSelfActions = _object isKindOf "LandVehicle";
 
 // 1. Создать главный REB action, если его ещё нет

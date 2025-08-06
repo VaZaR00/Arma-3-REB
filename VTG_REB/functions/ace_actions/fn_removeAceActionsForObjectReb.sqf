@@ -4,11 +4,12 @@
 
 #include "..\defines.h"
 
-params ["_objectReb"];
-private _object = METHOD(_objectReb, "Object", nil);
-private _actions = METHOD(_objectReb, "Ace_actions", nil);
+FILE_ONLY_SPAWN
 
-_actions RLOG
+params ["_objectReb"];
+
+GET_SERVER_VAL(private _object, INSTANCE_VAR(_objectReb C "Object"));
+GET_SERVER_VAL(private _actions, INSTANCE_VAR(_objectReb C "Ace_actions"));
 
 if (!isNil "_actions" && {!(_actions isEqualTo [])}) then {
     {

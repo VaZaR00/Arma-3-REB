@@ -380,11 +380,13 @@ REB_fnc_makeAttachable = {
 	_obj setVariable ["REB_ATTACH_ACTION", _action];
 };
 REB_fnc_setActive = {
-	params["_reb", ["_isActive", true]];
+	EXEC_ON_SERVER_START
+		params["_reb", ["_isActive", true]];
 
-	if !(IS_OOP(_reb)) exitWith {};
+		if !(IS_OOP(_reb)) exitWith {};
 
-	METHOD(_reb, "Set_Active", _isActive);
+		METHOD(_reb, "Set_Active", _isActive);
+	EXEC_ON_SERVER_END
 };
 
 /*

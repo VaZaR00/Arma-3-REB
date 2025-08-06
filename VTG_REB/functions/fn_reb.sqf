@@ -6,7 +6,10 @@
 
 _this spawn {
 
-	sleep 0.1;
+	if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
+		SPAWN_ONCE(REB_fnc_rebInit);
+	};
+
 	waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
 	EXEC_ON_SERVER_START

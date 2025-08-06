@@ -1,13 +1,17 @@
 #include "defines.h"
 
+FILE_ONLY_SPAWN
+
 params [["_objectReb", {}]];
 
 if (!IS_OOP(_objectReb)) exitWith {};
 
 REB_currentHandledReb = _objectReb;
-REB_currentHandledRebClass = INSTANCE_VAR(_objectReb, "Reb_class");
-REB_currentHandledRebMaxStrength = INSTANCE_VAR(REB_currentHandledRebClass, "Max_Strenght");
-private _strenght = INSTANCE_VAR(REB_currentHandledReb, "Strenght");
+
+GET_SERVER_VAL(REB_currentHandledRebClass, INSTANCE_VAR(_objectReb C "Reb_class"));
+GET_SERVER_VAL(REB_currentHandledRebMaxStrength, INSTANCE_VAR(REB_currentHandledRebClass C "Max_Strenght"));
+GET_SERVER_VAL(private _strenght, INSTANCE_VAR(REB_currentHandledReb C "Strenght"));
+
 private _startPos = if (_strenght == 0) then {0} else {_strenght * (10 / REB_currentHandledRebMaxStrength)};
 
 PR _textShow = {format ["%1: %2", LOC "$STR_REB_VALUE", _this]};

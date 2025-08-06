@@ -1,13 +1,17 @@
 #include "defines.h"
 
+FILE_ONLY_SPAWN
+
 params [["_objectReb", {}]];
 
 if (!IS_OOP(_objectReb)) exitWith {};
 
 REB_currentHandledReb = _objectReb;
-REB_currentHandledRebClass = INSTANCE_VAR(_objectReb, "Reb_class");
-REB_currentHandledRebMaxRange = INSTANCE_VAR(REB_currentHandledRebClass, "Max_Range");
-private _range = INSTANCE_VAR(REB_currentHandledReb, "Range");
+
+GET_SERVER_VAL(REB_currentHandledRebClass, INSTANCE_VAR(_objectReb C "Reb_class"));
+GET_SERVER_VAL(REB_currentHandledRebMaxRange, INSTANCE_VAR(REB_currentHandledRebClass C "Max_Range"));
+GET_SERVER_VAL(private _range, INSTANCE_VAR(REB_currentHandledReb C "Range"));
+
 private _startPos = if (_range == 0) then {0} else {_range * (10 / REB_currentHandledRebMaxRange)};
 
 PR _textShow = {format ["%1: %2 m", LOC "$STR_REB_VALUE", round _this]};

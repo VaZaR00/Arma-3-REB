@@ -47,7 +47,7 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		PR _obj = SELF_VAR("Object");
 		// if (IS_REB(_obj)) exitWith {};
 		[_obj] remoteExec ["REB_fnc_removeEventHandlers", 0, true];
-		[_instance] remoteExecCall ["REB_fnc_removeAceActionsForObjectReb", 0, true];
+		[_instance] remoteExec ["REB_fnc_removeAceActionsForObjectReb", 0, true];
 		// [_obj, false] call REB_fnc_setAttachable;
 	};
 

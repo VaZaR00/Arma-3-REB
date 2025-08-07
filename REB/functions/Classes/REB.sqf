@@ -82,7 +82,10 @@ CLASS("OO_REB") // IOO_REB
 		};
 
 		if (!IS_OBJNULL(_initObj) && {(_isAttachable || (getMass _initObj <= 31))}) then {
-			[_initObj] call REB_fnc_setAttachable;
+			if (REB_attachSystemOn) then {
+				[_initObj] call REB_fnc_setAttachable;
+			};
+			[_initObj] call REB_fnc_canManipulateAce;
 		};
 
 		if (!(REB_var_rebItemsSystemInited) && {IS_STR(_obj)}) then {

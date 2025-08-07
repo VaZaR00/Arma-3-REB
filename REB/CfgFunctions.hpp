@@ -26,6 +26,7 @@ class CfgFunctions
 			class clearAttachmentVars {};
 			class setAttachable {};
 			class attachObject {};
+			class canManipulateAce {};
 		};
 		class ace_actions
 		{

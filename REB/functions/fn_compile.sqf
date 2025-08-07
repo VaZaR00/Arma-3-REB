@@ -427,25 +427,6 @@ REB_fnc_simulateDamage = {
 /*
 	Handle REB player actions
 */
-REB_fnc_makeAttachable = {
-	params[["_obj"]];
-
-	if !(IS_OBJ(_obj)) exitWith {};
-	if !(IS_REB(_obj)) exitWith {};
-
-	PR _action = _obj addAction [
-		LOC "$STR_REB_ATTACH",
-		{
-			params ["_target", ["_player", player], ["_params", []]];
-			[_target] call REB_fnc_attachReb;
-		},
-		[],
-		0, true, true, "", 
-		"true"
-	];
-
-	_obj setVariable ["REB_ATTACH_ACTION", _action];
-};
 REB_fnc_setActive = {
 	EXEC_ON_SERVER_START
 		params["_object", ["_isActive", true], ["_ref", ""], ["_itemRef", 0]];

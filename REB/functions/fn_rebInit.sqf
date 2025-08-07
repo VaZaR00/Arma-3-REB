@@ -26,11 +26,12 @@ if (isServer) then {
 
 call REB_fnc_compile;
 
-REB_var_rebItemsSystemInited = false;
+REB_attachSystemOn = false;
 REB_createUavCrewOnDisconectTime = 5;
-REB_var_rebItemsClasses = [];
 REB_attach_actionTime = 0.5; // time in seconds for hold action to attach object
 
+REB_var_rebItemsClasses = [];
+REB_var_rebItemsSystemInited = false;
 REB_freq = _freq;
 REB_random = _random;
 

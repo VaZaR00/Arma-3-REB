@@ -6,7 +6,7 @@ class CfgFunctions
         {
 			recompile=1;
             file = "REB\functions";
-			class rebInit {};
+			class rebInit { postInit = 1; };
 			class compile {};
 			class reb {};
 			class removeReb {};
@@ -25,6 +25,7 @@ class CfgFunctions
 			class handleAttachment {};
 			class clearAttachmentVars {};
 			class setAttachable {};
+			class attachObject {};
 		};
 		class ace_actions
 		{
@@ -32,6 +33,7 @@ class CfgFunctions
 			file = "REB\functions\ace_actions";
 			class createAceActionsForObjectReb {};
 			class removeAceActionsForObjectReb {};
+			class objectRemoveAceActions {};
 		};
 	};
 };

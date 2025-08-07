@@ -8,15 +8,12 @@ FILE_ONLY_SPAWN
 
 params ["_objectReb"];
 
-GET_SERVER_VAL(private _object, INSTANCE_VAR(_objectReb C "Object"));
-GET_SERVER_VAL(private _actions, INSTANCE_VAR(_objectReb C "Ace_actions"));
+_this = _objectReb;
+GET_SERVER_VAL INSTANCE_VAR(_this, "Object"); 
+GSRES(private _object);
+GET_SERVER_VAL INSTANCE_VAR(_this, "InstanceHash"); 
+GSRES(private _objectRebHash);
 
-if (!isNil "_actions" && {!(_actions isEqualTo [])}) then {
-    {
-        [_object, 0, _x] call ace_interact_menu_fnc_removeActionFromObject;
-    } forEach _actions;
-    
-    if (isServer) then {
-        METHOD(_objectReb, "Ace_actions", []);
-    };
-};
+private _varName = "REB_AceActions_" + _objectRebHash;
+
+[_object, _varName] call REB_fnc_objectRemoveAceActions;

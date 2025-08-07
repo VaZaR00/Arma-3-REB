@@ -9,7 +9,7 @@ private _player = missionNamespace getVariable ["bis_fnc_moduleRemoteControl_uni
 private _objectType = if (_object isEqualType "") then {_object} else {typeOf _object};
 
 // new temporary object for preview
-private _tempObject = createSimpleObject [_objectType, [0, 0, 0], true];
+private _tempObject = createSimpleObject [_objectType, [0, 0, 0], false];
 
 if (_tempObject isEqualTo objNull) exitWith {};
 
@@ -19,7 +19,8 @@ if (_object isEqualType objNull) then {
         detach _object;
     };
     [_object, false] remoteExec ["enableSimulationGlobal", 2];
-    _object setPos [0,0,-5000];
+    _object attachTo [_player, [0,0,-5000], ""];
+    // _object setPos [0,0,-5000];
     _player setVariable ["REB_currentAttachObj", _object];
 };
 

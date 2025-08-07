@@ -20,7 +20,7 @@ private _attachFunction = {
         (_player != _currentPlayer)
     ) exitWith {
         [_handle] call CBA_fnc_removePerFrameHandler;
-        [] call REB_fnc_REB_releaseAttachment;
+        [] call REB_fnc_releaseAttachment;
     };
 
     // if (isNil "REB_TEMP_updateNearCollisions") then {

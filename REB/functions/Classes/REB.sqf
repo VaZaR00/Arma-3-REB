@@ -25,6 +25,8 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","Can_modify_strenght");
 	PUBLIC VARIABLE("array","object_reb_list");
 	PUBLIC VARIABLE("bool","Is_item");
+	PUBLIC VARIABLE("bool","SimulateDamage");
+	PUBLIC VARIABLE("scalar","SimulatedHealth");
 
 	PUBLIC FUNCTION("array","constructor") {
 		params[
@@ -35,10 +37,16 @@ CLASS("OO_REB") // IOO_REB
 			["_isAttachable", false], 
 			["_can_modify_range", true], 
 			["_can_modify_strenght", true], 
-			["_active", true]
+			["_active", true],
+			["_simulateDamage", false], 
+			["_health", 100]
 		];
 
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
+		// PR _previousClass = MGVAR [_name, {}];
+
+		// if !(_previousClass isEqualTo {}) then { DELETE(_previousClass) };
+
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
 		PR _initObjClass = IF_ELSE(IS_STR(_obj), _obj, typeOf _obj);
 		PR _ratio = (_range / _deadzone);
@@ -59,12 +67,17 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("Can_modify_strenght", _can_modify_strenght);
 		MEMBER("object_reb_list", []);
 		MEMBER("Is_item", IS_STR(_obj));
+		MEMBER("SimulateDamage", _simulateDamage);
+		MEMBER("SimulatedHealth", _health);
 
 		MSVAR [_name, _instance];
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
+		["REB_CONSTRUCTOR", _obj] MP_RLOG
+
 		if (IS_OBJ(_obj)) then {
+			["New_object_reb", _obj] MP_RLOG
 			MEMBER("New_object_reb", [_obj]);
 		};
 
@@ -77,7 +90,12 @@ CLASS("OO_REB") // IOO_REB
 		};
 	};
 
-	PUBLIC FUNCTION("","deconstructor") {};
+	PUBLIC FUNCTION("","deconstructor") {
+		METHOD(IOO_REB_DB, 'Remove_reb_class', SELF_VAR('Name'));
+		{
+			METHOD(IOO_OBJECT_REB_DB, 'Remove', [_x]);
+		} forEach SELF_VAR('object_reb_list');
+	};
 
 	PUBLIC FUNCTION("bool","Toggle_reb_global") {
 		MEMBER("Is_on", _this);
@@ -96,7 +114,9 @@ CLASS("OO_REB") // IOO_REB
 		params["_obj", ["_itemRef", objNull]];
 
 		if (IS_OBJNULL(_obj)) EX;
+		["New_object_reb : IS_OBJNULL", _obj] MP_RLOG
 		if (!IS_OBJ(_itemRef)) EX;
+		["New_object_reb : IS_OBJ", _obj] MP_RLOG
 
 		PR _params = [
 			_obj,
@@ -106,10 +126,15 @@ CLASS("OO_REB") // IOO_REB
 			SELF_VAR('Max_Strenght'),
 			SELF_VAR('Is_on'),
 			SELF_VAR('Ratio'),
-			_itemRef
+			_itemRef,
+			IF_ELSE(_obj isEqualTo SELF_VAR('Init_object'), SELF_VAR('SimulateDamage'), false),
+			SELF_VAR('SimulatedHealth')
 		];
 
-		if (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])) EX;
+		// if (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])) EW {
+		// 	["New_object_reb : DOES Object_reb_exists", true, _obj] MP_RLOG
+		// };
+		["New_object_reb : Object_reb_exists", (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])), _obj] MP_RLOG
 
 		PR _objectReb = ["new", _params] call OO_OBJECT_REB;
 

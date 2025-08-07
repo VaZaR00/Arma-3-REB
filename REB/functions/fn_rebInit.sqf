@@ -1,9 +1,22 @@
 #include "defines.h"
 
+FILE_ONLY_SPAWN
+
+_this spawn {
+
+sleep 0.1; // wait for mission fully initialized
+
+waitUntil { sleep 1; !isNil "REB_var_START_INIT"  };
+
 #include "Classes\REB_DB.sqf"
 #include "Classes\REB.sqf"
 #include "Classes\OBJECT_REB.sqf"
 #include "Classes\OBJECT_REB_DB.sqf"
+
+
+params[["_forceInit", false, [true]], ["_freq", 0.1, [0]], ["_random", [0.3, 0.5, 1], [[]]]];
+
+if ((missionNamespace getVariable ["REB_var_INITED", false]) && !_forceInit) EX;
 
 // main classes instanciation
 if (isServer) then {
@@ -11,22 +24,23 @@ if (isServer) then {
     IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 };
 
+call REB_fnc_compile;
+
 REB_var_rebItemsSystemInited = false;
 REB_createUavCrewOnDisconectTime = 5;
 REB_var_rebItemsClasses = [];
 REB_attach_actionTime = 0.5; // time in seconds for hold action to attach object
 
-PR _defaultRandom = [0.3, 0.5, 1];
-REB_freq = param[0, 0.1];
-REB_random = param[1, _defaultRandom];
-REB_noise = ppEffectCreate ["FilmGrain",3000];
+REB_freq = _freq;
+REB_random = _random;
 
-if !(isNil "REB_ON_HANDLE_DRONE_EH") then {
-	removeMissionEventHandler ["PlayerViewChanged", REB_ON_HANDLE_DRONE_EH];
+call REB_fnc_initEffects;
+
+if (isNil "REB_ON_HANDLE_DRONE_EH") then {
+    REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
+        _this call REB_fnc_eventHandler;
+    }];
 };
-REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
-	_this call REB_fnc_eventHandler;
-}];
 
 [] spawn {  
     if !(isNil "REB_ON_KeyDown_EH") exitWith {};
@@ -46,6 +60,6 @@ REB_ON_HANDLE_DRONE_EH = addMissionEventHandler ["PlayerViewChanged", {
     }];
 };
 
-call REB_fnc_compile;
-
 MSVAR ["REB_var_INITED", true];
+
+};

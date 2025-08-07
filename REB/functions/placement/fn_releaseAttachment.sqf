@@ -19,11 +19,14 @@ if (_item != "") then {
     _player addItem _item;
 };
 
-_object enableCollisionWith _player;
-[_object, true] remoteExec ["enableSimulationGlobal", 2];
+PR _id = owner _object;
+
+detach _object;
+[_object, _player] remoteExec ["enableCollisionWith", _id];
+[_object, true] remoteExec ["enableSimulationGlobal", _id];
 // _object setVehiclePosition [_safePos, [], 0, "CAN_COLLIDE"];
 _object setPosASL (getPosASL _tempObj);
-_object setVectorDirAndUp [vectorDir _tempObj, vectorUp _tempObj];
+[_object, [vectorDir _tempObj, vectorUp _tempObj]] remoteExec ["setVectorDirAndUp", _id];
 deleteVehicle _tempObj;
 
 // Очистка переменных

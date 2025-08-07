@@ -8,6 +8,8 @@ _object setVariable ["REB_attachable", _can, true];
 
 // we add action only once
 if (_can && (_object getVariable ["REB_attachable", false])) then {
+	["SET_ATTACH", _object] MP_RLOG
+
 	[
 		_object, 
 		"<t color='#0ed145'>Attach Object</t>", 
@@ -24,6 +26,7 @@ if (_can && (_object getVariable ["REB_attachable", false])) then {
 		0, 
 		false, 
 		false
+	// ] call BIS_fnc_holdActionAdd;
 	] remoteExec ["BIS_fnc_holdActionAdd", 0, true];
 
 	// add ACE dragging and carrying

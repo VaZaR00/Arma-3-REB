@@ -8,7 +8,8 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {hint str _this; diag_log str _this};
+#define RLOG call {_txt = format["%3 :: %2 : %1", _this, if (isServer) then {"SERVER"} else {clientOwner}, __FILE_SHORT__]; hint _txt; diag_log _txt};
+#define MP_RLOG call {(format["%3 :: ID %1 : %2", if (isServer) then {"SERVER"} else {clientOwner}, _this, __FILE_SHORT__]) remoteExec ["diag_log", 0]; (format["ID %1 : %2", clientOwner, _this]) remoteExec ["hint", 0];};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
@@ -19,6 +20,7 @@
 
 #define LOC  
 #define DOUBLE(v1, v2) v1##v2
+#define TRIPLE(v1, v2, v3) v1##v2##v3
 // #define LOC localize
 #define SKIP continue
 #define ONUL objNull
@@ -54,6 +56,14 @@
 #define ARR_EMPTY(a) (count a == 0)
 // #define REB_itemRebsClasses (keys REB_all_classes)
 
+#define ABSOLUTE_RANDOM_NUM (round (((random 2) * 100000) + (systemTimeUTC select -1)))
+
+#define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
+#define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
+#define UNQ_HASHVAL(v1, v2) (HASHVAL_(v1) + HASHVAL_(v2))
+#define OBJ_HASHVAL(o) UNQ_HASHVAL(o, typeOf o)
+
+
 /*
     MAIN REB MACRO DEFINES
 */
@@ -69,8 +79,29 @@
 // for handling scripts
 #define THIS_FUNC_NAME ((__FILE_SHORT__ splitString "_") select -1)
 #define SCR_HNDLR(s) DOUBLE(s,_scriptHandler)
+#define SCR_HNDLR_UNQ(s) (format["%1_%2_%3", s, "scriptHandler", HASHVAL_(_this)])
 #define SCR_HNDLR_VAR(s) (MGVAR [STR(SCR_HNDLR(s)), scriptNull])
-#define SPAWN_ONCE(s) call (if (scriptDone SCR_HNDLR_VAR(s)) then {{SCR_HNDLR(s) = _this spawn s;}} else {{}})
+#define SCR_HNDLR_VAR_UNQ(s) (MGVAR [SCR_HNDLR_UNQ(s), scriptNull])
+#define SPAWN_F_ONCE(f) call (if (scriptDone SCR_HNDLR_VAR(f)) then {{SCR_HNDLR(f) = _this spawn f;}} else {{}});
+
+#define ENSURE_SPAWN_ONCE_UNQ  \
+    if !(scriptDone SCR_HNDLR_VAR_UNQ(THIS_FUNC_NAME)) EW {};  \
+    MSVAR [SCR_HNDLR_UNQ(THIS_FUNC_NAME), _thisScript]; \
+
+#define ENSURE_SPAWN_ONCE_UNQ_GLOBAL  \
+    if !(scriptDone SCR_HNDLR_VAR_UNQ(THIS_FUNC_NAME)) EW {};  \
+    MSVAR [SCR_HNDLR_UNQ(THIS_FUNC_NAME), _thisScript, true]; \
+
+#define ENSURE_SPAWN_ONCE_START PR _codeForSpawnOnce = {
+#define ENSURE_SPAWN_ONCE_END }; \
+    PR _spawnOnceArgs = [_this, _codeForSpawnOnce]; \
+    PR _codeHash = HASHVAL_(_spawnOnceArgs); \
+    _spawnOnceArgs call ( \
+        if (scriptDone (MGVAR [_codeHash, scriptNull])) then { \
+            {PR _hndl = (_this select 0) spawn (_this select 1); MSVAR [_codeHash, _hndl]} \
+        } else {{}} \
+    ); \
+
 #define SPAWN_NWAIT(c) PR _thndl = [] spawn c; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define SPAWNF_NWAIT(a, f) PR _thndl = a spawn f; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define WAIT_THIS_SCRIPT \
@@ -88,8 +119,6 @@ if (!canSuspend) EW { \
 
 #define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC(THIS_FUNC_NAME))
 
-#define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
-
 // for server execuiton
 #define EXEC_ON_SERVER_START PR _codeForServer = {
 #define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]};
@@ -97,20 +126,24 @@ if (!canSuspend) EW { \
 PR _serverExecResult = if (isServer) then { \
 	_this call _codeForServer \
 } else { \
-    private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", time]; \
+    private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
     [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
+    ["EXEC_ON_SERVER_END_RESULT_1", [_this, clientOwner, _tempVarName], _codeForServer] MP_RLOG \
     WAITSVAR(_tempVarName); \
+    ["EXEC_ON_SERVER_END_RESULT_2", MGVAR _tempVarName] MP_RLOG \
     MGVAR _tempVarName; \
 }; \
 _serverExecResult; \
 
-#define GET_SERVER_VAL(v, c) \
-    EXEC_ON_SERVER_START \
-        c; \
-    EXEC_ON_SERVER_END_RESULT \
-    v = _serverExecResult; \
+#define EXEC_ON_SERVER_END_RESULT_VAR(var) EXEC_ON_SERVER_END_RESULT; var = _serverExecResult;
 
-#define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
+#define GET_SERVER_VAL \
+    ["GETTING_SERVER_VAR_1", _thisScript, __FILE_SHORT__] MP_RLOG; \
+    EXEC_ON_SERVER_START \
+
+#define GSRES(var) \
+    EXEC_ON_SERVER_END_RESULT_VAR(var) \
+    ["GETTING_SERVER_VAR_2", #var, _serverExecResult] MP_RLOG; \
 
 // FOR OOP
 

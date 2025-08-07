@@ -25,25 +25,50 @@
 
 #include "defines.h"
 
-_this spawn {
-	// We init only one REB at time to avoid execution intersections
-	WAIT_THIS_SCRIPT
+FILE_ONLY_SPAWN
 
-	// Check if RE system is already initialized
-	if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
-		[] call REB_fnc_rebInit;
-	};
+// init only one REB at time to avoid execution intersections
+WAIT_THIS_SCRIPT
 
-	// wait for REB system to be initialized
-	waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
+PR _obj = _this select 0;
 
-	// create REB instance on server backend
-	EXEC_ON_SERVER_START
+sleep 0.1; // wait for mission fully initialized
+
+["FN_REB_1", _obj] RLOG
+// Ensure the function is only executed where the object is local on mission init
+if !(local _obj) exitWith {
+	// if mission time is less than 0.2 seconds, we assume its init and all clients are executing it
+	if (time > 0.2) then {
+		_this remoteExec ["REB_fnc_removeReb", IF_ELSE(owner _obj == 0, 2, owner _obj)];
+		["FN_REB_11_REMOTE", _target] RLOG
+	}; 
+	["FN_REB_12_EXIT", owner _obj] RLOG
+};
+["FN_REB_2", _obj, owner _obj] RLOG
+
+// Check if REB system is already initialized
+if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
+	// [] remoteExec ["REB_fnc_rebInit", 0, true];
+	MSVAR ["REB_var_START_INIT", true, true];
+};
+
+// wait for REB system to be initialized
+waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
+
+// create REB instance on server backend
+EXEC_ON_SERVER_START
+	ENSURE_SPAWN_ONCE_START
+
+		// check if the REB class already exists
+		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', (_this select 0));
+		PR _previousClass = MGVAR [_name, {}];
+
+		// if the REB class already exists, just apply new parameters on it
+		if !(_previousClass isEqualTo {}) exitWith {
+			METHOD(_previousClass, "constructor", _this)
+		};
 
 		PR _rebObject = ["new", _this] call OO_REB;
 
-		MSVAR [INSTANCE_VAR(_rebObject, "Name"), _rebObject, true];
-
-	EXEC_ON_SERVER_END
-
-};
+	ENSURE_SPAWN_ONCE_END
+EXEC_ON_SERVER_END

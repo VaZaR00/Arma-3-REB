@@ -9,8 +9,17 @@ FILE_ONLY_SPAWN
 
 params ["_objectReb"];
 
-GET_SERVER_VAL(private _object, INSTANCE_VAR(_objectReb C "Object"));
-GET_SERVER_VAL(private _rebClassname, INSTANCE_VAR(_objectReb C "Reb_classname"));
+["ACE_CRT_ACTS_1", _objectReb] RLOG
+
+_this = _objectReb;
+GET_SERVER_VAL INSTANCE_VAR(_this, "Object"); 
+GSRES(private _object);
+GET_SERVER_VAL INSTANCE_VAR(_this, "Reb_classname"); 
+GSRES(private _rebClassname);
+GET_SERVER_VAL INSTANCE_VAR(_this, "InstanceHash"); 
+GSRES(private _objectRebHash);
+
+["ACE_CRT_ACTS_2", _object] RLOG
 
 private _addToSelfActions = _object isKindOf "LandVehicle";
 
@@ -61,9 +70,9 @@ PR _actionDisable = [
         private _objectReb = _params select 0;
         [_objectReb, false] call REB_fnc_setActive;
     },
-    {INSTANCE_VAR(((_this select 2) select 0), "Is_active")},
+    {((_this select 0) getVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", ((_this select 2) select 1)], false])},
     {},
-    [_objectReb]
+    [_objectReb, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionEnable = [
@@ -75,9 +84,9 @@ PR _actionEnable = [
         private _objectReb = _params select 0;
         [_objectReb, true] call REB_fnc_setActive;
     },
-    {!INSTANCE_VAR(((_this select 2) select 0), "Is_active")},
+    {!((_this select 0) getVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", ((_this select 2) select 1)], false])},
     {},
-    [_objectReb]
+    [_objectReb, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionSetRange = [
@@ -87,7 +96,7 @@ PR _actionSetRange = [
     {
         params ["_target", "_player", "_params"];
         private _objectReb = _params select 0;
-        [_objectReb] call REB_fnc_setRange;
+        [_objectReb] spawn REB_fnc_setRange;
     },
     {true},
     {},
@@ -101,7 +110,7 @@ PR _actionSetStrength = [
     {
         params ["_target", "_player", "_params"];
         private _objectReb = _params select 0;
-        [_objectReb] call REB_fnc_setStrenght;
+        [_objectReb] spawn REB_fnc_setStrenght;
     },
     {true},
     {},
@@ -160,9 +169,9 @@ if (_addToSelfActions) then {
     _actions pushBack _objectRebActionSelfId;
 };
 
-// 6. Сохраняем id actions в object_reb для последующего удаления
-if (isServer) then {
-    METHOD(_objectReb, "Ace_actions", _actions);
-};
+// 6. Сохраняем id actions object_reb'a для последующего удаления
+_object setVariable ["REB_AceActions_" + _objectRebHash, _actions];
+
+["ACE_CRT_ACTS_3", _object, _actions] RLOG
 
 _actions

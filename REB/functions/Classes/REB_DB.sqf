@@ -7,8 +7,11 @@
 
 #include "defines.h"
 
-#define SAVE_REB_ALL_REBS MSVAR ["REB_all_rebs", REB_all_rebs, true];
-#define SAVE_REB_ALL_CLASSES MSVAR ["REB_all_classes", REB_all_classes, -2];
+// #define SAVE_REB_ALL_REBS 0 spawn {sleep (random 0.2); MSVAR ["REB_all_rebs", REB_all_rebs, true];};
+// #define SAVE_REB_ALL_CLASSES 0 spawn {sleep (random 0.2); MSVAR ["REB_all_classes", REB_all_classes, -2];};
+#define SAVE_REB_ALL_REBS [{publicVariable "REB_all_rebs"}, [], 3] call cba_fnc_execAfterNFrames;;
+#define SAVE_REB_ALL_CLASSES [{publicVariable "REB_all_classes"}, [], 3] call cba_fnc_execAfterNFrames;;
+
 
 CLASS("OO_REB_DB") // IOO_REB_DB
 
@@ -57,7 +60,7 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 		};
 		if !(IS_OBJ(_this)) EX;
 
-		REB_all_rebs set [HASHVAL_(_this), _this];
+		REB_all_rebs set [OBJ_HASHVAL(_this), _this];
 
 		SAVE_REB_ALL_REBS
 	};
@@ -65,6 +68,8 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 	PUBLIC FUNCTION("ANY","Remove_reb") {
 		// PR _name = MEMBER("Make_reb_classname", _this);
 		PR _name = METHOD(IOO_OBJECT_REB_DB, "Get_object_hash", _this);
+
+		["Remove_reb", _name, _name in REB_all_rebs, _this] MP_RLOG
 
 		REB_all_rebs deleteAt _name;
 

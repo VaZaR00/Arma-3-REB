@@ -2,15 +2,28 @@
 
 FILE_ONLY_SPAWN
 
-params [["_objectReb", {}]];
+
+params [["_object", objNull], ["_ref", ""], ["_itemRef", 0]];
+
+private _objectReb = _object;
+if !(IS_OOP(_objectReb)) then {
+    GET_SERVER_VAL _this call REB_fnc_getObjectRebByRef; 
+    GSRES(_objectReb);
+};
 
 if (!IS_OOP(_objectReb)) exitWith {};
 
 REB_currentHandledReb = _objectReb;
 
-GET_SERVER_VAL(REB_currentHandledRebClass, INSTANCE_VAR(_objectReb C "Reb_class"));
-GET_SERVER_VAL(REB_currentHandledRebMaxStrength, INSTANCE_VAR(REB_currentHandledRebClass C "Max_Strenght"));
-GET_SERVER_VAL(private _strenght, INSTANCE_VAR(REB_currentHandledReb C "Strenght"));
+_this = _objectReb;
+GET_SERVER_VAL INSTANCE_VAR(_this, "Reb_class"); 
+GSRES(REB_currentHandledRebClass);
+_this = REB_currentHandledRebClass;
+GET_SERVER_VAL INSTANCE_VAR(_this, "Max_Strenght"); 
+GSRES(REB_currentHandledRebMaxStrength);
+_this = REB_currentHandledReb;
+GET_SERVER_VAL INSTANCE_VAR(_this, "Strenght"); 
+GSRES(private _strenght);
 
 private _startPos = if (_strenght == 0) then {0} else {_strenght * (10 / REB_currentHandledRebMaxStrength)};
 

@@ -2,11 +2,11 @@ _this spawn {
 
 params["_reb"];
 
-sleep 1;
+// sleep 0.1;
 
-if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
-	[] call REB_fnc_rebInit;
-};
+// if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
+// 	REB_var_START_INIT = true;
+// };
 
 [
 	_reb, 

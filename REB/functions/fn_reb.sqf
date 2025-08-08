@@ -38,7 +38,7 @@ sleep 0.1; // wait for mission fully initialized
 if !(local _obj) exitWith {
 	// if mission time is less than 0.2 seconds, we assume its init and all clients are executing it
 	if (time > 0.2) then {
-		_this remoteExec ["REB_fnc_removeReb", OBJ_OWNER(_obj)];
+		_this remoteExec ["REB_fnc_reb", OBJ_OWNER(_obj)];
 	}; 
 };
 

@@ -74,10 +74,7 @@ CLASS("OO_REB") // IOO_REB
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
-		["REB_CONSTRUCTOR", _obj] MP_RLOG
-
 		if (IS_OBJ(_obj)) then {
-			["New_object_reb", _obj] MP_RLOG
 			MEMBER("New_object_reb", [_obj]);
 		};
 
@@ -117,9 +114,7 @@ CLASS("OO_REB") // IOO_REB
 		params["_obj", ["_itemRef", objNull]];
 
 		if (IS_OBJNULL(_obj)) EX;
-		["New_object_reb : IS_OBJNULL", _obj] MP_RLOG
 		if (!IS_OBJ(_itemRef)) EX;
-		["New_object_reb : IS_OBJ", _obj] MP_RLOG
 
 		PR _params = [
 			_obj,
@@ -133,11 +128,6 @@ CLASS("OO_REB") // IOO_REB
 			IF_ELSE(_obj isEqualTo SELF_VAR('Init_object'), SELF_VAR('SimulateDamage'), false),
 			SELF_VAR('SimulatedHealth')
 		];
-
-		// if (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])) EW {
-		// 	["New_object_reb : DOES Object_reb_exists", true, _obj] MP_RLOG
-		// };
-		["New_object_reb : Object_reb_exists", (METHOD(IOO_OBJECT_REB_DB, "Object_reb_exists", [_obj C SELF_VAR('Name') C _itemRef])), _obj] MP_RLOG
 
 		PR _objectReb = ["new", _params] call OO_OBJECT_REB;
 

@@ -18,10 +18,10 @@
 
 #define GET_PLAYER_DRONE (vehicle (remoteControlled player))
 
-#define LOC  
+// #define LOC  
+#define LOC localize
 #define DOUBLE(v1, v2) v1##v2
 #define TRIPLE(v1, v2, v3) v1##v2##v3
-// #define LOC localize
 #define SKIP continue
 #define ONUL objNull
 #define EW exitWith
@@ -128,9 +128,7 @@ PR _serverExecResult = if (isServer) then { \
 } else { \
     private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
     [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
-    ["EXEC_ON_SERVER_END_RESULT_1", [_this, clientOwner, _tempVarName], _codeForServer] MP_RLOG \
     WAITSVAR(_tempVarName); \
-    ["EXEC_ON_SERVER_END_RESULT_2", MGVAR _tempVarName] MP_RLOG \
     MGVAR _tempVarName; \
 }; \
 _serverExecResult; \
@@ -138,12 +136,12 @@ _serverExecResult; \
 #define EXEC_ON_SERVER_END_RESULT_VAR(var) EXEC_ON_SERVER_END_RESULT; var = _serverExecResult;
 
 #define GET_SERVER_VAL \
-    ["GETTING_SERVER_VAR_1", _thisScript, __FILE_SHORT__] MP_RLOG; \
     EXEC_ON_SERVER_START \
 
 #define GSRES(var) \
     EXEC_ON_SERVER_END_RESULT_VAR(var) \
-    ["GETTING_SERVER_VAR_2", #var, _serverExecResult] MP_RLOG; \
+
+#define OBJ_OWNER(o) IF_ELSE(owner o == 0, 2, owner o)
 
 // FOR OOP
 

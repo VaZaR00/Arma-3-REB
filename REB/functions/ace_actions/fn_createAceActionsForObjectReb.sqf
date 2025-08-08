@@ -9,8 +9,6 @@ FILE_ONLY_SPAWN
 
 params ["_objectReb"];
 
-["ACE_CRT_ACTS_1", _objectReb] RLOG
-
 _this = _objectReb;
 GET_SERVER_VAL INSTANCE_VAR(_this, "Object"); 
 GSRES(private _object);
@@ -18,8 +16,6 @@ GET_SERVER_VAL INSTANCE_VAR(_this, "Reb_classname");
 GSRES(private _rebClassname);
 GET_SERVER_VAL INSTANCE_VAR(_this, "InstanceHash"); 
 GSRES(private _objectRebHash);
-
-["ACE_CRT_ACTS_2", _object] RLOG
 
 private _addToSelfActions = _object isKindOf "LandVehicle";
 
@@ -171,7 +167,5 @@ if (_addToSelfActions) then {
 
 // 6. Сохраняем id actions object_reb'a для последующего удаления
 _object setVariable ["REB_AceActions_" + _objectRebHash, _actions];
-
-["ACE_CRT_ACTS_3", _object, _actions] RLOG
 
 _actions

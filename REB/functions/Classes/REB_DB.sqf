@@ -69,8 +69,6 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 		// PR _name = MEMBER("Make_reb_classname", _this);
 		PR _name = METHOD(IOO_OBJECT_REB_DB, "Get_object_hash", _this);
 
-		["Remove_reb", _name, _name in REB_all_rebs, _this] MP_RLOG
-
 		REB_all_rebs deleteAt _name;
 
 		SAVE_REB_ALL_REBS

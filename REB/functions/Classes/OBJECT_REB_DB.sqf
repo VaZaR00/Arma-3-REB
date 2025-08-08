@@ -53,8 +53,6 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 	PUBLIC FUNCTION("ANY","Remove") {
 		params[["_obj", GET_OR_OBJ((_this select 0))], ["_rebRef", _this#0, [objNull, {}, "", 0]]];
 
-		["Remove_from_object_1", _this] MP_RLOG
-
 		PR _objectReb = if !(IS_OBJ(_obj)) then {
 			PR _t = _obj;
 			_obj = INSTANCE_VAR(_obj, "Object");
@@ -66,8 +64,6 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		if !(IS_OBJ(_obj)) EX;
 
 		IF_NIL_EX(_objectReb);
-
-		["Remove_from_object_2", _obj, _rebRef, _objectReb] MP_RLOG 
 
 		OBJ_REBS_LIST_VAR_SERVER
 		OBJ_REBS_LIST_VAR

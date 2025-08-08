@@ -38,7 +38,12 @@ REB_fnc_eventHandler = {
 
 	if (!(_uav isEqualTo objNull)) exitWith {
 		REB_main_handler = [] spawn {
-			while {uiSleep REB_freq; (alive player) && (REB_currentUAV isEqualTo (getConnectedUAV player))} do {
+			while {
+				uiSleep REB_freq; 
+				(alive player) && 
+				{(REB_currentUAV isEqualTo (getConnectedUAV player)) && 
+				{!(REB_currentUAV isEqualTo objNull)}}
+			} do {
 				call REB_fnc_main;
 			};
 		};
@@ -126,10 +131,10 @@ REB_fnc_disconectDrone = {
 	player connectTerminalToUAV objNull; //disconnect from players terminal
 	_noise ppEffectEnable false; //disable noise
 	//delete drone ai crew so drone will fall, otherwise ai will try to hover on 
-	deleteVehicleCrew _this; 
+	_this remoteExec ["deleteVehicleCrew", 0];
 	_this spawn {
 		uiSleep REB_createUavCrewOnDisconectTime;
-		createVehicleCrew _this;
+		_this remoteExec ["createVehicleCrew", 0];
 	};
 };
 REB_fnc_suppress = {

@@ -53,8 +53,6 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
 
-		["OBJECT_REB_constructor", _obj] MP_RLOG
-
 		_obj setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", _hash], _active, true];
 
 		if (_simulateDamage) then {

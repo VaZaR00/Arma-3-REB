@@ -10,7 +10,6 @@ private _selection = _intersections # 0 # 4 # 0;
 private _intersectObjectType = "";
 private _vectorDirAndUp = [vectorDir _tempObj, vectorUp _tempObj];
 
-["ATTACHING", _object, _tempObj, local _object, local _tempObj, attachedTo _object, local (attachedTo _object), _intersections] RLOG
 
 private _origPos = getPosASL _tempObj;
 detach _object;

@@ -34,17 +34,13 @@ PR _obj = _this select 0;
 
 sleep 0.1; // wait for mission fully initialized
 
-["FN_REB_1", _obj] RLOG
 // Ensure the function is only executed where the object is local on mission init
 if !(local _obj) exitWith {
 	// if mission time is less than 0.2 seconds, we assume its init and all clients are executing it
 	if (time > 0.2) then {
-		_this remoteExec ["REB_fnc_removeReb", IF_ELSE(owner _obj == 0, 2, owner _obj)];
-		["FN_REB_11_REMOTE", _target] RLOG
+		_this remoteExec ["REB_fnc_removeReb", OBJ_OWNER(_obj)];
 	}; 
-	["FN_REB_12_EXIT", owner _obj] RLOG
 };
-["FN_REB_2", _obj, owner _obj] RLOG
 
 // Check if REB system is already initialized
 if !(missionNamespace getVariable ["REB_var_INITED", false]) then {

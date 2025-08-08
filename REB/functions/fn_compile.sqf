@@ -468,7 +468,7 @@ REB_fnc_makeRebClassname = {
 	(if (IS_STR(_this)) then {
 		_this
 	} else {
-		HASHVAL_(_this);
+		OBJ_HASHVAL(_this);
 	});
 };
 REB_fnc_rebsInDroneRadius = {

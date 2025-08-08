@@ -36,8 +36,8 @@ sleep 0.1; // wait for mission fully initialized
 
 // Ensure the function is only executed where the object is local on mission init
 if !(local _obj) exitWith {
-	// if mission time is less than 0.2 seconds, we assume its init and all clients are executing it
-	if (time > 0.2) then {
+	// if mission time is less than 1 second, we assume its init and all clients are executing it including server
+	if (time > 1) then {
 		_this remoteExec ["REB_fnc_reb", OBJ_OWNER(_obj)];
 	}; 
 };

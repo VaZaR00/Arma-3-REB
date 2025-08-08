@@ -2,7 +2,11 @@
 
 FILE_ONLY_SPAWN
 
-_this spawn {
+if (!(IS_ARR(_this)) || {!((_this#0) isEqualType false)}) then {
+    _this = [];
+};
+
+params[["_forceInit", false, [false]], ["_freq", 0.1, [0]], ["_random", [0.3, 0.5, 1], [[]]]];
 
 sleep 0.1; // wait for mission fully initialized
 
@@ -12,9 +16,6 @@ waitUntil { sleep 1; !isNil "REB_var_START_INIT"  };
 #include "Classes\REB.sqf"
 #include "Classes\OBJECT_REB.sqf"
 #include "Classes\OBJECT_REB_DB.sqf"
-
-
-params[["_forceInit", false, [true]], ["_freq", 0.1, [0]], ["_random", [0.3, 0.5, 1], [[]]]];
 
 if ((missionNamespace getVariable ["REB_var_INITED", false]) && !_forceInit) EX;
 
@@ -62,5 +63,3 @@ if (isNil "REB_ON_HANDLE_DRONE_EH") then {
 };
 
 MSVAR ["REB_var_INITED", true];
-
-};

@@ -1,6 +1,10 @@
 #include "defines.h"
 
-FILE_ONLY_SPAWN
+// compile all functions
+[] call REB_fnc_compile;
+
+// we should spawn the init code because of waitUntil
+_this spawn {
 
 if (!(IS_ARR(_this)) || {!((_this#0) isEqualType false)}) then {
     _this = [];
@@ -24,8 +28,6 @@ if (isServer) then {
     IOO_REB_DB = NEW(OO_REB_DB, nil);
     IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 };
-
-call REB_fnc_compile;
 
 REB_attachSystemOn = false;
 REB_createUavCrewOnDisconectTime = 5;
@@ -63,3 +65,5 @@ if (isNil "REB_ON_HANDLE_DRONE_EH") then {
 };
 
 MSVAR ["REB_var_INITED", true];
+
+};

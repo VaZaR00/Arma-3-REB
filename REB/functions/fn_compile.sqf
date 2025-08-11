@@ -32,6 +32,8 @@ REB_fnc_eventHandler = {
 		"_oldCameraOn", "_newCameraOn", "_uav"
 	];
 
+	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
+
 	REB_noise ppEffectEnable false;
 	_uav = if (_newCameraOn isEqualTo player) then {objNull} else {_newCameraOn};
 	REB_currentUAV = _uav;
@@ -54,10 +56,13 @@ REB_fnc_main = {
 
 	_noise ppEffectEnable false; 
 
+	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
+	if (_uav getVariable ["REB_var_skipThis", false]) exitWith {};
+
 	if (_uav getVariable ['ArmaFPV_EnableTI', false]) then {
 		_uav disableTIEquipment false;
 	};
-	// equipmentDisabled _uav params ["_nvg", "_tiDisabled"];
+	
 	if (count REB_all_rebs == 0) exitWith {};
 
 	PR _isLancet = ISLANCETHANDL;
@@ -149,6 +154,8 @@ REB_fnc_showEffect = {
 };
 REB_fnc_disableSystem = {
 	// disables REB system localy
+
+	REB_systemIsOn = false;
 
 	(values REB_all_rebs) apply {
 		[_x] call REB_fnc_removeEventHandlers;

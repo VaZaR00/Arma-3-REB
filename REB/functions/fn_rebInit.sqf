@@ -29,6 +29,7 @@ if (isServer) then {
     IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 };
 
+REB_systemIsOn = true;
 REB_attachSystemOn = false;
 REB_createUavCrewOnDisconectTime = 5;
 REB_attach_actionTime = 0.5; // time in seconds for hold action to attach object

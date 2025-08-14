@@ -1,6 +1,6 @@
 class CfgPatches {
 	class REB {
-		name = "VTG REB";
+		name = "REB";
 		author = "Vazar";
 		requiredAddons[] = {
 			"A3_Functions_F",

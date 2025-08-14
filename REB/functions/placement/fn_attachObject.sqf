@@ -11,10 +11,10 @@ private _intersectObjectType = "";
 private _vectorDirAndUp = [vectorDir _tempObj, vectorUp _tempObj];
 
 
-private _origPos = getPosASL _tempObj;
 detach _object;
-_object setPosASL _origPos;
-_object setVectorDirAndUp _vectorDirAndUp;
+_object setVectorUp (_intersections # 0 # 1);
+_object setPosASL _position;
+
 
 // Если есть селекция, то крепим к ней
 if (!(isNil "_selection") && {!(_selection isEqualTo "")}) then {

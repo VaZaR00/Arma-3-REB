@@ -43,9 +43,6 @@ CLASS("OO_REB") // IOO_REB
 		];
 
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
-		// PR _previousClass = MGVAR [_name, {}];
-
-		// if !(_previousClass isEqualTo {}) then { DELETE(_previousClass) };
 
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
 		PR _initObjClass = IF_ELSE(IS_STR(_obj), _obj, typeOf _obj);

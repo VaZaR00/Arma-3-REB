@@ -1,3 +1,5 @@
+// REB_fnc_setAttachable
+
 #include "..\defines.h"
 
 params["_object", ["_can", true]];

@@ -35,7 +35,7 @@ REB_fnc_eventHandler = {
 	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
 
 	REB_noise ppEffectEnable false;
-	_uav = if (_newCameraOn isEqualTo player) then {objNull} else {_newCameraOn};
+	_uav = if (!(_newCameraOn isEqualTo player) && (_newCameraOn in allUnitsUAV) && !(_newCameraOn in allPlayers) && (alive player)) then {_newCameraOn} else {objNull};
 	REB_currentUAV = _uav;
 
 	if (!(_uav isEqualTo objNull)) exitWith {

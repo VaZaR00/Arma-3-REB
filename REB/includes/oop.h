@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TRIPLES(var1,var2,var3) var1##_##var2##_##var3
 #define DEFAULT_PARAM(idx,dft) (if ((count _this) > idx) then {_this select idx} else {dft})
 #define TO_LOCAL(var) _##var
+#define LWR(s) (toLower s)
 
 //////////////////////////////////////////////////////////////
 //  Group: Internal Definitions
@@ -273,6 +274,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	if ((count _this) > 0) then { \
 		private _class = className; \
 		private _parentClass = parentClassName; \
+		private _oopRemoteTarget = -clientOwner; \
 		if (isNil {_this select 0}) then {_this set [0,_class]}; \
 		switch (_this select 0) do { \
 		case "new": { \
@@ -306,6 +308,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
 			private _argType = if (isNil "_this") then {""} else {typeName _this}; \
+			private _ooSetType = ""; \
+			private _ooVarSetGlobal = true; \
 			switch (true) do { \
 				PUBLIC FUNCTION("ANY", "classname") { \
 					className \
@@ -321,3 +325,70 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}; \
 	}; \
 }}] 
+
+#define METHOD(object, method, args) ([method, args] call object)
+#define SELF_VAR(var) (MEMBER(var, nil))
+#define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
+#define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
+#define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
+
+
+/*
+Multiplayer implementation by Vazar
+*/
+#define PR private
+#define TARGET_VAR _oopRemoteTarget
+#define SV_TARGET_VAR _oopSVtarget
+
+#define DO_JIP (if (isNil "_oopRemoteJIP") then {false} else {_oopRemoteJIP})
+
+#define SET_TARGET(t) PR TARGET_VAR = t;
+#define GLOBALY PR TARGET_VAR = -clientOwner;
+
+#define REMOTE_CALLCLASS(className,member,args,access) \
+	(if(isNil "_oopOriginCall")then{ \
+		[[className, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP]  \
+	}else{  \
+		[[_oopOriginCall, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP] \
+	})
+
+#define MEMBER_GLOBAL(memberStr,args) MEMBER(memberStr,args); REMOTE_CALLCLASS(_class,memberStr,args,2)
+#define METHOD_GLOBAL(object, method, args) METHOD(object, method, args); ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
+
+#define MEMBER_TARGET(memberStr,args,targ) MEMBER(memberStr,args); SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
+#define METHOD_TARGET(object, method, args, targ) METHOD(object, method, args); SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
+
+
+#define SERVER_FUNCTION(typeStr,fncName) {(isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
+#define CLIENT_FUNCTION(typeStr,fncName) {(!isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
+
+
+// VARIABLE SETTER/GETTER
+#define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {_ooSetType = typeStr; true}):
+#define IF_SET if ((!isNil "_this") && {LWR(typeName _this) == LWR(_ooSetType)}) then
+#define IF_GET else
+
+#ifndef PREFX
+	#define PREFX ""
+#endif
+#define STR(s) #s
+#ifndef SPREF
+	#define SPREF(s) (STR(PREFX) + "_" + t)
+#endif
+#ifndef CLASS_MAIN_OBJ
+	#define CLASS_MAIN_OBJ ""
+#endif
+
+// just variable setter to main object, nothing more
+#define VAR_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
+	PR _mainObj = SELF_VAR(CLASS_MAIN_OBJ); \
+	if (isNil "_mainObj") EW {defaultVal}; \
+	IF_SET { \
+		_mainObj SV [SPREF(fncName), _this, _ooVarSetGlobal]; \
+	}  \
+	IF_GET { \
+		_mainObj GV [SPREF(fncName), defaultVal]; \
+	} \
+};
+#define LOCAL_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && VAR_SETTER(typeStr,fncName,defaultVal)
+#define GLOBAL_VAR_SETTER(typeStr,fncName,defaultVal) VAR_SETTER(typeStr,fncName,defaultVal)

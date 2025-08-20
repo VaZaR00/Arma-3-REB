@@ -1,11 +1,11 @@
 class CfgFunctions
 {
-	class REB
+	class PREFX
 	{
-		class scriptsREB
+		class scripts##PREFX
         {
 			recompile=1;
-            file = "REB\functions";
+            file = CFG_FUNCTIONS_PATH;
 			class rebInit { postInit = 1; };
 			class compile {};
 			class reb {};
@@ -18,7 +18,7 @@ class CfgFunctions
 		class REBplacement
         {
 			recompile=1;
-            file = "REB\functions\placement";
+            file = CFG_FUNCTIONS_PATH_FOLDER(placement);
 			class releaseAttachment {};
 			class updateAttachmentPosition {};	
 			class placeAttachment {};
@@ -31,7 +31,7 @@ class CfgFunctions
 		class ace_actions
 		{
 			recompile=1;
-			file = "REB\functions\ace_actions";
+			file = CFG_FUNCTIONS_PATH_FOLDER(ace_actions);
 			class createAceActionsForObjectReb {};
 			class removeAceActionsForObjectReb {};
 			class objectRemoveAceActions {};

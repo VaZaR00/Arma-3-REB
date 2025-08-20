@@ -1,4 +1,4 @@
-#include "oop.h"
+
 
 #define STR(s) #s
 #define PR private
@@ -8,13 +8,23 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {_txt = format["%3 :: %2 : %1", _this, if (isServer) then {"SERVER"} else {clientOwner}, __FILE_SHORT__]; hint _txt; diag_log _txt};
-#define MP_RLOG call {(format["%3 :: ID %1 : %2", if (isServer) then {"SERVER"} else {clientOwner}, _this, __FILE_SHORT__]) remoteExec ["diag_log", 0]; (format["ID %1 : %2", clientOwner, _this]) remoteExec ["hint", 0];};
+#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
+#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
 #define NOLOG MSVAR ["TEMP_DO_LOG", false];
 #define CRTHSH createHashMap
+
+#define PREF_FNC PREFX##_fnc_
+#define PREF_VAR PREFX##_var_
+#define PREF(t) PREFX##_##t
+#define QPREF(t) STR(PREF(t))
+#define SPREF(t) (STR(PREFX) + "_" + t)
+#define FUNC(fnc) PREF_FNC##fnc
+#define VAR(fnc) PREF_VAR##fnc
+#define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
+
 
 #define GET_PLAYER_DRONE (vehicle (remoteControlled player))
 
@@ -54,7 +64,10 @@
 #define IS_LOCAL(o) ((IS_OBJ(o) && {local o}) || isServer)
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
-// #define REB_itemRebsClasses (keys REB_all_classes)
+#define LWR(s) (toLower s)
+#define FOR_I(n) for "_i" from 0 to (n - 1) do
+
+#define ARGS PR _args = 
 
 #define ABSOLUTE_RANDOM_NUM (round (((random 2) * 100000) + (systemTimeUTC select -1)))
 
@@ -63,18 +76,6 @@
 #define UNQ_HASHVAL(v1, v2) (HASHVAL_(v1) + HASHVAL_(v2))
 #define OBJ_HASHVAL(o) UNQ_HASHVAL(o, typeOf o)
 
-
-/*
-    MAIN REB MACRO DEFINES
-*/
-#define PREF REB
-#define PREF_FNC PREF##_fnc_
-#define FUNC(f) PREF_FNC##f
-#define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
-#define REB_CLS_PREF "REB_CLASS_"
-#define REB_VAR_PREF "REB_VAR_"
-#define REB_OBJ_PREF "REB_OBJECT_CLASS_"
-#define RC_PREF(s) (REB_CLS_PREF + s)
 
 // for handling scripts
 #define THIS_FUNC_NAME ((__FILE_SHORT__ splitString "_") select -1)
@@ -105,8 +106,12 @@
 #define SPAWN_NWAIT(c) PR _thndl = [] spawn c; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define SPAWNF_NWAIT(a, f) PR _thndl = a spawn f; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define WAIT_THIS_SCRIPT \
-    waitUntil { scriptDone (missionNamespace getVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, scriptNull]) }; \
-	missionNamespace setVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, _thisScript]; \
+    waitUntil { scriptDone (missionNamespace getVariable ["TEMP_TEMP_HNDL_" + THIS_FUNC_NAME, scriptNull]) }; \
+	missionNamespace setVariable ["TEMP_TEMP_HNDL_" + THIS_FUNC_NAME, _thisScript];
+
+#define WAIT_SCRIPT_END(script) \
+    waitUntil { scriptDone (missionNamespace getVariable ["TEMP_TEMP_HNDL_" + #script, scriptNull]) }; \
+	missionNamespace setVariable ["TEMP_TEMP_HNDL_" + #script, _thisScript];
 
 #define WAITVAR(v) waitUntil { !ISNIL(v) };
 #define WAITSVAR(v) waitUntil { !isNil v };
@@ -121,13 +126,13 @@ if (!canSuspend) EW { \
 
 // for server execuiton
 #define EXEC_ON_SERVER_START PR _codeForServer = {
-#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]};
+#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["TEMP_fnc_remoteCall", 2]};
 #define EXEC_ON_SERVER_END_RESULT }; \
 PR _serverExecResult = if (isServer) then { \
 	_this call _codeForServer \
 } else { \
-    private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
-    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
+    private _tempVarName = format ["TEMP_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
+    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["call", 2]; \
     WAITSVAR(_tempVarName); \
     MGVAR _tempVarName; \
 }; \
@@ -150,27 +155,6 @@ _serverExecResult; \
 #define SET_BOOL(b) (if (IS_BOOL(b)) then {b} else {0})
 #define IS_OOP(s) (IS_CODE(s) && {IS_STR(METHOD(s, "classname", nil))})
 
-// #define METHOD_LOCAL(object, method, args) ([method, args] call object)
-// #define METHOD_GLOBAL(object, method, args) ([[method, args], object] remoteExec ["call", 0])
-#define METHOD(object, method, args) ([method, args] call object)
-// #define METHOD(object, method, args) (IF_ELSE(IS_GLOBALY, METHOD_GLOBAL(object, method, args), METHOD_LOCAL(object, method, args)))
-#define SELF_VAR(var) (MEMBER(var, nil))
-#define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
-#define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
-#define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
-#define GET_OR_OBJ(i) (IF_ELSE(IS_OBJ(i), i, (INSTANCE_VAR(i, "Object"))))
-
-#define GLOBALY_DEFAULT false
-
-#define SET_GLOBALY(v) _globaly = v;
-#define GLOBALY SET_GLOBALY(true)
-#define LOCALY SET_GLOBALY(false)
-#define IS_GLOBALY IF_NIL(_globaly, false)
-#define EXEC_GLOBAL(code) _tempGlobaly = _globaly; SET_GLOBALY(true); code LOCALY; SET_GLOBALY(_tempGlobaly);
-#define EXEC_LOCAL(code) _tempGlobaly = _globaly; SET_GLOBALY(false); code LOCALY; SET_GLOBALY(_tempGlobaly);
-
-// for player REB_var_currentRebItems
-
 #define GET_CURR_ITEMS(p) (p GV ["REB_var_currentRebItems", CRTHSH])
 #define GET_CURR_ITEMS_VAR(p) PR _currRebItems = GET_CURR_ITEMS(p);
 #define SAVE_CURR_ITEMS_VAR(p) (p SV ["REB_var_currentRebItems", _currRebItems, true])
@@ -192,10 +176,5 @@ _serverExecResult; \
 #define OBJ_REBS_LIST(o) (o GV [ROVAR, createHashMap])
 #define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST(_obj);
 
-#define GET_RO_BY_HASH(o, h) (OBJ_REBS_LIST(o) get h)
 
 #define GET_REB_INSTANCE(n) (METHOD(IOO_REB_DB, "Get_reb_class", n))
-
-// TEMP
-
-#define HAS_ACTIVE_REB(x) false

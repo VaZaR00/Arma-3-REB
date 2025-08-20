@@ -12,5 +12,6 @@ class CfgPatches {
 	};
 };
 
-#include "CfgFunctions.hpp"
-#include "CfgRemoteExec.hpp"
+#include "includes/main.h"
+#include "includes/CfgFunctions.hpp"
+#include "includes/CfgRemoteExec.hpp"

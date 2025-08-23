@@ -9,13 +9,9 @@ FILE_ONLY_SPAWN
 
 params ["_objectReb"];
 
-_this = _objectReb;
-GET_SERVER_VAL INSTANCE_VAR(_this, "Object"); 
-GSRES(private _object);
-GET_SERVER_VAL INSTANCE_VAR(_this, "Reb_classname"); 
-GSRES(private _rebClassname);
-GET_SERVER_VAL INSTANCE_VAR(_this, "InstanceHash"); 
-GSRES(private _objectRebHash);
+private _object = INSTANCE_VAR(_objectReb, "Object"); 
+private _rebClassname = INSTANCE_VAR(_objectReb, "Reb_classname"); 
+private _objectRebHash = INSTANCE_VAR(_objectReb, "InstanceHash"); 
 
 private _addToSelfActions = _object isKindOf "LandVehicle";
 

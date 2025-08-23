@@ -28,7 +28,7 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","SimulateDamage");
 	PUBLIC VARIABLE("scalar","SimulatedHealth");
 
-	PUBLIC FUNCTION("array","constructor") {
+	PUBLIC FUNCTION("array","constructor") { // executed on every client
 		params[
 			"_obj", 
 			["_range", 100], 
@@ -51,6 +51,13 @@ CLASS("OO_REB") // IOO_REB
 		_strenght = (_strenght max 0) min 1;
 		_deadzone = _range min _deadzone;
 
+
+		// Setting variables
+
+		LOCAL_SETTER
+
+		MEMBER("SelfVarSetterPrefix", _name);
+
 		MEMBER("Name", _name);
 		MEMBER("Init_object", _initObj);
 		MEMBER("Init_object_class", _initObjClass);
@@ -67,13 +74,24 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
 
-		MSVAR [_name, _instance];
+		GLOBAL_SETTER
 
-		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
+		MSVAR [_name, _self];
+
 
 		if (IS_OBJ(_obj)) then {
 			MEMBER("New_object_reb", [_obj]);
 		};
+
+		if (!(MGVAR ["REB_var_rebItemsSystemInited", false]) && {IS_STR(_obj)}) then {
+			// [] remoteExec ["REB_fnc_initRebItemSystem", 0, true];
+			call REB_fnc_initRebItemSystem;
+		};
+
+		// NOW EXECUTE WHERE OBJECT IS LOCAL
+		if !(local _initObj) exitWith {};
+
+		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
 		if (!IS_OBJNULL(_initObj) && {(_isAttachable || (getMass _initObj <= 31))}) then {
 			if (REB_attachSystemOn) then {
@@ -81,21 +99,21 @@ CLASS("OO_REB") // IOO_REB
 			};
 			[_initObj] call REB_fnc_canManipulateAce;
 		};
-
-		if (!(REB_var_rebItemsSystemInited) && {IS_STR(_obj)}) then {
-			[] remoteExec ["REB_fnc_initRebItemSystem", 0, true];
-		};
 	};
 
-	PUBLIC FUNCTION("","deconstructor") {
+	PUBLIC SERVER_FUNCTION("any","deconstructor") {
 		METHOD(IOO_REB_DB, 'Remove_reb_class', SELF_VAR('Name'));
 		{
-			METHOD(IOO_OBJECT_REB_DB, 'Remove', [_x]);
+			METHOD(IOO_OBJECT_REB_DB, 'Remove', [OBJ_REB(_x)]);
 		} forEach SELF_VAR('object_reb_list');
 	};
 
 	PUBLIC FUNCTION("bool","Toggle_reb_global") {
 		MEMBER("Is_on", _this);
+
+		{
+			METHOD(OBJ_REB(_x), 'Set_Active', _this);
+		} forEach SELF_VAR('object_reb_list');
 	};
 
 	/*
@@ -107,7 +125,7 @@ CLASS("OO_REB") // IOO_REB
 		Arguments:
 			[Object, itemRef (container of backpack)]
 	*/
-	PUBLIC FUNCTION("ARRAY","New_object_reb") {
+	PUBLIC FUNCTION("array","New_object_reb") {
 		params["_obj", ["_itemRef", objNull]];
 
 		if (IS_OBJNULL(_obj)) EX;
@@ -130,15 +148,15 @@ CLASS("OO_REB") // IOO_REB
 
 		MEMBER('Add_object_reb_to_list', _objectReb);
 
-		METHOD(IOO_OBJECT_REB_DB, 'Add', [_obj C _objectReb]);
+		METHOD(IOO_OBJECT_REB_DB, 'Add', [_obj I _objectReb]);
 
 		_objectReb
 	};
 
-	PUBLIC FUNCTION("ARRAY","Delete_object_reb") {
+	PUBLIC SERVER_FUNCTION("ARRAY","Delete_object_reb") {
 		params["_obj", ["_rebRef", objNull]];
 
-		_this = METHOD(IOO_OBJECT_REB_DB, "Get_object_reb", [_obj C _obj C _rebRef]);
+		_this = METHOD(IOO_OBJECT_REB_DB, "Get_object_reb", [_obj I _obj I _rebRef]);
 
 		IF_NIL_EX(_this);
 
@@ -148,17 +166,15 @@ CLASS("OO_REB") // IOO_REB
 
 		METHOD(IOO_OBJECT_REB_DB, 'Remove', _this);
 
-		// DELETE(_this);
-
 		true
 	};
 
-	PUBLIC FUNCTION("CODE","Add_object_reb_to_list") {
-		SELF_VAR('object_reb_list') pushBackUnique _this;
+	PUBLIC SERVER_FUNCTION("CODE","Add_object_reb_to_list") {
+		SELF_ARRAY_ADD('object_reb_list', OBJ_REB_VAR(_this));
 	};
 
-	PUBLIC FUNCTION("CODE","Remove_object_reb_from_list") {
-		SELF_VAR('object_reb_list') - [_this];
+	PUBLIC SERVER_FUNCTION("CODE","Remove_object_reb_from_list") {
+		SELF_ARRAY_REM('object_reb_list', OBJ_REB_VAR(_this));
 	};
 
 ENDCLASS;

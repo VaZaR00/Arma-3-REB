@@ -2,26 +2,20 @@
 
 FILE_ONLY_SPAWN
 
-params [["_object", objNull], ["_ref", ""], ["_itemRef", 0]];
+params [["_obj", objNull], ["_ref", ""], ["_itemRef", 0]];
 
-private _objectReb = _object;
-if !(IS_OOP(_objectReb)) then {
-    GET_SERVER_VAL _this call REB_fnc_getObjectRebByRef; GSRES(_objectReb);
+private _objReb = _obj;
+if !(IS_OOP(_objReb)) then {
+    _objReb = _this call REB_fnc_getObjectRebByRef;
 };
 
-if (!IS_OOP(_objectReb)) exitWith {};
+if (!IS_OOP(_objReb)) exitWith {};
 
-REB_currentHandledReb = _objectReb;
+REB_currentHandledReb = _objReb;
 
-_this = _objectReb;
-GET_SERVER_VAL INSTANCE_VAR(_this, "Reb_class"); 
-GSRES(REB_currentHandledRebClass);
-_this = REB_currentHandledRebClass;
-GET_SERVER_VAL INSTANCE_VAR(_this, "Max_Range"); 
-GSRES(REB_currentHandledRebMaxRange);
-_this = REB_currentHandledReb;
-GET_SERVER_VAL INSTANCE_VAR(_this, "Range"); 
-GSRES(private _range);
+REB_currentHandledRebClass = OBJ_VAR ["Reb_class", ""];
+REB_currentHandledRebMaxRange = OBJ_VAR ["Max_Range", 100];
+private _range = OBJ_VAR ["Range", 100];
 
 private _startPos = if (_range == 0) then {0} else {_range * (10 / REB_currentHandledRebMaxRange)};
 
@@ -40,13 +34,13 @@ PR _onButtonClick = {
 
     _this = [REB_currentHandledReb, REB_currentHandledRebClass, REB_currentHandledRebMaxRange, _sliderVal];
 
-    EXEC_ON_SERVER_START
+    // EXEC_ON_SERVER_START
         params["_reb", "_rebclass", "_maxRng", "_sliderVal"];
 
         PR _newRange = round (_maxRng * (_sliderVal/10));
 
         METHOD(_reb, "Set_Range", _newRange);
-    EXEC_ON_SERVER_END
+    // EXEC_ON_SERVER_END
 
 	REB_currentHandledObj = nil;
 	REB_currentHandledRebClass = nil;

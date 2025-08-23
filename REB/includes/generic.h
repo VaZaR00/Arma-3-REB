@@ -8,8 +8,8 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
-#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
+#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]; hint _txt; diag_log _txt};
+#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
@@ -36,7 +36,7 @@
 #define ONUL objNull
 #define EW exitWith
 #define EX EW {};
-#define C , 
+#define I , 
 #define EQTYPE isEqualType
 #define EQTO isEqualTo
 #define ISNIL(v) isNil STR(v)
@@ -154,27 +154,3 @@ _serverExecResult; \
 #define BOOL_TO_INT(b) (if (b) then {1} else {0})
 #define SET_BOOL(b) (if (IS_BOOL(b)) then {b} else {0})
 #define IS_OOP(s) (IS_CODE(s) && {IS_STR(METHOD(s, "classname", nil))})
-
-#define GET_CURR_ITEMS(p) (p GV ["REB_var_currentRebItems", CRTHSH])
-#define GET_CURR_ITEMS_VAR(p) PR _currRebItems = GET_CURR_ITEMS(p);
-#define SAVE_CURR_ITEMS_VAR(p) (p SV ["REB_var_currentRebItems", _currRebItems, true])
-#define ADD_TO_CURR_ITEMS(i) _currRebItems set [i, nil];
-#define REMOVE_FROM_CURR_ITEMS(i) _currRebItems deleteAt i;
-
-// for OO_OBJECT_REB_DB
-
-#define ROVAR "REB_objectRebs"
-#define ROVAR_S "REB_objectRebs_SERVER"
-#define ROVAR_NAME(n) (REB_VAR_PREF + _hshVal + n)
-
-#define SAVE_OBJ_REBS_LIST _obj SV [ROVAR, _objRebs, true];
-#define SAVE_OBJ_REBS_LIST_SERVER _obj SV [ROVAR_S, _objRebs_SERVER];
-
-#define OBJ_REBS_LIST_SERVER(o) (o GV [ROVAR_S, createHashMap])
-#define OBJ_REBS_LIST_VAR_SERVER_P(o) PR _objRebs_SERVER = OBJ_REBS_LIST_SERVER(o);
-#define OBJ_REBS_LIST_VAR_SERVER OBJ_REBS_LIST_VAR_SERVER_P(_obj)
-#define OBJ_REBS_LIST(o) (o GV [ROVAR, createHashMap])
-#define OBJ_REBS_LIST_VAR PR _objRebs = OBJ_REBS_LIST(_obj);
-
-
-#define GET_REB_INSTANCE(n) (METHOD(IOO_REB_DB, "Get_reb_class", n))

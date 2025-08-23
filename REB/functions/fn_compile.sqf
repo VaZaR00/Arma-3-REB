@@ -96,10 +96,11 @@ REB_fnc_currentJammingRebStrength = {
 		PR _obj = _y;
 		PR _d = (_this distance _obj);
 		OBJ_REBS_LIST(_obj) apply {
-			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
+			PR _hashVal = _x;
+			PR _stren = _obj GV [OBJ_VARPREF("Strenght"), 0];
 			if (
-				(_d < (_obj GV [(REB_VAR_PREF + _x + "_range"), -1])) &&
-				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false]) &&
+				(_d < (_obj GV [OBJ_VARPREF("Range"), -1])) &&
+				(_obj GV [OBJ_VARPREF("Is_active"), false]) &&
 				(_stren > _currentStrength)
 			) then {
 				_currentStrength = _stren;
@@ -116,10 +117,11 @@ REB_fnc_isInDeadzone = {
 		PR _obj = _y;
 		PR _d = (_this distance _obj);
 		OBJ_REBS_LIST(_obj) apply {
-			PR _stren = _obj GV [(REB_VAR_PREF + _x + "_strenght"), 0];
+			PR _hashVal = _x;
+			PR _stren = _obj GV [OBJ_VARPREF("Strenght"), 0];
 			if (
-				(_d < (_obj GV [(REB_VAR_PREF + _x + "_deadzone"), -1])) &&
-				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
+				(_d < (_obj GV [OBJ_VARPREF("Deadzone"), -1])) &&
+				(_obj GV [OBJ_VARPREF("Is_active"), false])
 			) EW {
 				_isDead = true;
 			};
@@ -186,23 +188,157 @@ REB_fnc_addRebOnObj = {
 		_this = [_this#0, _this#1#0, _this#1#1];
 	};
 
-	EXEC_ON_SERVER_START
-		params['_obj', '_rebObj', ['_itemRef', objNull]];
+	params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-		METHOD(GET_REB_INSTANCE(_rebObj), "New_object_reb", [_obj C _itemRef]);
-	EXEC_ON_SERVER_END
+	METHOD_GLOBAL(GET_REB_INSTANCE(_rebObj), "New_object_reb", [_obj I _itemRef]);
 };
 REB_fnc_removeRebOnObj = {
 	if (IS_ARR(_this select 1)) then {
 		_this = [_this#0, _this#1#0, _this#1#1];
 	};
 
-	EXEC_ON_SERVER_START 
-		params['_obj', '_rebObj', ['_itemRef', objNull]];
+	params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-		METHOD(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", [_obj C _itemRef]);
-	EXEC_ON_SERVER_END
+	METHOD_GLOBAL(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", [_obj I _itemRef]);
 };
+REB_fnc_setEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
+	if !((_obj getVariable ["REB_DELETED_EH", ""]) isEqualType 1) then {
+		private _eh = _obj addEventHandler ["Deleted", {
+			params ["_entity"];
+			[_entity, true] call REB_fnc_removeReb;
+		}];
+		_obj setVariable ["REB_DELETED_EH", _eh];
+	};
+
+	if !((_obj getVariable ["REB_KILLED_EH", ""]) isEqualType 1) then {
+		private _eh = _obj addEventHandler ["Killed", {
+			params ["_unit", "_killer", "_instigator", "_useEffects"];
+			[_unit, true] call REB_fnc_removeReb;
+		}];
+
+		_obj setVariable ["REB_KILLED_EH", _eh];
+	};
+};
+REB_fnc_removeEventHandlers = {
+	params[["_obj", 0]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+	if (IS_REB(_obj)) exitWith {};
+
+	_obj removeEventHandler ["Deleted", (_obj getVariable ["REB_DELETED_EH", -1])];
+	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_KILLED_EH", -1])];
+	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_HIT_EH", -1])];
+
+	_obj setVariable ["REB_DELETED_EH", nil];
+	_obj setVariable ["REB_KILLED_EH", nil];
+	_obj setVariable ["REB_HIT_EH", nil];
+};
+REB_fnc_objectRemoveAllRebAceActions = {
+	params["_object"];
+
+	{
+		[_object, _x] call REB_fnc_objectRemoveAceActions;
+	} forEach ((allVariables _object) select {"REB_AceActions_" in _x});
+};
+REB_fnc_simulateDamage = {
+	// should be executed on every client
+	params["_obj", ["_simulateDamage", false], ["_health", 100]];
+
+	if !(IS_OBJ(_obj)) exitWith {};
+
+	if (_simulateDamage && !((_obj getVariable ["REB_HIT_EH", ""]) isEqualType 1)) then {
+		private _eh = _obj addEventHandler ["HitPart", {
+			(_this select 0) params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect", "_instigator"];
+			_ammo params ["_hitVal", "_indirectHitVal", "_indirectHitRange", "_explosiveDamage", "_ammoClass"];
+
+			if !(local _target) exitWith {};
+			if !(alive _target) exitWith {};
+			if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
+
+			PR _varName = "REB_object_var_simulatedHealth";
+			PR _newVal = (_target GV [_varName, 100]) - _hitVal;
+
+			_target setVariable [_varName, _newVal, true];
+
+			if (_newVal <= 0) then {
+				_target setDamage 1;
+			};
+		}];
+
+		_obj setVariable ["REB_HIT_EH", _eh];
+	};
+
+	if (local _obj) then {
+		_obj setVariable ["REB_object_var_simulatedHealth", _health, true];
+		_obj setVariable ["REB_var_SimulateDamage", _simulateDamage, true];
+	};
+};
+
+/*
+	Handle REB player actions
+*/
+REB_fnc_setActive = {
+	params["_object", ["_isActive", true], ["_ref", ""], ["_itemRef", 0]];
+
+	private _objectReb = _object;
+	if !(IS_OOP(_objectReb)) then {
+		_objectReb = [_object, _ref, _itemRef] call REB_fnc_getObjectRebByRef;
+	};
+
+	if (ISNIL(_objectReb) || {!(IS_OOP(_objectReb))}) exitWith {};
+
+	if (_ref isEqualTo true) exitWith {
+		{
+			METHOD(OBJ_REB(_x), "Set_Active", _isActive);
+		} forEach OBJ_REBS_LIST(_object);
+	};
+
+	METHOD(_objectReb, "Set_Active", _isActive);
+};
+
+/*
+	Misc functions
+*/
+REB_fnc_isReb = {
+	if (ARR_EMPTY(OBJ_REBS_LIST(_this))) EW {false};
+
+	true
+};
+REB_fnc_makeRebClassname = {
+	if (IS_STR(_this) && {PREF_CLAS in _this}) EW {_this};
+
+	PREF_CLAS +
+	(if (IS_STR(_this)) then {
+		_this
+	} else {
+		OBJ_HASHVAL(_this);
+	});
+};
+REB_fnc_rebsInDroneRadius = {
+	params["_drone", ["_byRange", true]];
+	REB_all_rebs select {
+		PR _obj = _x;
+		PR _d = (_drone distance _obj);
+		count (OBJ_REBS_LIST(_obj) select {
+			PR _hashVal = _x;
+			(
+				(_d < (_obj GV [OBJ_VARPREF(IF_ELSE(_byRange I "Range" I "Deadzone")), -1])) &&
+				(_obj GV [OBJ_VARPREF("Is_active"), false])
+			)
+		}) > 0;
+	};
+};
+REB_fnc_getObjectRebByRef = {
+	METHOD(IOO_OBJECT_REB_DB, "Get_object_reb", _this);
+};
+
+/*
+	Item handling functions
+*/
 REB_fnc_rebItemHandle = {
 	//check unit inventory and _container if its replaced
 	
@@ -358,139 +494,4 @@ REB_fnc_handleContainerFull = {
 			[_obj, _x] call REB_fnc_addRebOnObj;
 		};
 	} forEach _containersInfo;
-};
-REB_fnc_setEventHandlers = {
-	params[["_obj", 0]];
-
-	if !(IS_OBJ(_obj)) exitWith {};
-
-	if !((_obj getVariable ["REB_DELETED_EH", ""]) isEqualType 1) then {
-		private _eh = _obj addEventHandler ["Deleted", {
-			params ["_entity"];
-			[_entity, true] call REB_fnc_removeReb;
-		}];
-		_obj setVariable ["REB_DELETED_EH", _eh];
-	};
-
-	if !((_obj getVariable ["REB_KILLED_EH", ""]) isEqualType 1) then {
-		private _eh = _obj addEventHandler ["Killed", {
-			params ["_unit", "_killer", "_instigator", "_useEffects"];
-			[_unit, true] call REB_fnc_removeReb;
-		}];
-
-		_obj setVariable ["REB_KILLED_EH", _eh];
-	};
-};
-REB_fnc_removeEventHandlers = {
-	params[["_obj", 0]];
-
-	if !(IS_OBJ(_obj)) exitWith {};
-	if (IS_REB(_obj)) exitWith {};
-
-	_obj removeEventHandler ["Deleted", (_obj getVariable ["REB_DELETED_EH", -1])];
-	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_KILLED_EH", -1])];
-	_obj removeEventHandler ["Killed", (_obj getVariable ["REB_HIT_EH", -1])];
-
-	_obj setVariable ["REB_DELETED_EH", nil];
-	_obj setVariable ["REB_KILLED_EH", nil];
-	_obj setVariable ["REB_HIT_EH", nil];
-};
-REB_fnc_objectRemoveAllRebAceActions = {
-	params["_object"];
-
-	{
-		[_object, _x] call REB_fnc_objectRemoveAceActions;
-	} forEach ((allVariables _object) select {"REB_AceActions_" in _x});
-};
-REB_fnc_simulateDamage = {
-	// should be executed on every client
-	params["_obj", ["_simulateDamage", false], ["_health", 100]];
-
-	if !(IS_OBJ(_obj)) exitWith {};
-
-	if (_simulateDamage && !((_obj getVariable ["REB_HIT_EH", ""]) isEqualType 1)) then {
-		private _eh = _obj addEventHandler ["HitPart", {
-			(_this select 0) params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect", "_instigator"];
-			_ammo params ["_hitVal", "_indirectHitVal", "_indirectHitRange", "_explosiveDamage", "_ammoClass"];
-
-			if !(local _target) exitWith {};
-			if !(alive _target) exitWith {};
-			if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
-
-			PR _varName = "REB_object_var_simulatedHealth";
-			PR _newVal = (_target GV [_varName, 100]) - _hitVal;
-
-			_target setVariable [_varName, _newVal, true];
-
-			if (_newVal <= 0) then {
-				_target setDamage 1;
-			};
-		}];
-
-		_obj setVariable ["REB_HIT_EH", _eh];
-	};
-
-	if (local _obj) then {
-		_obj setVariable ["REB_object_var_simulatedHealth", _health, true];
-		_obj setVariable ["REB_var_SimulateDamage", _simulateDamage, true];
-	};
-};
-
-/*
-	Handle REB player actions
-*/
-REB_fnc_setActive = {
-	EXEC_ON_SERVER_START
-		params["_object", ["_isActive", true], ["_ref", ""], ["_itemRef", 0]];
-
-		private _objectReb = _object;
-		if !(IS_OOP(_objectReb)) then {
-			_objectReb = [_object, _ref, _itemRef] call REB_fnc_getObjectRebByRef;
-		};
-
-		if (ISNIL(_objectReb) || {!(IS_OOP(_objectReb))}) exitWith {};
-
-		if (_ref isEqualTo true) exitWith {
-			{
-				METHOD(_x, "Set_Active", _isActive);
-			} forEach OBJ_REBS_LIST(_object);
-		};
-
-		METHOD(_objectReb, "Set_Active", _isActive);
-	EXEC_ON_SERVER_END
-};
-
-/*
-	Misc functions
-*/
-REB_fnc_isReb = {
-	if (ARR_EMPTY(OBJ_REBS_LIST(_this))) EW {false};
-
-	true
-};
-REB_fnc_makeRebClassname = {
-	if (IS_STR(_this) && {REB_CLS_PREF in _this}) EW {_this};
-
-	REB_CLS_PREF +
-	(if (IS_STR(_this)) then {
-		_this
-	} else {
-		OBJ_HASHVAL(_this);
-	});
-};
-REB_fnc_rebsInDroneRadius = {
-	params["_drone", ["_byRange", true]];
-	REB_all_rebs select {
-		PR _obj = _x;
-		PR _d = (_drone distance _obj);
-		count (OBJ_REBS_LIST(_obj) select {
-			(
-				(_d < (_obj GV [(REB_VAR_PREF + _x + IF_ELSE(_byRange, "_range", "_deadzone")), -1])) &&
-				(_obj GV [(REB_VAR_PREF + _x + "_isActive"), false])
-			)
-		}) > 0;
-	};
-};
-REB_fnc_getObjectRebByRef = {
-	METHOD(IOO_OBJECT_REB_DB, "Get_object_reb", _this);
 };

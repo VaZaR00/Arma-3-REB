@@ -3,31 +3,57 @@
 
 	Description:
 		class which contains and handles global variables for REB system
+		ALL instances of OO_REB are stored in REB_all_classes variable as string: 
+		name of its missionNamespace variable.
 */
 
 #include "defines.h"
 
-// #define SAVE_REB_ALL_REBS 0 spawn {sleep (random 0.2); MSVAR ["REB_all_rebs", REB_all_rebs, true];};
-// #define SAVE_REB_ALL_CLASSES 0 spawn {sleep (random 0.2); MSVAR ["REB_all_classes", REB_all_classes, -2];};
-#define SAVE_REB_ALL_REBS [{publicVariable "REB_all_rebs"}, [], 3] call cba_fnc_execAfterNFrames;;
-#define SAVE_REB_ALL_CLASSES [{publicVariable "REB_all_classes"}, [], 3] call cba_fnc_execAfterNFrames;;
 
 
 CLASS("OO_REB_DB") // IOO_REB_DB
 
-	PUBLIC FUNCTION("","constructor") {
-		REB_all_rebs = createHashMap;
-		REB_all_classes = createHashMap;
-		REB_all_classes_SERVER = createHashMap;
-		SAVE_REB_ALL_CLASSES
-		SAVE_REB_ALL_REBS
+	/*
+		Variables
+	*/
+	PUBLIC SETTER("hashMap","REB_all_rebs") {
+		/* 
+			variable which contains all REB instances in the mission 
+
+			key: [string] object hashval
+			value: [object] object instance
+		*/
+		IF_SET
+			MSVAR ["REB_all_rebs", _this, true];
+		IF_GET
+			MGVAR ["REB_all_rebs", createHashMap];
+	};
+	PUBLIC SETTER("hashMap","REB_all_classes") {
+		/* 
+			variable which contains all REB classes in the mission
+
+			key: [string] class name (variable name in missionNamespace)
+			value: [bool] true (placeholder)
+		*/
+		IF_SET
+			MSVAR ["REB_all_classes", _this, true];
+		IF_GET
+			MGVAR ["REB_all_classes", createHashMap];
 	};
 
-	PUBLIC FUNCTION("","deconstructor") {
+	/*
+		Constructor / Deconstructor
+	*/
+	PUBLIC SERVER_FUNCTION("","constructor") {
+		MEMBER('REB_all_rebs', createHashMap);
+		MEMBER('REB_all_classes', createHashMap);
+	};
+
+	PUBLIC SERVER_FUNCTION("","deconstructor") {
 		MEMBER("clear_vars", nil);
 	};
 
-	PUBLIC FUNCTION("ANY","clear_vars") {
+	PUBLIC SERVER_FUNCTION("ANY","clear_vars") {
 		MSVAR ["REB_all_rebs", nil, true];
 		MSVAR ["REB_all_classes", nil, true];
 	};
@@ -36,25 +62,23 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 		Handle REB_all_classes Methods
 	*/
 
-	PUBLIC FUNCTION("string","Add_reb_class") {
-		REB_all_classes_SERVER set [_this, call compile _this];
-		REB_all_classes set [_this, nil];
+	PUBLIC SERVER_FUNCTION("string","Add_reb_class") {
+		REB_all_classes set [_this, true];
 
-		SAVE_REB_ALL_CLASSES
+		MEMBER('REB_all_classes', REB_all_classes);
 	};
 
-	PUBLIC FUNCTION("string","Remove_reb_class") {
-		REB_all_classes_SERVER deleteAt _this;
+	PUBLIC SERVER_FUNCTION("string","Remove_reb_class") {
 		REB_all_classes deleteAt _this;
 
-		SAVE_REB_ALL_CLASSES
+		MEMBER('REB_all_classes', REB_all_classes);
 	};
 
 	/* 
 		Handle REB_all_rebs Methods
 	*/
 
-	PUBLIC FUNCTION("ANY","Add_reb") {
+	PUBLIC SERVER_FUNCTION("ANY","Add_reb") {
 		if (IS_CODE(_this)) then {
 			_this = INSTANCE_VAR(_this, "Object");
 		};
@@ -62,23 +86,16 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 
 		REB_all_rebs set [OBJ_HASHVAL(_this), _this];
 
-		SAVE_REB_ALL_REBS
+		MEMBER('REB_all_rebs', REB_all_rebs);
 	};
 
-	PUBLIC FUNCTION("ANY","Remove_reb") {
-		// PR _name = MEMBER("Make_reb_classname", _this);
+	PUBLIC SERVER_FUNCTION("ANY","Remove_reb") {
 		PR _name = METHOD(IOO_OBJECT_REB_DB, "Get_object_hash", _this);
 
 		REB_all_rebs deleteAt _name;
 
-		SAVE_REB_ALL_REBS
+		MEMBER('REB_all_rebs', REB_all_rebs);
 	};
-
-	// PUBLIC FUNCTION("","Sort_rebs") {
-	// 	REB_all_rebs = [REB_all_rebs, [], {INSTANCE_VAR((OBJ_REBS_LIST(_x) select 0), "Range")}, "DESCEND"] call BIS_fnc_sortBy;
-
-	// 	SAVE_REB_ALL_REBS
-	// };
 
 	/* 
 		Other Methods
@@ -95,13 +112,15 @@ CLASS("OO_REB_DB") // IOO_REB_DB
 			INSTANCE_VAR(_this, "Reb_classname");
 		};
 
-		REB_all_classes_SERVER getDef [_name, {}];
+		if (_name in SELF_VAR('REB_all_classes')) then {
+			MGVAR [_name, {}];
+		} else {{}};
 	};
 
 	PUBLIC FUNCTION("ANY","Get_reb_classname") {
 		PR _name = MEMBER("Make_reb_classname", _this);
 
-		if (_name in REB_all_classes_SERVER) then {_name};
+		if (_name in SELF_VAR('REB_all_classes')) then {_name};
 	};
 
 ENDCLASS;

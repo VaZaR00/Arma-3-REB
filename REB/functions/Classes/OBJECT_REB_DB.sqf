@@ -2,7 +2,10 @@
 	Class: OO_OBJECT_REB_DB
 
 	Description:
-		class which handles variable "REB_objectRebs" of any object
+		class which handles variable "REB_objectRebs" of any object.
+		ALL instances of OO_OBJECT_REB are stored in ROVAR (REB_var_objectRebs) variable as: 
+			key: [string] instance hash
+			value: [string] instance name - its missionNamespace variable.
 */
 
 #include "defines.h"
@@ -10,15 +13,28 @@
 
 CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
-	PUBLIC FUNCTION("","constructor") {
-		REB_ALL_OBJECT_REBS = createHashMap;
+	PUBLIC SETTER("hashMap","REB_ALL_OBJECT_REBS") {
+		/*
+			global hashMap of all OO_OBJECT_REB instances
+
+			key: [string] instance hash
+			value: [string] instance name 
+		*/
+		IF_SET
+			MSVAR ["REB_ALL_OBJECT_REBS", _this, true];
+		IF_GET
+			MGVAR ["REB_ALL_OBJECT_REBS", createHashMap];
 	};
 
-	PUBLIC FUNCTION("","deconstructor") {
-		REB_ALL_OBJECT_REBS = nil;
+	PUBLIC SERVER_FUNCTION("","constructor") {
+		MEMBER('REB_ALL_OBJECT_REBS', createHashMap);
 	};
 
-	PUBLIC FUNCTION("array","Add") {
+	PUBLIC SERVER_FUNCTION("","deconstructor") {
+		MSVAR ["REB_ALL_OBJECT_REBS", nil, true];
+	};
+
+	PUBLIC SERVER_FUNCTION("array","Add") {
 		// args types: [string / code / object]
 
 		params["_obj", "_objectReb"];
@@ -28,29 +44,30 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			_obj = INSTANCE_VAR(_objectReb, "Object");
 		};
 		
+		// VALIDATIONS
 		IF_EX(!IS_OBJ(_obj));
 		IF_EX(!IS_OOP(_objectReb));
 
-		OBJ_REBS_LIST_VAR_SERVER
-		OBJ_REBS_LIST_VAR
-
+		// GET VALUES
 		PR _hsh = INSTANCE_VAR(_objectReb, "InstanceHash");
+		PR _name = INSTANCE_VAR(_objectReb, "InstanceName");
+		PR _objRebs = OBJ_VAR [ROVAR, createHashMap];
 
-		_objRebs_SERVER set [_hsh, _objectReb];
-		_objRebs set [_hsh, INSTANCE_VAR(_objectReb, "item_ref")];
-		REB_ALL_OBJECT_REBS set [_hsh, _objectReb];
+		// SET
+		_objRebs set [_hsh, _name];
+		REB_ALL_OBJECT_REBS set [_hsh, _name];
 
-		METHOD(_objectReb, "Set_object_helper_vars", false);
+		// SAVE
+		_obj SV [ROVAR, _objRebs, true];
+		MEMBER('REB_ALL_OBJECT_REBS', REB_ALL_OBJECT_REBS);
 
-		SAVE_OBJ_REBS_LIST_SERVER
-		SAVE_OBJ_REBS_LIST
-
+		// ADD TO ALL REBs
 		METHOD(IOO_REB_DB, 'Add_reb', _obj);
 
 		true
 	};
 
-	PUBLIC FUNCTION("ANY","Remove") {
+	PUBLIC SERVER_FUNCTION("ANY","Remove") {
 		params[["_obj", GET_OR_OBJ((_this select 0))], ["_rebRef", _this#0, [objNull, {}, "", 0]]];
 
 		PR _objectReb = if !(IS_OBJ(_obj)) then {
@@ -61,43 +78,42 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			MEMBER('Get_object_reb', [_obj C _rebRef C _rebRef]);
 		};
 
+		// VALIDATIONS
 		if !(IS_OBJ(_obj)) EX;
-
 		IF_NIL_EX(_objectReb);
 
-		OBJ_REBS_LIST_VAR_SERVER
-		OBJ_REBS_LIST_VAR
-
+		// GET VALUES
 		PR _hsh = INSTANCE_VAR(_objectReb, "InstanceHash");
+		PR _name = INSTANCE_VAR(_objectReb, "InstanceName");
+		PR _objRebs = OBJ_VAR [ROVAR, createHashMap];
 
-		_objRebs_SERVER deleteAt _hsh;
+		// REMOVE
 		_objRebs deleteAt _hsh;
 		REB_ALL_OBJECT_REBS deleteAt _hsh;
-
-		METHOD(_objectReb, "Set_object_helper_vars", true);
-
 		DELETE(_objectReb);
 
-		SAVE_OBJ_REBS_LIST_SERVER
-		SAVE_OBJ_REBS_LIST
+		// SAVE
+		_obj SV [ROVAR, _objRebs, true];
+		MEMBER('REB_ALL_OBJECT_REBS', REB_ALL_OBJECT_REBS);
 
+		// REMOVE FROM ALL REBs
 		METHOD(IOO_REB_DB, 'Remove_reb', _obj);
 
 		true
 	};
 
-	PUBLIC FUNCTION("object","Clear_object_var") {
+	PUBLIC SERVER_FUNCTION("object","Clear_object_var") {
 		PR _obj = _this;
 
-		OBJ_REBS_LIST_VAR_SERVER
+		PR _objRebs = OBJ_VAR [ROVAR, createHashMap];
 
-		_objRebs_SERVER apply {
+		_objRebs apply {
 			REB_ALL_OBJECT_REBS deleteAt _x;
 			MEMBER('Remove', [_obj C _y]);
 		};
 
-		_obj SV [ROVAR_S, nil];
-		_obj SV [ROVAR, nil, true];
+		_obj SV [ROVAR, createHashMap, true];
+		MEMBER('REB_ALL_OBJECT_REBS', REB_ALL_OBJECT_REBS);
 	};
 
 	PUBLIC FUNCTION("array","Get_object_reb") {
@@ -111,7 +127,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			_obj = INSTANCE_VAR(_obj, "Object");
 		};
 
-		PR _objRebs = OBJ_REBS_LIST_SERVER(_obj);
+		PR _objRebs = OBJ_VAR [ROVAR, createHashMap];
 
 		if (!IS_HASH(_objRebs) || {ARR_EMPTY(_objRebs)}) EX;
 		
@@ -122,7 +138,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		PR _hsh = HASHVAL_(_ref);
 		PR _res = 0;
 
-		switch (true) do {
+		PR _res = switch (true) do {
 			case (_ref isEqualType 1): {
 				(values _objRebs) select _ref;
 			};
@@ -137,7 +153,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			};
 			case (IS_STR(_ref)): {
 				_objRebs apply {
-					if (_ref in INSTANCE_VAR(_y, "Reb_classname")) EW {
+					if (_ref in INSTANCE_VAR(OBJ_REB(_y), "Reb_classname")) EW {
 						_res = _y;
 					};
 				};
@@ -145,7 +161,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			};
 			case (IS_OBJ(_itemRef)): {
 				_objRebs apply {
-					if (INSTANCE_VAR(_y, "item_ref") EQTO _itemRef) EW {
+					if (INSTANCE_VAR(OBJ_REB(_y), "item_ref") EQTO _itemRef) EW {
 						_res = _y;
 					};
 				};
@@ -157,7 +173,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 				if (isNil "_cls") EX;
 
 				_objRebs apply {
-					if (INSTANCE_VAR(_y, "Reb_class") EQTO _cls) EW {
+					if (INSTANCE_VAR(OBJ_REB(_y), "Reb_class") EQTO _cls) EW {
 						_res = _y;
 					};
 				};
@@ -166,6 +182,8 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			default {
 			};
 		};
+
+		if !(isNil "_res") exitWith {OBJ_REB(_res)};
 	};
 
 	PUBLIC FUNCTION("ANY","Object_reb_exists") {
@@ -173,27 +191,14 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		_res = count (
 			(values REB_ALL_OBJECT_REBS) select {
-				(INSTANCE_VAR(_x, "Object") EQTO _obj) &&
-				(INSTANCE_VAR(_x, "Reb_classname") EQTO _rebClassname) &&
-				(INSTANCE_VAR(_x, "item_ref") EQTO _itemRef)
+				(INSTANCE_VAR(OBJ_REB(_x), "Object") EQTO _obj) &&
+				(INSTANCE_VAR(OBJ_REB(_x), "Reb_classname") EQTO _rebClassname) &&
+				(INSTANCE_VAR(OBJ_REB(_x), "item_ref") EQTO _itemRef)
 			}
 		) > 0;
 
 		_res
 	};
-
-	// PUBLIC FUNCTION("array","Get_items_object_rebs") {
-	// 	// Get all OBJECT_REB instances that has itemRef so that they created for item
-
-	// 	params["_obj"];
-
-	// 	OBJ_REBS_LIST_VAR_SERVER_P(_obj);
-
-	// 	PR _toArr = _objRebs_SERVER toArray false;
-	// 	PR _withItems = _toArr select {
-	// 		_x params [];
-	// 	};
-	// };
 
 	PUBLIC FUNCTION("ANY","Get_object_hash") {
 		PR _obj = if (IS_OBJ(_this)) then {

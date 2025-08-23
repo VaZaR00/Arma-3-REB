@@ -8,22 +8,28 @@
 
 #include "defines.h"
 
+
 CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 
-	PUBLIC VARIABLE("string","InstanceHash");
 	PUBLIC VARIABLE("object","Object");
-	PUBLIC VARIABLE("string","Reb_classname");
-	PUBLIC VARIABLE("code","Reb_class");
-	PUBLIC VARIABLE("scalar","Range");
-	PUBLIC VARIABLE("scalar","Deadzone");
-	PUBLIC VARIABLE("scalar","Strenght");
-	PUBLIC VARIABLE("bool","Is_active");
-	PUBLIC VARIABLE("scalar","ratio");
-	PUBLIC VARIABLE("object","item_ref"); // reference to dummyweapon placeholder for backpack
-	PUBLIC VARIABLE("bool","SimulateDamage");
-	PUBLIC VARIABLE("scalar","SimulatedHealth");
 
-	PUBLIC FUNCTION("array","constructor") {
+	PUBLIC OBJECT_VAR_SETTER("string","InstanceHash", "");
+	PUBLIC OBJECT_VAR_SETTER("string","Reb_classname", "");
+	PUBLIC OBJECT_VAR_SETTER("code","Reb_class", {});
+	PUBLIC OBJECT_VAR_SETTER("scalar","Max_Range", -1);
+	PUBLIC OBJECT_VAR_SETTER("scalar","Max_Deadzone", -1);
+	PUBLIC OBJECT_VAR_SETTER("scalar","Max_Strenght", 0);
+	PUBLIC OBJECT_VAR_SETTER("scalar","Range", -1);
+	PUBLIC OBJECT_VAR_SETTER("scalar","Deadzone", -1);
+	PUBLIC OBJECT_VAR_SETTER("scalar","Strenght", 0);
+	PUBLIC OBJECT_VAR_SETTER("bool","Is_active", false);
+	PUBLIC OBJECT_VAR_SETTER("bool","Has_reb", false);
+	PUBLIC OBJECT_VAR_SETTER("scalar","ratio", 1);
+	PUBLIC OBJECT_VAR_SETTER("object","item_ref", objNull); // reference to dummyweapon placeholder for backpack
+	PUBLIC OBJECT_VAR_SETTER("bool","SimulateDamage", false);
+	PUBLIC OBJECT_VAR_SETTER("scalar","SimulatedHealth", 0);
+
+	PUBLIC FUNCTION("array","constructor") { // executed on every client
 		params[
 			"_obj", 
 			"_rebClassname", 
@@ -38,7 +44,12 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		];
 
 		PR _rebClass = call compile _rebClassname;
-		PR _hash = UNQ_HASHVAL(_instance, _obj);
+		PR _hash = UNQ_HASHVAL(_self, _obj);
+
+		LOCAL_SETTER
+
+		MEMBER("SelfObjVarSetterObject", _obj);
+		MEMBER("SelfObjVarSetterPrefix", (PREF_ + _hash));
 
 		MEMBER("InstanceHash", _hash);
 		MEMBER("Object", _obj);
@@ -53,23 +64,27 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
 
-		_obj setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", _hash], _active, true];
+		MEMBER("Max_Range", INSTANCE_VAR(_rebClass I 'Max_Range'));
+		MEMBER("Max_Deadzone", INSTANCE_VAR(_rebClass I 'Max_Deadzone'));
+		MEMBER("Max_Strenght", INSTANCE_VAR(_rebClass I 'Max_Strenght'));
+
+		GLOBAL_SETTER
+
+		// _obj setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", _hash], _active, true];
 
 		if (_simulateDamage) then {
-			[_obj, _simulateDamage, _health] remoteExec ["REB_fnc_simulateDamage", 0, true];
+			[_obj, _simulateDamage, _health] call REB_fnc_simulateDamage;
 		};
-		[_obj] remoteExec ["REB_fnc_setEventHandlers", 0, true];
-		[_instance] remoteExec ["REB_fnc_createAceActionsForObjectReb", 0, true];
+		[_obj] call REB_fnc_setEventHandlers;
+		[_self] call REB_fnc_createAceActionsForObjectReb;
 
-		_instance
+		_self
 	};
 
-	PUBLIC FUNCTION("ANY","deconstructor") {
+	PUBLIC FUNCTION("ANY","deconstructor") { // executed on every client
 		PR _obj = SELF_VAR("Object");
-		// if (IS_REB(_obj)) exitWith {};
-		[_obj] remoteExec ["REB_fnc_removeEventHandlers", 0, true];
-		[_instance] remoteExec ["REB_fnc_removeAceActionsForObjectReb", 0, true];
-		// [_obj, false] call REB_fnc_setAttachable;
+		[_obj] call REB_fnc_removeEventHandlers;
+		[_self] call REB_fnc_removeAceActionsForObjectReb;
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Range") {
@@ -81,8 +96,6 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 
 		MEMBER("Range", _this);
 		MEMBER("Deadzone", _newDeadzone);
-
-		MEMBER("Set_object_helper_vars", false);
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Strenght") {
@@ -90,39 +103,12 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			hint LOC "$STR_REB_STRENGHT_EXCEED_MAX";
 		};
 		MEMBER("Strenght", _this);
-
-		MEMBER("Set_object_helper_vars", false);
 	};
 
 	PUBLIC FUNCTION("BOOL","Set_Active") {
 		MEMBER("Is_active", _this);
 
-		SELF_VAR("Object") setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", SELF_VAR("InstanceHash")], _this, true];
-
-		MEMBER("Set_object_helper_vars", false);
-	};
-	
-	PUBLIC FUNCTION("BOOL","Set_object_helper_vars") {
-		PR _nil = _this;
-
-		PR _obj = SELF_VAR("Object");
-		PR _hshVal = SELF_VAR("InstanceHash");
-
-		[
-			SELF_VAR("Range"),
-			SELF_VAR("Deadzone"),
-			SELF_VAR("Strenght"),
-			SELF_VAR("Is_active"),
-			SELF_VAR("ratio"),
-			SELF_VAR("Reb_classname")
-		] params ["_range", "_deadzone", "_strenght", "_isActive", "_ratio", "_rebClassname"];
-
-		_obj SV [ROVAR_NAME("_range"), IF_ELSE(_nil, nil, _range), true];
-		_obj SV [ROVAR_NAME("_deadzone"), IF_ELSE(_nil, nil, _deadzone), true];
-		_obj SV [ROVAR_NAME("_strenght"), IF_ELSE(_nil, nil, _strenght), true];
-		_obj SV [ROVAR_NAME("_isActive"), IF_ELSE(_nil, nil, _isActive), true];
-		_obj SV [ROVAR_NAME("_ratio"), IF_ELSE(_nil, nil, _ratio), true];
-		_obj SV [ROVAR_NAME("_rebClassname"), IF_ELSE(_nil, nil, _rebClassname), true];
+		// SELF_VAR("Object") setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", SELF_VAR("InstanceHash")], _this, true];
 	};
 
 ENDCLASS;

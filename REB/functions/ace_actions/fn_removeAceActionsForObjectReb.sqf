@@ -8,11 +8,8 @@ FILE_ONLY_SPAWN
 
 params ["_objectReb"];
 
-_this = _objectReb;
-GET_SERVER_VAL INSTANCE_VAR(_this, "Object"); 
-GSRES(private _object);
-GET_SERVER_VAL INSTANCE_VAR(_this, "InstanceHash"); 
-GSRES(private _objectRebHash);
+private _object = INSTANCE_VAR(_objectReb, "Object"); 
+private _objectRebHash = INSTANCE_VAR(_objectReb, "InstanceHash"); 
 
 private _varName = "REB_AceActions_" + _objectRebHash;
 

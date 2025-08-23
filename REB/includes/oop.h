@@ -282,14 +282,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	if ((count _this) > 0) then { \
 		private _selfClass = className; \
 		private _ooParentClass = parentClassName; \
-		private _oopRemoteTarget = -clientOwner; \
+		private _oopRemoteTarget = 0; \
 		private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
 		private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
 		if (isNil {_this select 0}) then {_this set [0,_selfClass]}; \
 		switch (_this select 0) do { \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
-			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooClassID, _ooInstanceName]; \
+			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
 			NAMESPACE setVariable [_ooInstanceName, _self]; \
 			[CONSTRUCTOR_METHOD, (_this select 1)] call _self; \
@@ -372,13 +372,14 @@ Addtions by Vazar
 /*
 Multiplayer implementation by Vazar
 */
-#define TARGET_VAR _oopRemoteTarget
+#define TARGET_VARNAME _oopRemoteTarget
+#define TARGET_VAR (if (isNil STR(TARGET_VARNAME)) then {0} else {TARGET_VARNAME})
 #define SV_TARGET_VAR _oopSVtarget
 
 #define DO_JIP (if (isNil "_oopRemoteJIP") then {false} else {_oopRemoteJIP})
 
-#define SET_TARGET(t) PR TARGET_VAR = t;
-#define GLOBALY PR TARGET_VAR = 0;
+#define SET_TARGET(t) PR TARGET_VARNAME = t;
+#define GLOBALY PR TARGET_VARNAME = 0;
 
 #define REMOTE_CALLCLASS(className,member,args,access) \
 	(if(isNil "_oopOriginCall")then{ \
@@ -430,8 +431,8 @@ Multiplayer implementation by Vazar
 #define VARIABLE(typeStr,fncName) DEFAULT_SETTER(typeStr,fncName,nil)
 
 // variable setters for MP
-#define LOCAL_OBJ_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && DEFAULT_SETTER(typeStr,fncName,defaultVal)
-#define GLOBAL_OBJ_VAR_SETTER(typeStr,fncName,defaultVal) DEFAULT_SETTER(typeStr,fncName,defaultVal)
+#define LOCAL_OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && OBJECT_VAR_SETTER(typeStr,fncName,defaultVal)
+#define GLOBAL_OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) OBJECT_VAR_SETTER(typeStr,fncName,defaultVal)
 
 #define LOCAL_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && DEFAULT_SETTER(typeStr,fncName,defaultVal)
 #define GLOBAL_VAR_SETTER(typeStr,fncName,defaultVal) DEFAULT_SETTER(typeStr,fncName,defaultVal)

@@ -68,14 +68,14 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 	};
 
 	PUBLIC SERVER_FUNCTION("ANY","Remove") {
-		params[["_obj", GET_OR_OBJ((_this select 0))], ["_rebRef", _this#0, [objNull, {}, "", 0]]];
+		params[["_obj", ((_this select 0))], ["_rebRef", _this#0, [objNull, {}, "", 0]]];
 
 		PR _objectReb = if !(IS_OBJ(_obj)) then {
 			PR _t = _obj;
 			_obj = INSTANCE_VAR(_obj, "Object");
 			_t
 		} else {
-			MEMBER('Get_object_reb', [_obj C _rebRef C _rebRef]);
+			MEMBER('Get_object_reb', [_obj I _rebRef I _rebRef]);
 		};
 
 		// VALIDATIONS
@@ -109,7 +109,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		_objRebs apply {
 			REB_ALL_OBJECT_REBS deleteAt _x;
-			MEMBER('Remove', [_obj C _y]);
+			MEMBER('Remove', [_obj I _y]);
 		};
 
 		_obj SV [ROVAR, createHashMap, true];

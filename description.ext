@@ -6,5 +6,6 @@ allowRecompileFunctions = 1;
 /////////////////////////////////////////////////////////  REB  ///////////////////////////////////////////////////////////////////
 
 
-#include "REB\CfgFunctions.hpp"
-#include "REB\CfgRemoteExec.hpp"
+#include "REB\includes\main.h"
+#include "REB\includes\CfgFunctions.hpp"
+#include "REB\includes\CfgRemoteExec.hpp"

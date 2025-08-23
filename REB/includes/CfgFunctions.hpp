@@ -2,7 +2,7 @@ class CfgFunctions
 {
 	class PREFX
 	{
-		class scripts##PREFX
+		class main
         {
 			recompile=1;
             file = CFG_FUNCTIONS_PATH;
@@ -15,7 +15,7 @@ class CfgFunctions
 			class setValueDialog {};
 			class remoteCall {};
 		};
-		class REBplacement
+		class placement
         {
 			recompile=1;
             file = CFG_FUNCTIONS_PATH_FOLDER(placement);

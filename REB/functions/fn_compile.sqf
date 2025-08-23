@@ -320,13 +320,14 @@ REB_fnc_makeRebClassname = {
 };
 REB_fnc_rebsInDroneRadius = {
 	params["_drone", ["_byRange", true]];
+	PR _varRange = if (_byRange) then {"Range"} else {"Deadzone"};
 	REB_all_rebs select {
 		PR _obj = _x;
 		PR _d = (_drone distance _obj);
 		count (OBJ_REBS_LIST(_obj) select {
 			PR _hashVal = _x;
 			(
-				(_d < (_obj GV [OBJ_VARPREF(IF_ELSE(_byRange I "Range" I "Deadzone")), -1])) &&
+				(_d < (_obj GV [OBJ_VARPREF(_varRange), -1])) &&
 				(_obj GV [OBJ_VARPREF("Is_active"), false])
 			)
 		}) > 0;

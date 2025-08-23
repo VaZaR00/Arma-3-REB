@@ -285,10 +285,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		private _oopRemoteTarget = 0; \
 		private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
 		private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
+		["CALL_CLs", _ooInstanceID, _ooInstanceName] RLOG; \
 		if (isNil {_this select 0}) then {_this set [0,_selfClass]}; \
 		switch (_this select 0) do { \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
+			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
+			private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
 			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
 			NAMESPACE setVariable [_ooInstanceName, _self]; \
@@ -410,9 +413,12 @@ Multiplayer implementation by Vazar
 
 // variable setter to class main object
 #define OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
-	private _ooObjVarSetObject = SELF_VAR_DEF("SelfObjVarSetterObject", objNull); \
-	private _ooVarSetName = format[SELF_VAR_DEF("SelfObjVarSetterPrefix", _selfClass) + "_%1", fncName]; \
+	private _ooObjVarSetObject = MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), objNull]; \
+	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
 	IF_SET \
+		["OBJ_SETTER", _ooObjVarSetObject, _ooVarSetName, typeStr, fncName, _this, defaultVal] RLOG; \
+		if (_ooMember == "SelfObjVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
+		if (_ooMember == "SelfObjVarSetterObject") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), _this, _ooVarSetGlobal]}; \
 		_ooObjVarSetObject SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
 	IF_GET \
 		_ooObjVarSetObject GV [_ooVarSetName, defaultVal]; \
@@ -422,8 +428,10 @@ Multiplayer implementation by Vazar
 
 // variable setter in mission namespace
 #define DEFAULT_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
-	private _ooVarSetName = format[SELF_VAR_DEF("SelfVarSetterPrefix", _ooInstanceID)  + "_%1", fncName]; \
+	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
 	IF_SET \
+		["SETTER", _ooVarSetName, typeStr, fncName, _this, defaultVal] RLOG; \
+		if (_ooMember == "SelfVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
 		NAMESPACE SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
 	IF_GET \
 		NAMESPACE GV [_ooVarSetName, defaultVal]; \

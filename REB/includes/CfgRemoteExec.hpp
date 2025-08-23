@@ -15,5 +15,6 @@ class CfgRemoteExec
         class REB_fnc_attachObject { allowedTargets = 0; jip = 1; };
         class REB_fnc_reb { allowedTargets = 0; jip = 1; };
         class REB_fnc_removeReb { allowedTargets = 0; jip = 1; };
+        class REB_fnc_remoteCall { allowedTargets = 0; jip = 1; };
     };
 };

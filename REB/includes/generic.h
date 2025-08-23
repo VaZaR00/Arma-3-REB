@@ -125,14 +125,15 @@ if (!canSuspend) EW { \
 #define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC(THIS_FUNC_NAME))
 
 // for server execuiton
+#define REMOTE_CALL_FUNC "call"
 #define EXEC_ON_SERVER_START PR _codeForServer = {
-#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["TEMP_fnc_remoteCall", 2]};
+#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec [REMOTE_CALL_FUNC, 2]};
 #define EXEC_ON_SERVER_END_RESULT }; \
 PR _serverExecResult = if (isServer) then { \
 	_this call _codeForServer \
 } else { \
-    private _tempVarName = format ["TEMP_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
-    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["call", 2]; \
+    private _tempVarName = format ["TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
+    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec [REMOTE_CALL_FUNC, 2]; \
     WAITSVAR(_tempVarName); \
     MGVAR _tempVarName; \
 }; \

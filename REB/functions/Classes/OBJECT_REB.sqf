@@ -44,14 +44,13 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		];
 
 		PR _rebClass = call compile _rebClassname;
-		PR _hash = UNQ_HASHVAL(_self, _obj);
+		PR _hash = SELF_VAR("InstanceHash");;
 
 		LOCAL_SETTER
 
 		MEMBER("SelfObjVarSetterObject", _obj);
-		MEMBER("SelfObjVarSetterPrefix", (PREF_ + _hash));
+		MEMBER("SelfObjVarSetterPrefix", (PREF_VAR + _hash));
 
-		MEMBER("InstanceHash", _hash);
 		MEMBER("Object", _obj);
 		MEMBER("Reb_classname", _rebClassname);
 		MEMBER("Reb_class", _rebClass);

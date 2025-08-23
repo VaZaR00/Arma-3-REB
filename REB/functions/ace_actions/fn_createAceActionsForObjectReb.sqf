@@ -62,7 +62,7 @@ PR _actionDisable = [
         private _objectReb = _params select 0;
         [_objectReb, false] call REB_fnc_setActive;
     },
-    {((_this select 0) getVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", ((_this select 2) select 1)], false])},
+    {PR _hashVal = ((_this select 2) select 1); ((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false])},
     {},
     [_objectReb, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
@@ -76,7 +76,7 @@ PR _actionEnable = [
         private _objectReb = _params select 0;
         [_objectReb, true] call REB_fnc_setActive;
     },
-    {!((_this select 0) getVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", ((_this select 2) select 1)], false])},
+    {PR _hashVal = ((_this select 2) select 1); !((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false])},
     {},
     [_objectReb, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;

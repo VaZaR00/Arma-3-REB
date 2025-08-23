@@ -23,11 +23,10 @@ waitUntil { sleep 1; !isNil "REB_var_START_INIT"  };
 
 if ((missionNamespace getVariable ["REB_var_INITED", false]) && !_forceInit) EX;
 
-// main classes instanciation
-if (isServer) then {
-    IOO_REB_DB = NEW(OO_REB_DB, nil);
-    IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
-};
+// main classes instantiation
+IOO_REB_DB = NEW(OO_REB_DB, nil);
+IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
+
 
 REB_systemIsOn = true;
 REB_attachSystemOn = true;

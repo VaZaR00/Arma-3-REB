@@ -51,7 +51,7 @@ if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
 // wait for REB system to be initialized
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
-// create REB instance on server backend
+// create REB instance on server for broadcast to all clients
 EXEC_ON_SERVER_START
 	ENSURE_SPAWN_ONCE_START
 
@@ -61,10 +61,10 @@ EXEC_ON_SERVER_START
 
 		// if the REB class already exists, just apply new parameters on it
 		if !(_previousClass isEqualTo {}) exitWith {
-			METHOD(_previousClass, "constructor", _this)
+			METHOD_GLOBAL(_previousClass, "constructor", _this)
 		};
 
-		PR _rebObject = ["new", _this] call OO_REB;
+		METHOD_GLOBAL(OO_REB, "new", _this);
 
 	ENSURE_SPAWN_ONCE_END
 EXEC_ON_SERVER_END

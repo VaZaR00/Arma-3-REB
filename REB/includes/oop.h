@@ -380,15 +380,16 @@ Multiplayer implementation by Vazar
 #define SET_TARGET(t) PR TARGET_VARNAME = t;
 #define GLOBALY PR TARGET_VARNAME = 0;
 
+#define REMOTE_CALL_FUNC "call"
 #define REMOTE_CALLCLASS(className,member,args,access) \
 	(if(isNil "_oopOriginCall")then{ \
-		[[className, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP]  \
+		[[className, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
 	}else{  \
-		[[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP] \
+		[[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
 	})
 
 #define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_selfClass,memberStr,args,2)}
-#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then {METHOD(object, method, args)} else {([[INSTANCE_VAR(object, "InstanceName"), [method, args]], {(_this select 1) call (MGVAR [(_this select 0), {}])}] remoteExec ["call", TARGET_VAR, DO_JIP])}
+#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then {METHOD(object, method, args)} else {([[INSTANCE_VAR(object, "InstanceName"), [method, args]], {(_this select 1) call (MGVAR [(_this select 0), {}])}] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP])}
 
 #define MEMBER_TARGET(memberStr,args,targ) SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
 #define METHOD_TARGET(object, method, args, targ) SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;

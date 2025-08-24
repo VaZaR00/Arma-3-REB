@@ -13,10 +13,11 @@ if !(IS_OOP(_objectReb)) then {
 if (!IS_OOP(_objectReb)) exitWith {};
 
 REB_currentHandledReb = _objectReb;
+_obj = INSTANCE_VAR(_objReb, "Object");
 
-REB_currentHandledRebClass = OBJ_VAR ["Reb_class", ""];
-REB_currentHandledRebMaxStrength = OBJ_VAR ["Max_Strenght", 0.6];
-private _strenght = OBJ_VAR ["Strenght", 0.6];
+REB_currentHandledRebClass = INSTANCE_VAR(_objReb, "Reb_class");
+REB_currentHandledRebMaxStrength = INSTANCE_VAR(_objReb, "Max_Strenght");
+private _strenght = INSTANCE_VAR(_objReb, "Strenght");
 
 
 private _startPos = if (_strenght == 0) then {0} else {_strenght * (10 / REB_currentHandledRebMaxStrength)};

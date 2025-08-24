@@ -282,19 +282,21 @@ REB_fnc_simulateDamage = {
 	Handle REB player actions
 */
 REB_fnc_setActive = {
-	params["_object", ["_isActive", true], ["_ref", ""], ["_itemRef", 0]];
+	params["_obj", ["_isActive", true], ["_ref", ""], ["_itemRef", 0]];
 
-	private _objectReb = _object;
+	private _objectReb = _obj;
 	if !(IS_OOP(_objectReb)) then {
-		_objectReb = [_object, _ref, _itemRef] call REB_fnc_getObjectRebByRef;
+		_objectReb = [_obj, _ref, _itemRef] call REB_fnc_getObjectRebByRef;
 	};
 
 	if (ISNIL(_objectReb) || {!(IS_OOP(_objectReb))}) exitWith {};
 
+	_obj = INSTANCE_VAR(_objectReb, "Object");
+
 	if (_ref isEqualTo true) exitWith {
 		{
 			METHOD(OBJ_REB(_x), "Set_Active", _isActive);
-		} forEach OBJ_REBS_LIST(_object);
+		} forEach OBJ_REBS_LIST(_obj);
 	};
 
 	METHOD(_objectReb, "Set_Active", _isActive);

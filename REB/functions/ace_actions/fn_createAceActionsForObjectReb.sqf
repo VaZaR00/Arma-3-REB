@@ -13,6 +13,8 @@ private _object = INSTANCE_VAR(_objectReb, "Object");
 private _rebClassname = INSTANCE_VAR(_objectReb, "Reb_classname"); 
 private _objectRebHash = INSTANCE_VAR(_objectReb, "InstanceHash"); 
 
+PR _hashVal = _objectRebHash;
+
 private _addToSelfActions = _object isKindOf "LandVehicle";
 
 // 1. Создать главный REB action, если его ещё нет

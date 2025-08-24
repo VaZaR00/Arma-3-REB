@@ -12,10 +12,11 @@ if !(IS_OOP(_objReb)) then {
 if (!IS_OOP(_objReb)) exitWith {};
 
 REB_currentHandledReb = _objReb;
+_obj = INSTANCE_VAR(_objReb, "Object");
 
-REB_currentHandledRebClass = OBJ_VAR ["Reb_class", ""];
-REB_currentHandledRebMaxRange = OBJ_VAR ["Max_Range", 100];
-private _range = OBJ_VAR ["Range", 100];
+REB_currentHandledRebClass = INSTANCE_VAR(_objReb, "Reb_class");
+REB_currentHandledRebMaxRange = INSTANCE_VAR(_objReb, "Max_Range");
+private _range = INSTANCE_VAR(_objReb, "Range");
 
 private _startPos = if (_range == 0) then {0} else {_range * (10 / REB_currentHandledRebMaxRange)};
 
@@ -42,7 +43,7 @@ PR _onButtonClick = {
         METHOD(_reb, "Set_Range", _newRange);
     // EXEC_ON_SERVER_END
 
-	REB_currentHandledObj = nil;
+	REB_currentHandledReb = nil;
 	REB_currentHandledRebClass = nil;
 	REB_currentHandledRebMaxRange = nil;
 

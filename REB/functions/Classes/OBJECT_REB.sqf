@@ -13,7 +13,6 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 
 	PUBLIC VARIABLE("object","Object");
 
-	PUBLIC OBJECT_VAR_SETTER("string","InstanceHash", "");
 	PUBLIC OBJECT_VAR_SETTER("string","Reb_classname", "");
 	PUBLIC OBJECT_VAR_SETTER("code","Reb_class", {});
 	PUBLIC OBJECT_VAR_SETTER("scalar","Max_Range", -1);
@@ -44,7 +43,7 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		];
 
 		PR _rebClass = call compile _rebClassname;
-		PR _hash = SELF_VAR("InstanceHash");;
+		PR _hash = SELF_VAR("InstanceHash");
 
 		LOCAL_SETTER
 
@@ -63,9 +62,9 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
 
-		MEMBER("Max_Range", INSTANCE_VAR(_rebClass I 'Max_Range'));
-		MEMBER("Max_Deadzone", INSTANCE_VAR(_rebClass I 'Max_Deadzone'));
-		MEMBER("Max_Strenght", INSTANCE_VAR(_rebClass I 'Max_Strenght'));
+		MEMBER("Max_Range", _range);
+		MEMBER("Max_Deadzone", _deadzone);
+		MEMBER("Max_Strenght", _strenght);
 
 		GLOBAL_SETTER
 

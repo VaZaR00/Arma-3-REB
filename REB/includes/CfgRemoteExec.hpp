@@ -10,7 +10,6 @@ class CfgRemoteExec
         class REB_fnc_initRebItems { allowedTargets = 0; jip = 1; };
         class REB_fnc_rebInit { allowedTargets = 0; jip = 1; };
         class REB_fnc_setAttachable { allowedTargets = 0; jip = 1; };
-        class REB_fnc_canManipulateAce { allowedTargets = 0; jip = 1; };
         class REB_fnc_objectRemoveAceActions { allowedTargets = 0; jip = 1; };
         class REB_fnc_attachObject { allowedTargets = 0; jip = 1; };
         class REB_fnc_reb { allowedTargets = 0; jip = 1; };

@@ -283,23 +283,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		private _selfClass = className; \
 		private _ooParentClass = parentClassName; \
 		private _oopRemoteTarget = 0; \
-		private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
-		private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
-		["CALL_CLs", _ooInstanceID, _ooInstanceName] RLOG; \
 		if (isNil {_this select 0}) then {_this set [0,_selfClass]}; \
 		switch (_this select 0) do { \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
 			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
 			private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
-			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
+			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _ooInstanceID = "%1"; private _ooInstanceName = "%2"; private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
 			NAMESPACE setVariable [_ooInstanceName, _self]; \
-			[CONSTRUCTOR_METHOD, (_this select 1)] call _self; \
 			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _self); \
 			METHOD(_self, "InstanceHash", _ooInstanceHash); \
 			METHOD(_self, "InstanceName", _ooInstanceName); \
 			METHOD(_self, "Classname", className); \
+			[CONSTRUCTOR_METHOD, (_this select 1)] call _self; \
 			_self; \
 		}; \
 		case "static":{ \
@@ -322,7 +319,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
-			private _self = NAMESPACE getVariable [_ooInstanceName, {}]; \
 			private _ooArgType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
 			private _ooVarSetGlobal = if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}; \
@@ -416,7 +412,6 @@ Multiplayer implementation by Vazar
 	private _ooObjVarSetObject = MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), objNull]; \
 	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
 	IF_SET \
-		["OBJ_SETTER", _ooObjVarSetObject, _ooVarSetName, typeStr, fncName, _this, defaultVal] RLOG; \
 		if (_ooMember == "SelfObjVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
 		if (_ooMember == "SelfObjVarSetterObject") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), _this, _ooVarSetGlobal]}; \
 		_ooObjVarSetObject SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
@@ -430,7 +425,6 @@ Multiplayer implementation by Vazar
 #define DEFAULT_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
 	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
 	IF_SET \
-		["SETTER", _ooVarSetName, typeStr, fncName, _this, defaultVal] RLOG; \
 		if (_ooMember == "SelfVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
 		NAMESPACE SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
 	IF_GET \

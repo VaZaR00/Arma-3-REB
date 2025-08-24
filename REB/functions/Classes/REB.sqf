@@ -42,6 +42,7 @@ CLASS("OO_REB") // IOO_REB
 			["_health", 100]
 		];
 
+
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
 
 		PR _initObj = IF_ELSE(IS_STR(_obj), objNull, _obj);
@@ -97,7 +98,6 @@ CLASS("OO_REB") // IOO_REB
 			if (REB_attachSystemOn) then {
 				[_initObj] call REB_fnc_setAttachable;
 			};
-			[_initObj] call REB_fnc_canManipulateAce;
 		};
 	};
 

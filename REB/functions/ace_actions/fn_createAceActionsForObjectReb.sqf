@@ -92,7 +92,7 @@ PR _actionSetRange = [
         private _objectReb = _params select 0;
         [_objectReb] spawn REB_fnc_setRange;
     },
-    {true},
+    {MGVAR ["REB_CanSetRangeGlobal", true]},
     {},
     [_objectReb]
 ] call ace_interact_menu_fnc_createAction;
@@ -106,7 +106,7 @@ PR _actionSetStrength = [
         private _objectReb = _params select 0;
         [_objectReb] spawn REB_fnc_setStrenght;
     },
-    {true},
+    {MGVAR ["REB_CanSetStrengthGlobal", false]} ,
     {},
     [_objectReb]
 ] call ace_interact_menu_fnc_createAction;
@@ -115,6 +115,8 @@ _object SV ["REB_actionDisable", _actionDisable];
 _object SV ["REB_actionEnable", _actionEnable];
 _object SV ["REB_actionSetRange", _actionSetRange];
 _object SV ["REB_actionSetStrength", _actionSetStrength];
+_object SV ["REB_CanSetStrength", INSTANCE_VAR(_objectReb, "Can_modify_strenght")];
+_object SV ["REB_CanSetRange", INSTANCE_VAR(_objectReb, "Can_modify_range")];
 
 // 4. Собрать ветку для object_reb (глобально)
 PR _objectRebBranch = [
@@ -125,12 +127,17 @@ PR _objectRebBranch = [
     {true},
     {
         params ["_target", ["_player", player], ["_params", []]];
-        [
+        _acts = [
             _target GV "REB_actionDisable",
-            _target GV "REB_actionEnable",
-            _target GV "REB_actionSetRange",
-            _target GV "REB_actionSetStrength"
-        ] apply {
+            _target GV "REB_actionEnable"
+        ];
+        if (_target GV ["REB_CanSetStrength", false]) then {
+            _acts pushBack (_target GV "REB_actionSetStrength");
+        };
+        if (_target GV ["REB_CanSetRange", false]) then {
+            _acts pushBack (_target GV "REB_actionSetRange");
+        };
+        _acts apply {
 			[_x, [], _target]
 		};
     },

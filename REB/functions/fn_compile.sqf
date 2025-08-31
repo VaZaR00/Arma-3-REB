@@ -190,7 +190,10 @@ REB_fnc_addRebOnObj = {
 
 	params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-	METHOD_GLOBAL(GET_REB_INSTANCE(_rebObj), "New_object_reb", [_obj I _itemRef]);
+	ARGS [_obj I _itemRef];
+	PR _rebInst = GET_REB_INSTANCE(_rebObj);
+
+	METHOD_GLOBAL(_rebInst, "New_object_reb", _args);
 };
 REB_fnc_removeRebOnObj = {
 	if (IS_ARR(_this select 1)) then {
@@ -199,7 +202,10 @@ REB_fnc_removeRebOnObj = {
 
 	params['_obj', '_rebObj', ['_itemRef', objNull]];
 
-	METHOD_GLOBAL(GET_REB_INSTANCE(_rebObj), "Delete_object_reb", [_obj I _itemRef]);
+	ARGS [_obj I _itemRef];
+	PR _rebInst = GET_REB_INSTANCE(_rebObj);
+
+	METHOD_GLOBAL(_rebInst, "Delete_object_reb", _args);
 };
 REB_fnc_setEventHandlers = {
 	params[["_obj", 0]];
@@ -323,7 +329,7 @@ REB_fnc_makeRebClassname = {
 REB_fnc_rebsInDroneRadius = {
 	params["_drone", ["_byRange", true]];
 	PR _varRange = if (_byRange) then {"Range"} else {"Deadzone"};
-	REB_all_rebs select {
+	(values REB_all_rebs) select {
 		PR _obj = _x;
 		PR _d = (_drone distance _obj);
 		count (OBJ_REBS_LIST(_obj) select {

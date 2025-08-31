@@ -27,6 +27,8 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC OBJECT_VAR_SETTER("object","item_ref", objNull); // reference to dummyweapon placeholder for backpack
 	PUBLIC OBJECT_VAR_SETTER("bool","SimulateDamage", false);
 	PUBLIC OBJECT_VAR_SETTER("scalar","SimulatedHealth", 0);
+	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_range", true);
+	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_strenght", false);
 
 	PUBLIC FUNCTION("array","constructor") { // executed on every client
 		params[
@@ -39,7 +41,9 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			["_ratio", 100/30], 
 			["_itemRef", objNull], 
 			["_simulateDamage", false], 
-			["_health", 100]
+			["_health", 100],
+			["_can_modify_range", true], 
+			["_can_modify_strenght", false]
 		];
 
 		PR _rebClass = call compile _rebClassname;
@@ -61,10 +65,16 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("item_ref", _itemRef);
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
+		MEMBER("Can_modify_range", _can_modify_range);
+		MEMBER("Can_modify_strenght", _can_modify_strenght);
 
-		MEMBER("Max_Range", _range);
-		MEMBER("Max_Deadzone", _deadzone);
-		MEMBER("Max_Strenght", _strenght);
+		PR _maxRange = INSTANCE_VAR(_rebClass, "Max_Range");
+		PR _maxDeadzone = INSTANCE_VAR(_rebClass, "Max_Deadzone");
+		PR _maxStrenght = INSTANCE_VAR(_rebClass, "Max_Strenght");
+
+		MEMBER("Max_Range", _maxRange);
+		MEMBER("Max_Deadzone", _maxDeadzone);
+		MEMBER("Max_Strenght", _maxStrenght);
 
 		GLOBAL_SETTER
 

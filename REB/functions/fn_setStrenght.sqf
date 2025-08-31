@@ -5,14 +5,14 @@ FILE_ONLY_SPAWN
 
 params [["_obj", objNull], ["_ref", ""], ["_itemRef", 0]];
 
-private _objectReb = _obj;
-if !(IS_OOP(_objectReb)) then {
+private _objReb = _obj;
+if !(IS_OOP(_objReb)) then {
     _objReb = _this call REB_fnc_getObjectRebByRef; 
 };
 
-if (!IS_OOP(_objectReb)) exitWith {};
+if (!IS_OOP(_objReb)) exitWith {};
 
-REB_currentHandledReb = _objectReb;
+REB_currentHandledReb = _objReb;
 _obj = INSTANCE_VAR(_objReb, "Object");
 
 REB_currentHandledRebClass = INSTANCE_VAR(_objReb, "Reb_class");

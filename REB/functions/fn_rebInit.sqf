@@ -28,6 +28,8 @@ IOO_REB_DB = NEW(OO_REB_DB, nil);
 IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 
 
+REB_CanSetStrengthGlobal = false;
+REB_CanSetRangeGlobal = true;
 REB_systemIsOn = true;
 REB_attachSystemOn = true;
 REB_createUavCrewOnDisconectTime = 5;

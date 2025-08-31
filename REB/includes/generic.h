@@ -122,6 +122,11 @@ if (!canSuspend) EW { \
     _this spawn fnc; \
 }; \
 
+#define WAIT_A_BIT_T(code, t) private _tempWaitABitStartTime = time; \
+waitUntil { (code) || ((time - _tempWaitABitStartTime) > t) }; \
+
+#define WAIT_A_BIT(code) WAIT_A_BIT_T(code, 1)
+
 #define FILE_ONLY_SPAWN ONLY_SPAWN(QFUNC(THIS_FUNC_NAME))
 
 // for server execuiton

@@ -36,12 +36,11 @@ CLASS("OO_REB") // IOO_REB
 			["_strenght", 0.6], 
 			["_isAttachable", false], 
 			["_can_modify_range", true], 
-			["_can_modify_strenght", true], 
+			["_can_modify_strenght", false], 
 			["_active", true],
 			["_simulateDamage", false], 
 			["_health", 100]
 		];
-
 
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
 
@@ -141,7 +140,9 @@ CLASS("OO_REB") // IOO_REB
 			SELF_VAR('Ratio'),
 			_itemRef,
 			IF_ELSE(_obj isEqualTo SELF_VAR('Init_object'), SELF_VAR('SimulateDamage'), false),
-			SELF_VAR('SimulatedHealth')
+			SELF_VAR('SimulatedHealth'),
+			SELF_VAR('Can_modify_range'),
+			SELF_VAR('Can_modify_strenght')
 		];
 
 		PR _objectReb = ["new", _params] call OO_OBJECT_REB;
@@ -169,11 +170,11 @@ CLASS("OO_REB") // IOO_REB
 		true
 	};
 
-	PUBLIC SERVER_FUNCTION("CODE","Add_object_reb_to_list") {
+	PUBLIC SERVER_FUNCTION("code","Add_object_reb_to_list") {
 		SELF_ARRAY_ADD('object_reb_list', OBJ_REB_VAR(_this));
 	};
 
-	PUBLIC SERVER_FUNCTION("CODE","Remove_object_reb_from_list") {
+	PUBLIC SERVER_FUNCTION("code","Remove_object_reb_from_list") {
 		SELF_ARRAY_REM('object_reb_list', OBJ_REB_VAR(_this));
 	};
 

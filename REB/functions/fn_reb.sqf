@@ -34,6 +34,7 @@ PR _obj = _this select 0;
 
 sleep 0.1; // wait for mission fully initialized
 
+
 // Ensure the function is only executed where the object is local on mission init
 if !(local _obj) exitWith {
 	// if mission time is less than 1 second, we assume its init and all clients are executing it including server
@@ -64,7 +65,7 @@ EXEC_ON_SERVER_START
 			METHOD_GLOBAL(_previousClass, "constructor", _this)
 		};
 
-		METHOD_GLOBAL(OO_REB, "new", _this);
+		SPAWN_METHOD_GLOBAL(OO_REB, "new", _this);
 
 	ENSURE_SPAWN_ONCE_END
 EXEC_ON_SERVER_END

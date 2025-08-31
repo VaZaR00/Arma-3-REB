@@ -285,6 +285,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		private _oopRemoteTarget = 0; \
 		if (isNil {_this select 0}) then {_this set [0,_selfClass]}; \
 		switch (_this select 0) do { \
+		case "classname":{ \
+			className; \
+		}; \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
 			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
@@ -293,9 +296,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			ENSURE_INDEX(1,nil); \
 			NAMESPACE setVariable [_ooInstanceName, _self]; \
 			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _self); \
+			LOCAL_SETTER \
 			METHOD(_self, "InstanceHash", _ooInstanceHash); \
 			METHOD(_self, "InstanceName", _ooInstanceName); \
 			METHOD(_self, "Classname", className); \
+			GLOBAL_SETTER \
 			[CONSTRUCTOR_METHOD, (_this select 1)] call _self; \
 			_self; \
 		}; \
@@ -315,7 +320,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}; \
 		default { \
 			private _ooClassID = _this select 0; \
-			private _ooMember = _this select 1; \
+			private _ooMember = param[1, ""]; \
 			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
@@ -353,6 +358,7 @@ Addtions by Vazar
 #define GLOBAL_SETTER private _ooVarSetGlobal = true;
 
 #define METHOD(object, method, args) ([method, args] call object)
+#define SPAWN_METHOD(object, method, args) ([method, args] spawn object)
 
 #define SELF_VAR(var) (MEMBER(var, nil))
 #define SET_SELF_VAR(var, val) MEMBER(var, val);
@@ -383,19 +389,91 @@ Multiplayer implementation by Vazar
 #define REMOTE_CALL_FUNC "call"
 #define REMOTE_CALLCLASS(className,member,args,access) \
 	(if(isNil "_oopOriginCall")then{ \
-		[[className, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
+		[ \
+			[ \
+				[className, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) call GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
 	}else{  \
-		[[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+		[ \
+			[ \
+				[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) call GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+	})
+#define REMOTE_SPAWN_CLASS(className,member,args,access) \
+	(if(isNil "_oopOriginCall")then{ \
+		[ \
+			[ \
+				[className, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) spawn GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
+	}else{  \
+		[ \
+			[ \
+				[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) spawn GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
 	})
 
 #define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_selfClass,memberStr,args,2)}
-#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then {METHOD(object, method, args)} else {([[INSTANCE_VAR(object, "InstanceName"), [method, args]], {(_this select 1) call (MGVAR [(_this select 0), {}])}] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP])}
+#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
+	METHOD(object, method, args) \
+} else { \
+	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
+	[ \
+		[ \
+			[_ooRemoteInstanceName, method, args] \
+		], \
+		{ \
+			params ["_objectName", "_method", "_args"]; \
+			private _object = NAMESPACE getVariable [_objectName, {}]; \
+			METHOD(_object, _method, _args); \
+		} \
+	] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+}
+#define SPAWN_METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
+	SPAWN_METHOD(object, method, args) \
+} else { \
+	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
+	[ \
+		[ \
+			[_ooRemoteInstanceName, method, args] \
+		], \
+		{ \
+			_this spawn { \
+				params ["_objectName", "_method", "_args"]; \
+				WAIT_A_BIT(!(isNil {NAMESPACE getVariable _objectName})); \
+				private _object = NAMESPACE getVariable [_objectName, {}]; \
+				SPAWN_METHOD(_object, _method, _args); \
+			}; \
+		} \
+	] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+}
 
 #define MEMBER_TARGET(memberStr,args,targ) SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
 #define METHOD_TARGET(object, method, args, targ) SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
+#define SPAWN_METHOD_TARGET(object, method, args, targ) SET_TARGET(targ); SPAWN_METHOD_GLOBAL(object, method, args); GLOBALY;
 
 #define MEMBER_SERVER(memberStr,args) SET_TARGET(2); MEMBER_GLOBAL(memberStr,args); GLOBALY;
 #define METHOD_SERVER(object, method, args) SET_TARGET(2); METHOD_GLOBAL(object, method, args); GLOBALY;
+#define SPAWN_METHOD_SERVER(object, method, args) SET_TARGET(2); SPAWN_METHOD_GLOBAL(object, method, args); GLOBALY;
 
 
 #define SERVER_FUNCTION(typeStr,fncName) (isServer || !isMultiplayer) && FUNCTION(typeStr,fncName)

@@ -324,6 +324,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
+			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
 			private _ooArgType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
 			private _ooVarSetGlobal = if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}; \

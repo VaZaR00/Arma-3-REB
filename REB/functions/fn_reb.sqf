@@ -38,7 +38,8 @@ sleep 0.1; // wait for mission fully initialized
 // Ensure the function is only executed where the object is local on mission init
 if !(local _obj) exitWith {
 	// if mission time is less than 1 second, we assume its init and all clients are executing it including server
-	if (time > 1) then {
+	// also we check if player is JIP, cuz it would call it all again and rewrite everything
+	if (!didJIP && (time > 1)) then {
 		_this remoteExec ["REB_fnc_reb", OBJ_OWNER(_obj)];
 	}; 
 };
@@ -52,6 +53,7 @@ if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
 // wait for REB system to be initialized
 waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
+
 // create REB instance on server for broadcast to all clients
 EXEC_ON_SERVER_START
 	ENSURE_SPAWN_ONCE_START
@@ -59,6 +61,8 @@ EXEC_ON_SERVER_START
 		// check if the REB class already exists
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', (_this select 0));
 		PR _previousClass = MGVAR [_name, {}];
+
+		SET_JIP(true); // add all executions to JIP
 
 		// if the REB class already exists, just apply new parameters on it
 		if !(_previousClass isEqualTo {}) exitWith {

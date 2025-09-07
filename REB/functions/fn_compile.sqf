@@ -35,6 +35,9 @@ REB_fnc_eventHandler = {
 	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
 
 	REB_noise ppEffectEnable false;
+	REB_isSuppressed = false;
+	call REB_fnc_removeInputDelay;
+
 	_uav = if (!(_newCameraOn isEqualTo player) && (_newCameraOn in allUnitsUAV) && !(_newCameraOn in allPlayers) && (alive player)) then {_newCameraOn} else {objNull};
 	REB_currentUAV = _uav;
 
@@ -48,13 +51,16 @@ REB_fnc_eventHandler = {
 			} do {
 				call REB_fnc_main;
 			};
+			REB_currentUAV = objNull;
 		};
 	};
 };
 REB_fnc_main = {
 	params [["_freq", REB_freq], ["_random", REB_random], ["_noise", REB_noise], ["_uav", GET_PLAYER_DRONE]];
 
+	REB_isSuppressed = false;
 	_noise ppEffectEnable false; 
+	call REB_fnc_removeInputDelay;
 
 	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
 	if (_uav getVariable ["REB_var_skipThis", false]) exitWith {};
@@ -79,7 +85,7 @@ REB_fnc_main = {
 
 	PR _activeRebStrength = _uav call REB_fnc_currentJammingRebStrength;
 
-	IF_NIL_EX(_activeRebStrength);
+	if !(_activeRebStrength > 0) exitWith {};
 
 	_uav disableTIEquipment true;
 	
@@ -108,7 +114,12 @@ REB_fnc_currentJammingRebStrength = {
 		};
 	};
 
-	IF_ELSE(_currentStrength <= 0, nil, _currentStrength);
+	REB_currentStrength = if (_currentStrength <= 0) then {
+		0
+	} else {
+		_currentStrength
+	};
+	REB_currentStrength
 };
 REB_fnc_isInDeadzone = {
 	PR _isDead = false;
@@ -145,6 +156,12 @@ REB_fnc_disconectDrone = {
 	};
 };
 REB_fnc_suppress = {
+	REB_isSuppressed = true;
+
+	if (MGVAR ["REB_delayInput", true]) then {
+		call REB_fnc_delayInput;
+	};
+
 	PR _effect = (random _random) * _this;
 	
 	_effect call REB_fnc_showEffect;
@@ -178,6 +195,79 @@ REB_fnc_disableSystem = {
 	MSVAR ["REB_var_INITED", false];
 
 	hint "REB SYSTEM DISABLED";
+};
+
+/*
+	Delay input simulation system
+*/
+REB_fnc_delayInput = {
+	PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
+	PR _chance = _currentStrength * REB_randomDelayInput;
+
+	if ([true, false] selectRandomWeighted [1 - _chance, _chance]) then {
+		call REB_fnc_createInputBlockDisplay
+	};
+};
+REB_fnc_removeInputDelay = {
+	call REB_fnc_removeInputBlockDisplay
+};
+// Block mouse and some keys
+REB_fnc_createInputBlockDisplay = {
+	if !(isNull (uiNamespace getVariable ["REB_tempBlockInputDisp", displayNull])) exitWith {};
+	PR _tempBlockInputDisp = findDisplay 46 createDisplay "RscDisplayEmpty";
+	uiNamespace setVariable ["REB_tempBlockInputDisp", _tempBlockInputDisp];
+	hint ("DELAY INPUT " + str (time));	
+	ENSURE_SPAWN_ONCE_START
+		hint ("START DELAY INPUT " + str (time));
+		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
+
+		sleep (_currentStrength + (random REB_randomDelayInput));
+		hint ("END DELAY INPUT " + str (time));
+
+		call REB_fnc_removeInputDelay;
+	ENSURE_SPAWN_ONCE_END
+};
+REB_fnc_removeInputBlockDisplay = {
+	(uiNamespace getVariable ["REB_tempBlockInputDisp", displayNull]) closeDisplay 1;
+	uiNamespace setVariable ["REB_tempBlockInputDisp", nil];
+};
+// Block all keys
+REB_fnc_delayInputEventHandler = {
+	waitUntil {!isNull findDisplay 46};
+
+	findDisplay 46 displayAddEventHandler ["KeyDown", {
+		call REB_fnc_delayInputKeys;
+	}];
+};
+REB_fnc_delayInputKeys = {
+	private _handled = false;
+	if (
+		!((missionNamespace getVariable ["REB_currentUAV", objNull]) isEqualTo objNull) && // does player control drone ?
+		(missionNamespace getVariable ["REB_isSuppressed", false])
+	) then {
+		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
+		PR _chance = _currentStrength * REB_randomDelayInput;
+
+		if (
+			([true, false] selectRandomWeighted [1 - _chance, _chance]) &&
+			{
+				!(inputAction "nextAction" > 0) && 
+				!(inputAction "prevAction" > 0) && 
+				!(inputAction "Action" > 0) && 
+				!(inputAction "ActionContext" > 0) && 
+				!(inputAction "navigateMenu" > 0) && 
+				!(inputAction "closeContext" > 0) && 
+				!(inputAction "ingamePause" > 0) && 
+				!(inputAction "uavViewToggle" > 0) && 
+				!(inputAction "uavView" > 0)
+			}
+		) then {
+			hint ("KEY DELAY INPUT " + str (time));
+			_handled = true; // make delay input
+		};
+	};
+
+	_handled;
 };
 
 /*

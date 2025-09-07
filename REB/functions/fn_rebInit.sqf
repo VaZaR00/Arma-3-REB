@@ -28,7 +28,7 @@ IOO_REB_DB = NEW(OO_REB_DB, nil);
 IOO_OBJECT_REB_DB = NEW(OO_OBJECT_REB_DB, nil);
 
 
-REB_CanSetStrengthGlobal = false;
+REB_CanSetStrengthGlobal = true;
 REB_CanSetRangeGlobal = true;
 REB_systemIsOn = true;
 REB_attachSystemOn = true;
@@ -39,6 +39,8 @@ REB_var_rebItemsClasses = [];
 REB_var_rebItemsSystemInited = false;
 REB_freq = _freq;
 REB_random = _random;
+REB_delayInput = true;
+REB_randomDelayInput = 0.5;
 
 call REB_fnc_initEffects;
 
@@ -64,6 +66,10 @@ if (isNil "REB_ON_HANDLE_DRONE_EH") then {
             true;
         };
     }];
+};
+
+if (MGVAR ["REB_var_testKeyInputDelay", false]) then {
+    [] spawn REB_fnc_delayInputEventHandler;
 };
 
 MSVAR ["REB_var_INITED", true];

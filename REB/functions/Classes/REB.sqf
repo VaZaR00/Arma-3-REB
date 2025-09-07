@@ -76,7 +76,7 @@ CLASS("OO_REB") // IOO_REB
 
 		GLOBAL_SETTER
 
-		MSVAR [_name, _self];
+		MSVAR [_name, _ooSelf];
 
 
 		if (IS_OBJ(_obj)) then {

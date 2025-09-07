@@ -292,17 +292,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
 			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
 			private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
-			private _self = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _ooInstanceID = "%1"; private _ooInstanceName = "%2"; private _self = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
+			private _ooSelf = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _ooInstanceID = "%1"; private _ooInstanceName = "%2"; private _ooSelf = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
-			NAMESPACE setVariable [_ooInstanceName, _self]; \
-			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _self); \
+			NAMESPACE setVariable [_ooInstanceName, _ooSelf]; \
+			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _ooSelf); \
 			LOCAL_SETTER \
-			METHOD(_self, "InstanceHash", _ooInstanceHash); \
-			METHOD(_self, "InstanceName", _ooInstanceName); \
-			METHOD(_self, "Classname", className); \
+			METHOD(_ooSelf, "InstanceHash", _ooInstanceHash); \
+			METHOD(_ooSelf, "InstanceName", _ooInstanceName); \
+			METHOD(_ooSelf, "Classname", className); \
 			GLOBAL_SETTER \
-			[CONSTRUCTOR_METHOD, (_this select 1)] call _self; \
-			_self; \
+			[CONSTRUCTOR_METHOD, (_this select 1)] call _ooSelf; \
+			_ooSelf; \
 		}; \
 		case "static":{ \
 			private _code = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', className]; \
@@ -324,7 +324,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
-			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
+			private _ooSelf = NAMESPACE getVariable [_ooInstanceName, {}]; \
 			private _ooArgType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
 			private _ooVarSetGlobal = if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}; \
@@ -382,6 +382,7 @@ Multiplayer implementation by Vazar
 #define TARGET_VAR (if (isNil STR(TARGET_VARNAME)) then {0} else {TARGET_VARNAME})
 #define SV_TARGET_VAR _oopSVtarget
 
+#define SET_JIP(v) PR _oopRemoteJIP = v;
 #define DO_JIP (if (isNil "_oopRemoteJIP") then {false} else {_oopRemoteJIP})
 
 #define SET_TARGET(t) PR TARGET_VARNAME = t;

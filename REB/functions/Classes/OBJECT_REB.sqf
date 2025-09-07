@@ -84,15 +84,15 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			[_obj, _simulateDamage, _health] call REB_fnc_simulateDamage;
 		};
 		[_obj] call REB_fnc_setEventHandlers;
-		[_self] call REB_fnc_createAceActionsForObjectReb;
+		[_ooSelf] call REB_fnc_createAceActionsForObjectReb;
 
-		_self
+		_ooSelf
 	};
 
 	PUBLIC FUNCTION("ANY","deconstructor") { // executed on every client
 		PR _obj = SELF_VAR("Object");
 		[_obj] call REB_fnc_removeEventHandlers;
-		[_self] call REB_fnc_removeAceActionsForObjectReb;
+		[_ooSelf] call REB_fnc_removeAceActionsForObjectReb;
 	};
 
 	PUBLIC FUNCTION("scalar","Set_Range") {

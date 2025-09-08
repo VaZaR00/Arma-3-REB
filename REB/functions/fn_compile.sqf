@@ -202,7 +202,7 @@ REB_fnc_disableSystem = {
 */
 REB_fnc_delayInput = {
 	PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
-	PR _chance = _currentStrength * REB_randomDelayInput;
+	PR _chance = _currentStrength * REB_delayInputCoef * (MGVAR ["REB_mouseDelayInputCoef", 1]);
 
 	if ([true, false] selectRandomWeighted [1 - _chance, _chance]) then {
 		call REB_fnc_createInputBlockDisplay
@@ -216,13 +216,10 @@ REB_fnc_createInputBlockDisplay = {
 	if !(isNull (uiNamespace getVariable ["REB_tempBlockInputDisp", displayNull])) exitWith {};
 	PR _tempBlockInputDisp = findDisplay 46 createDisplay "RscDisplayEmpty";
 	uiNamespace setVariable ["REB_tempBlockInputDisp", _tempBlockInputDisp];
-	hint ("DELAY INPUT " + str (time));	
 	ENSURE_SPAWN_ONCE_START
-		hint ("START DELAY INPUT " + str (time));
 		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
 
-		sleep (_currentStrength + (random REB_randomDelayInput));
-		hint ("END DELAY INPUT " + str (time));
+		sleep (_currentStrength + (random REB_delayInputCoef));
 
 		call REB_fnc_removeInputDelay;
 	ENSURE_SPAWN_ONCE_END
@@ -246,7 +243,7 @@ REB_fnc_delayInputKeys = {
 		(missionNamespace getVariable ["REB_isSuppressed", false])
 	) then {
 		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
-		PR _chance = _currentStrength * REB_randomDelayInput;
+		PR _chance = _currentStrength * REB_delayInputCoef * (MGVAR ["REB_keyDelayInputCoef", 1]);
 
 		if (
 			([true, false] selectRandomWeighted [1 - _chance, _chance]) &&
@@ -262,7 +259,6 @@ REB_fnc_delayInputKeys = {
 				!(inputAction "uavView" > 0)
 			}
 		) then {
-			hint ("KEY DELAY INPUT " + str (time));
 			_handled = true; // make delay input
 		};
 	};

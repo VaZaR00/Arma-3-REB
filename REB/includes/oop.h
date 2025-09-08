@@ -61,7 +61,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CHECK_VAR(typeStr,varName) {CHECK_MEMBER(varName)} && {CHECK_TYPE(typeStr) || CHECK_NIL}
 
 #define GETVAR(var) (_ooClassID + "_" + var)
-#define GETSVAR(var) (_selfClass + "_" + var)
+#define GETSVAR(var) (_ooSelfClass + "_" + var)
 #define GETCLASS(className) (NAMESPACE getVariable [className, {nil}])
 #define CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_ooClassID, member, SAFE_VAR(args),access] call GETCLASS(className) }else{ [_ooClassID, member, SAFE_VAR(args),access] call GETCLASS(_oopOriginCall)})
 #define SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_ooClassID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_ooClassID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
@@ -125,7 +125,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	See Also:
 		<CLASSEXTENDS>
 */
-#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _selfClass, _ooMember, _ooArgType]; };
+#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _ooSelfClass, _ooMember, _ooArgType]; };
 
 /*
 	Macro: CLASS_EXTENDS(childClassName,parentClassName)
@@ -227,8 +227,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		memberStr - The name of the member function or variable [string].
 		args - The arguments to be passed to the member function or variable [any].
 */
-#define MEMBER(memberStr,args) CALLCLASS(_selfClass,memberStr,args,2)
-#define SPAWN_MEMBER(memberStr,args) SPAWNCLASS(_selfClass,memberStr,args,2)
+#define MEMBER(memberStr,args) CALLCLASS(_ooSelfClass,memberStr,args,2)
+#define SPAWN_MEMBER(memberStr,args) SPAWNCLASS(_ooSelfClass,memberStr,args,2)
 
 /*
 	Macro: SUPER(memberStr,args)
@@ -238,7 +238,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		memberStr - The name of the parent mumber function
 		args - The arguments to be passed to the member function or variable [any].
 */
-#define SUPER(memberStr,args) CALLCLASS_FROMCHILD(_ooParentClass,memberStr,args,1, _selfClass)
+#define SUPER(memberStr,args) CALLCLASS_FROMCHILD(_ooParentClass,memberStr,args,1, _ooSelfClass)
 
 /*
 	Macro:  NEW(class, args)
@@ -280,10 +280,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	NAMESPACE setVariable [className, { try { \
 	CHECK_THIS; \
 	if ((count _this) > 0) then { \
-		private _selfClass = className; \
+		private _ooSelfClass = className; \
 		private _ooParentClass = parentClassName; \
 		private _oopRemoteTarget = 0; \
-		if (isNil {_this select 0}) then {_this set [0,_selfClass]}; \
+		if (isNil {_this select 0}) then {_this set [0,_ooSelfClass]}; \
 		switch (_this select 0) do { \
 		case "classname":{ \
 			className; \
@@ -324,6 +324,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
+			private _ooInstanceName = if (isNil "_ooInstanceName") then {_ooSelfClass} else {_ooInstanceName}; \
+			private _ooInstanceID = if (isNil "_ooInstanceID") then {_ooSelfClass} else {_ooInstanceID}; \
 			private _ooSelf = NAMESPACE getVariable [_ooInstanceName, {}]; \
 			private _ooArgType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
@@ -430,7 +432,7 @@ Multiplayer implementation by Vazar
 		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
 	})
 
-#define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_selfClass,memberStr,args,2)}
+#define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_ooSelfClass,memberStr,args,2)}
 #define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
 	METHOD(object, method, args) \
 } else { \

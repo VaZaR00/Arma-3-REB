@@ -1,8 +1,9 @@
+#include "includes\defines.h"
 #include "includes\main.h"
 
 class CfgPatches {
-	class PREFX {
-		name = STR(PREFX);
+	class ADDON_NAME {
+		name = "REB Modules";
 		author = "Vazar";
 		requiredAddons[] = {
 			"A3_Functions_F",
@@ -16,3 +17,4 @@ class CfgPatches {
 
 #include "includes\CfgFunctions.hpp"
 #include "includes\CfgRemoteExec.hpp"
+#include "includes\CfgModules.hpp"

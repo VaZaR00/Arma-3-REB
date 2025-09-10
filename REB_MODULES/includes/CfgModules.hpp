@@ -72,10 +72,11 @@ class CfgVehicles
                 displayName = SSTR(IsAttachable);
                 description = SSTR_DESC(IsAttachable);
                 typeName = "NUMBER";
+                defaultValue = 0;
                 class values
                 {
                     class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0; default = 1;};
+                    class No   {name = SSTR(No); value = 0;};
                 };
             };
             class CanModifyRange
@@ -83,9 +84,10 @@ class CfgVehicles
                 displayName = SSTR(CanModifyRange);
                 description = SSTR_DESC(CanModifyRange);
                 typeName = "NUMBER";
+                defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
@@ -94,10 +96,11 @@ class CfgVehicles
                 displayName = SSTR(CanModifyStrength);
                 description = SSTR_DESC(CanModifyStrength);
                 typeName = "NUMBER";
+                defaultValue = 0;
                 class values
                 {
                     class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0; default = 1;};
+                    class No   {name = SSTR(No); value = 0;};
                 };
             };
             class IsActive
@@ -105,9 +108,10 @@ class CfgVehicles
                 displayName = SSTR(IsActive);
                 description = SSTR_DESC(IsActive);
                 typeName = "NUMBER";
+                defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };

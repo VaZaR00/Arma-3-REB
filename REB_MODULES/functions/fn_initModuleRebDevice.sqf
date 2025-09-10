@@ -29,6 +29,8 @@ if (is3DEN) exitWith {};
 
 	if ((isNil "_object") || {(_object isEqualTo objNull)}) exitWith {};
 
+	if !(local _object) exitWith {};
+
 	[
 		_object,
 		LGVAR ["Radius", 100],

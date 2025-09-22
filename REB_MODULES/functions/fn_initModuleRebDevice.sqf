@@ -39,7 +39,9 @@ if (is3DEN) exitWith {};
 		BOOL("IsAttachable", 0),
 		BOOL("CanModifyRange", 1),
 		BOOL("CanModifyStrength", 0),
-		BOOL("IsActive", 1)
+		BOOL("IsActive", 1),
+		BOOL("SimulateDamage", 0),
+		LGVAR ["SimulatedHealth", 100]
 	] spawn REB_fnc_reb;
 };
 

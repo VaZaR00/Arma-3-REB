@@ -1,8 +1,29 @@
-#define STR_PREF STR_WMT_Module_Device_
+#define STR_PREF STR_REB_Module_Device_
 #define SSTR_N(s) $##STR_PREF##s
 #define SSTR_DESC_N(s) $##STR_PREF##DESC_##s
 #define SSTR(s) STR(SSTR_N(s))
 #define SSTR_DESC(s) STR(SSTR_DESC_N(s))
+
+#define PARAMETER(paramName, type, default) class paramName \
+{ \
+    displayName = SSTR(paramName); \
+    description = SSTR_DESC(paramName); \
+    typeName = type; \
+    defaultValue = default; \
+};
+
+#define PARAMETER_SELECT(paramName, type, default) class paramName \
+{ \
+    displayName = SSTR(paramName); \
+    description = SSTR_DESC(paramName); \
+    typeName = type; \
+    defaultValue = default; \
+    class values \
+    { \
+        class Yes    {name = SSTR(Yes); value = 1;}; \
+        class No   {name = SSTR(No); value = 0;}; \
+    }; \
+};
 
 class CfgFactionClasses
 {
@@ -115,6 +136,8 @@ class CfgVehicles
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
+            PARAMETER_SELECT(SimulateDamage, "NUMBER", 0)
+            PARAMETER(SimulatedHealth, "NUMBER", 100)
         };
     };
     // Change priority to default module for create diary

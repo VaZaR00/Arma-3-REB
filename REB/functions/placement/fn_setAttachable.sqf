@@ -27,5 +27,5 @@ if (_can && (_object getVariable ["REB_attachable", false])) then {
 		false, 
 		false
 	// ] call BIS_fnc_holdActionAdd;
-	] call BIS_fnc_holdActionAdd;
+	] remoteExec ["BIS_fnc_holdActionAdd", 0, true];
 };

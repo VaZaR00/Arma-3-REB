@@ -209,15 +209,21 @@ REB_fnc_delayInput = {
 	};
 };
 REB_fnc_removeInputDelay = {
-	call REB_fnc_removeInputBlockDisplay
+	DB_inputDelayed = false;
+	call REB_fnc_removeInputBlockDisplay;
 };
 // Block mouse and some keys
 REB_fnc_createInputBlockDisplay = {
-	if !(isNull (uiNamespace getVariable ["REB_tempBlockInputDisp", displayNull])) exitWith {};
-	PR _tempBlockInputDisp = findDisplay 46 createDisplay "RscDisplayEmpty";
-	uiNamespace setVariable ["REB_tempBlockInputDisp", _tempBlockInputDisp];
+	if (dialog) exitWith {};
+	createDialog ["RscDisplayEmpty", false];
 	ENSURE_SPAWN_ONCE_START
 		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
+
+		[] spawn {
+			while {dialog && (MGVAR ["DB_inputDelayed", false])} do {
+				setMousePosition [100,100];
+			};
+		};
 
 		sleep (_currentStrength + (random REB_delayInputCoef));
 
@@ -225,8 +231,7 @@ REB_fnc_createInputBlockDisplay = {
 	ENSURE_SPAWN_ONCE_END
 };
 REB_fnc_removeInputBlockDisplay = {
-	(uiNamespace getVariable ["REB_tempBlockInputDisp", displayNull]) closeDisplay 1;
-	uiNamespace setVariable ["REB_tempBlockInputDisp", nil];
+	closeDialog 1;
 };
 // Block all keys
 REB_fnc_delayInputEventHandler = {
@@ -238,29 +243,24 @@ REB_fnc_delayInputEventHandler = {
 };
 REB_fnc_delayInputKeys = {
 	private _handled = false;
-	if (
-		!((missionNamespace getVariable ["REB_currentUAV", objNull]) isEqualTo objNull) && // does player control drone ?
-		(missionNamespace getVariable ["REB_isSuppressed", false])
-	) then {
-		PR _currentStrength = (missionNamespace getVariable ["REB_currentStrength", 0]);
-		PR _chance = _currentStrength * REB_delayInputCoef * (MGVAR ["REB_keyDelayInputCoef", 1]);
+	PR _currentStrength = (missionNamespace getVariable ["DB_currentSignal", 0]);
 
-		if (
-			([true, false] selectRandomWeighted [1 - _chance, _chance]) &&
-			{
-				!(inputAction "nextAction" > 0) && 
-				!(inputAction "prevAction" > 0) && 
-				!(inputAction "Action" > 0) && 
-				!(inputAction "ActionContext" > 0) && 
-				!(inputAction "navigateMenu" > 0) && 
-				!(inputAction "closeContext" > 0) && 
-				!(inputAction "ingamePause" > 0) && 
-				!(inputAction "uavViewToggle" > 0) && 
-				!(inputAction "uavView" > 0)
-			}
-		) then {
-			_handled = true; // make delay input
-		};
+	if (
+		!((missionNamespace getVariable ["ArmaFPV_currentUAV", objNull]) isEqualTo objNull) &&
+		{(_currentStrength < (MGVAR ["ArmaFPV_delayInputThreashold", 0.3])) &&
+		{
+			!(inputAction "nextAction" > 0) && 
+			!(inputAction "prevAction" > 0) && 
+			!(inputAction "Action" > 0) && 
+			!(inputAction "ActionContext" > 0) && 
+			!(inputAction "navigateMenu" > 0) && 
+			!(inputAction "closeContext" > 0) && 
+			!(inputAction "ingamePause" > 0) && 
+			!(inputAction "uavViewToggle" > 0) && 
+			!(inputAction "uavView" > 0)
+		}}
+	) then {
+		_handled = true; // make delay input
 	};
 
 	_handled;
@@ -352,12 +352,16 @@ REB_fnc_simulateDamage = {
 			if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
 
 			PR _varName = "REB_object_var_simulatedHealth";
-			PR _newVal = (_target GV [_varName, 100]) - _hitVal;
+			PR _maxVal = _target GV ["REB_object_var_maxSimulatedHealth", 100];
+			PR _currentVal = _target GV [_varName, 100];
+			PR _newVal = _currentVal - _hitVal;
 
 			_target setVariable [_varName, _newVal, true];
 
-			if (_newVal <= 0) then {
-				_target setDamage 1;
+			_target setDamage (_newVal/_maxVal);
+
+			if (_newVal >= 1) then {
+				[_target, true] call REB_fnc_removeReb;
 			};
 		}];
 
@@ -366,6 +370,7 @@ REB_fnc_simulateDamage = {
 
 	if (local _obj) then {
 		_obj setVariable ["REB_object_var_simulatedHealth", _health, true];
+		_obj setVariable ["REB_object_var_maxSimulatedHealth", _health, true];
 		_obj setVariable ["REB_var_SimulateDamage", _simulateDamage, true];
 	};
 };

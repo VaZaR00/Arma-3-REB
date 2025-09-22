@@ -336,6 +336,28 @@ REB_fnc_objectRemoveAllRebAceActions = {
 		[_object, _x] call REB_fnc_objectRemoveAceActions;
 	} forEach ((allVariables _object) select {"REB_AceActions_" in _x});
 };
+REB_fnc_onHit = {
+	(_this select 0) params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect", "_instigator"];
+	_ammo params ["_hitVal", "_indirectHitVal", "_indirectHitRange", "_explosiveDamage", "_ammoClass"];
+
+	if !(alive _target) exitWith {};
+	if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
+
+	PR _varName = "REB_object_var_simulatedHealth";
+	PR _maxVal = _target GV ["REB_object_var_maxSimulatedHealth", 100];
+	PR _currentVal = _target GV [_varName, 100];
+	PR _newVal = _currentVal - _hitVal;
+
+	_target setVariable [_varName, _newVal, true];
+
+	private _damage = 1 - (_newVal/_maxVal);
+
+	_target setDamage _damage;
+
+	if (_damage >= 1) then {
+		[_target, true] call REB_fnc_removeReb;
+	};
+};
 REB_fnc_simulateDamage = {
 	// should be executed on every client
 	params["_obj", ["_simulateDamage", false], ["_health", 100]];
@@ -343,27 +365,7 @@ REB_fnc_simulateDamage = {
 	if !(IS_OBJ(_obj)) exitWith {};
 
 	if (_simulateDamage && !((_obj getVariable ["REB_HIT_EH", ""]) isEqualType 1)) then {
-		private _eh = _obj addEventHandler ["HitPart", {
-			(_this select 0) params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect", "_instigator"];
-			_ammo params ["_hitVal", "_indirectHitVal", "_indirectHitRange", "_explosiveDamage", "_ammoClass"];
-
-			if !(local _target) exitWith {};
-			if !(alive _target) exitWith {};
-			if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
-
-			PR _varName = "REB_object_var_simulatedHealth";
-			PR _maxVal = _target GV ["REB_object_var_maxSimulatedHealth", 100];
-			PR _currentVal = _target GV [_varName, 100];
-			PR _newVal = _currentVal - _hitVal;
-
-			_target setVariable [_varName, _newVal, true];
-
-			_target setDamage (1 - (_newVal/_maxVal));
-
-			if (_newVal >= 1) then {
-				[_target, true] call REB_fnc_removeReb;
-			};
-		}];
+		private _eh = _obj addEventHandler ["HitPart", {call REB_fnc_onHit}];
 
 		_obj setVariable ["REB_HIT_EH", _eh];
 	};

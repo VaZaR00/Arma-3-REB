@@ -39,7 +39,7 @@ REB_var_rebItemsClasses = [];
 REB_var_rebItemsSystemInited = false;
 REB_freq = _freq;
 REB_random = _random;
-REB_delayInput = true;
+REB_delayInput = false;
 REB_delayInputCoef = 0.5;
 
 call REB_fnc_initEffects;

@@ -97,7 +97,13 @@ CLASS("OO_REB") // IOO_REB
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 
-		if (!IS_OBJNULL(_initObj) && {(_isAttachable || (getMass _initObj <= 31))}) then {
+		if (
+			!IS_OBJNULL(_initObj) && 
+			{
+				((_isAttachable && (getMass _initObj <= 100)) || 
+				(getMass _initObj <= 31))
+			}
+		) then {
 			if (REB_attachSystemOn) then {
 				[_initObj] call REB_fnc_setAttachable;
 			};

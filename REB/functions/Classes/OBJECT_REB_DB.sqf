@@ -90,7 +90,8 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		// REMOVE
 		_objRebs deleteAt _hsh;
 		REB_ALL_OBJECT_REBS deleteAt _hsh;
-		DELETE(_objectReb);
+		// DELETE(_objectReb);
+		METHOD_GLOBAL(_objectReb, "deconstructor", nil);
 
 		// SAVE
 		_obj SV [ROVAR, _objRebs, true];
@@ -109,7 +110,8 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		_objRebs apply {
 			REB_ALL_OBJECT_REBS deleteAt _x;
-			MEMBER('Remove', [_obj I _y]);
+			private _or = MGVAR [_y, {}];
+			MEMBER('Remove', [_obj I _or]);
 		};
 
 		_obj SV [ROVAR, createHashMap, true];
@@ -121,7 +123,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 
 		params["_obj", "_ref", ["_itemRef", 0]];
 
-		if (!(IS_OBJ(_obj)) && {!IS_OOP(_obj)}) EX;
+		if !((IS_OBJ(_obj)) || {IS_OOP(_obj)}) EX;
 
 		if !(IS_OBJ(_obj)) then {
 			_obj = INSTANCE_VAR(_obj, "Object");
@@ -130,7 +132,7 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 		PR _objRebs = OBJ_VAR [ROVAR, createHashMap];
 
 		if (!IS_HASH(_objRebs) || {ARR_EMPTY(_objRebs)}) EX;
-		
+
 		if (_itemRef EQTO _ref) then {
 			_itemRef = 0;
 		};
@@ -183,7 +185,9 @@ CLASS("OO_OBJECT_REB_DB") // IOO_OBJECT_REB_DB
 			};
 		};
 
-		if !(isNil "_res") exitWith {OBJ_REB(_res)};
+		if !(isNil "_res") exitWith {
+			if (IS_STR(_res)) then {OBJ_REB(_res)} else {_res};
+		};
 	};
 
 	PUBLIC FUNCTION("ANY","Object_reb_exists") {

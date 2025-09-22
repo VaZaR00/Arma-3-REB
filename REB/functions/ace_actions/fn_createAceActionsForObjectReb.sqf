@@ -15,7 +15,14 @@ private _objectRebHash = INSTANCE_VAR(_objectReb, "InstanceHash");
 
 PR _hashVal = _objectRebHash;
 
-private _addToSelfActions = _object isKindOf "LandVehicle";
+private _addToSelfActions = _object isKindOf "AllVehicles";
+
+if !(_object getVariable ["ace_dragging_canDrag", false]) then {
+    [_object, true] call ace_dragging_fnc_setDraggable;
+};
+if !(_object getVariable ["ace_dragging_canCarry", false]) then {
+    [_object, true] call ace_dragging_fnc_setCarryable;
+};
 
 // 1. Создать главный REB action, если его ещё нет
 private _mainActionId = _object getVariable ["REB_mainActionId", ""];

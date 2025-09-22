@@ -49,6 +49,10 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		PR _rebClass = call compile _rebClassname;
 		PR _hash = SELF_VAR("InstanceHash");
 
+		if !(_obj isEqualTo objNull) then {
+			_simulateDamage = (getText (configFile >> "CfgVehicles" >> (typeOf _obj) >> "destrType")) isEqualTo "DestructNo";
+		};
+
 		LOCAL_SETTER
 
 		MEMBER("SelfObjVarSetterObject", _obj);

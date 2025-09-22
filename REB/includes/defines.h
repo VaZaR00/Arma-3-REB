@@ -34,7 +34,7 @@
 
 // for OO_OBJECT_REB_DB
 
-#define OBJ_REB(o) (MGVAR o)
+#define OBJ_REB(o) (MGVAR [o, {}])
 #define OBJ_REB_VAR(o) (INSTANCE_VAR(o, "InstanceName"))
 
 #define ROVAR PREF_QVAR("objectRebs")

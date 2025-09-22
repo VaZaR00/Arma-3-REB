@@ -52,6 +52,10 @@ CLASS("OO_REB") // IOO_REB
 		_deadzone = _range min _deadzone;
 
 
+		if !(_initObj isEqualTo objNull) then {
+			_simulateDamage = (getText (configFile >> "CfgVehicles" >> _initObjClass >> "destrType")) isEqualTo "DestructNo";
+		};
+
 		// Setting variables
 
 		LOCAL_SETTER

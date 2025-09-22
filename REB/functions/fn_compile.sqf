@@ -358,7 +358,7 @@ REB_fnc_simulateDamage = {
 
 			_target setVariable [_varName, _newVal, true];
 
-			_target setDamage (_newVal/_maxVal);
+			_target setDamage (1 - (_newVal/_maxVal));
 
 			if (_newVal >= 1) then {
 				[_target, true] call REB_fnc_removeReb;

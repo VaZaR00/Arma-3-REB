@@ -336,26 +336,43 @@ REB_fnc_objectRemoveAllRebAceActions = {
 		[_object, _x] call REB_fnc_objectRemoveAceActions;
 	} forEach ((allVariables _object) select {"REB_AceActions_" in _x});
 };
+
+// Damage simulation system
 REB_fnc_onHit = {
 	(_this select 0) params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect", "_instigator"];
 	_ammo params ["_hitVal", "_indirectHitVal", "_indirectHitRange", "_explosiveDamage", "_ammoClass"];
 
-	if !(alive _target) exitWith {};
-	if !(_target GV ["REB_var_SimulateDamage", true]) exitWith {};
+	[_target, _hitVal] call REB_fnc_handleDamage;
+};
+REB_fnc_onExplosion = {
+	params ["_vehicle", "_damage", "_explosionSource"];
+
+	private _distance = if (_explosionSource isEqualTo objNull) then {1} else {_vehicle distance _explosionSource};
+	_distance = _distance min 20;
+	private _hit = getNumber (configFile >> "CfgAmmo" >> typeOf _explosionSource >> "hit");
+	private _damage = _hit / (_distance max 1); // avoid div by 0
+
+	[_vehicle, _damage] call REB_fnc_handleDamage;
+};
+REB_fnc_handleDamage = {
+	params ["_obj", "_damage"];
+
+	if !(alive _obj) exitWith {};
+	if !(_obj GV ["REB_var_SimulateDamage", true]) exitWith {};
 
 	PR _varName = "REB_object_var_simulatedHealth";
-	PR _maxVal = _target GV ["REB_object_var_maxSimulatedHealth", 100];
-	PR _currentVal = _target GV [_varName, 100];
-	PR _newVal = _currentVal - _hitVal;
+	PR _maxVal = _obj GV ["REB_object_var_maxSimulatedHealth", 100];
+	PR _currentVal = _obj GV [_varName, 100];
+	PR _newVal = _currentVal - _damage;
 
-	_target setVariable [_varName, _newVal, true];
+	_obj setVariable [_varName, _newVal, true];
 
 	private _damage = 1 - (_newVal/_maxVal);
 
-	_target setDamage _damage;
+	_obj setDamage _damage;
 
 	if (_damage >= 1) then {
-		[_target, true] call REB_fnc_removeReb;
+		[_obj, true] call REB_fnc_removeReb;
 	};
 };
 REB_fnc_simulateDamage = {
@@ -364,10 +381,17 @@ REB_fnc_simulateDamage = {
 
 	if !(IS_OBJ(_obj)) exitWith {};
 
-	if (_simulateDamage && !((_obj getVariable ["REB_HIT_EH", ""]) isEqualType 1)) then {
-		private _eh = _obj addEventHandler ["HitPart", {call REB_fnc_onHit}];
+	if (_simulateDamage) then {
+		if !((_obj getVariable ["REB_HIT_EH", ""]) isEqualType 1) then {
+			private _eh = _obj addEventHandler ["HitPart", {call REB_fnc_onHit}];
 
-		_obj setVariable ["REB_HIT_EH", _eh];
+			_obj setVariable ["REB_HIT_EH", _eh];
+		};
+		if !((_obj getVariable ["REB_EXPL_EH", ""]) isEqualType 1) then {
+			private _eh = _obj addEventHandler ["Explosion", {call REB_fnc_onExplosion}];
+
+			_obj setVariable ["REB_EXPL_EH", _eh];
+		};
 	};
 
 	if (local _obj) then {

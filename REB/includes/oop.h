@@ -444,7 +444,7 @@ Multiplayer implementation by Vazar
 			[_ooRemoteInstanceName, method, args] \
 		], \
 		{ \
-			params ["_objectName", "_method", "_args"]; \
+			params ["_objectName", "_method", ["_args", []]]; \
 			private _object = NAMESPACE getVariable [_objectName, {}]; \
 			METHOD(_object, _method, _args); \
 		} \
@@ -462,7 +462,7 @@ Multiplayer implementation by Vazar
 		], \
 		{ \
 			_this spawn { \
-				params ["_objectName", "_method", "_args"]; \
+				params ["_objectName", "_method", ["_args", []]]; \
 				WAIT_A_BIT(!(isNil {NAMESPACE getVariable _objectName})); \
 				private _object = NAMESPACE getVariable [_objectName, {}]; \
 				SPAWN_METHOD(_object, _method, _args); \

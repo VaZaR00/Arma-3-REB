@@ -28,7 +28,7 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","SimulateDamage");
 	PUBLIC VARIABLE("scalar","SimulatedHealth");
 
-	PUBLIC FUNCTION("array","constructor") { // executed on every client
+	PUBLIC SERVER_FUNCTION("array","constructor") { // executed only on server
 		params[
 			"_obj", 
 			["_range", 100], 
@@ -58,8 +58,6 @@ CLASS("OO_REB") // IOO_REB
 
 		// Setting variables
 
-		LOCAL_SETTER
-
 		MEMBER("SelfVarSetterPrefix", _name);
 
 		MEMBER("Name", _name);
@@ -78,10 +76,7 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
 
-		GLOBAL_SETTER
-
-		MSVAR [_name, _ooSelf];
-
+		MSVAR [_name, _ooSelf, true]; // sent OOP object to all clients
 
 		if (IS_OBJ(_obj)) then {
 			MEMBER("New_object_reb", [_obj]);
@@ -91,9 +86,6 @@ CLASS("OO_REB") // IOO_REB
 			// [] remoteExec ["REB_fnc_initRebItemSystem", 0, true];
 			call REB_fnc_initRebItemSystem;
 		};
-
-		// NOW EXECUTE WHERE OBJECT IS LOCAL
-		if !(local _initObj) exitWith {};
 
 		METHOD(IOO_REB_DB, 'Add_reb_class', _name);
 

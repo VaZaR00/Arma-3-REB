@@ -7,11 +7,7 @@
 
 FILE_ONLY_SPAWN
 
-params ["_objectReb"];
-
-private _object = INSTANCE_VAR(_objectReb, "Object"); 
-private _rebClassname = INSTANCE_VAR(_objectReb, "Reb_classname"); 
-private _objectRebHash = INSTANCE_VAR(_objectReb, "InstanceHash"); 
+params ["_object", "_rebClassname", "_objectRebHash", "_canModifyStren", "_canModifyRange", "_objectRebName"];
 
 PR _hashVal = _objectRebHash;
 
@@ -68,12 +64,12 @@ PR _actionDisable = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = _params select 0;
+        private _objectReb = MGVAR [(_params select 0), {}];
         [_objectReb, false] call REB_fnc_setActive;
     },
     {PR _hashVal = ((_this select 2) select 1); ((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false])},
     {},
-    [_objectReb, _objectRebHash]
+    [_objectRebName, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionEnable = [
@@ -82,12 +78,12 @@ PR _actionEnable = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = _params select 0;
+        private _objectReb = MGVAR [(_params select 0), {}];
         [_objectReb, true] call REB_fnc_setActive;
     },
     {PR _hashVal = ((_this select 2) select 1); !((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false])},
     {},
-    [_objectReb, _objectRebHash]
+    [_objectRebName, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionSetRange = [
@@ -96,12 +92,12 @@ PR _actionSetRange = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = _params select 0;
+        private _objectReb = MGVAR [(_params select 0), {}];
         [_objectReb] spawn REB_fnc_setRange;
     },
     {MGVAR ["REB_CanSetRangeGlobal", true]},
     {},
-    [_objectReb]
+    [_objectRebName]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionSetStrength = [
@@ -110,20 +106,20 @@ PR _actionSetStrength = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = _params select 0;
+        private _objectReb = MGVAR [(_params select 0), {}];
         [_objectReb] spawn REB_fnc_setStrenght;
     },
     {MGVAR ["REB_CanSetStrengthGlobal", false]} ,
     {},
-    [_objectReb]
+    [_objectRebName]
 ] call ace_interact_menu_fnc_createAction;
 
 _object SV ["REB_actionDisable", _actionDisable];
 _object SV ["REB_actionEnable", _actionEnable];
 _object SV ["REB_actionSetRange", _actionSetRange];
 _object SV ["REB_actionSetStrength", _actionSetStrength];
-_object SV ["REB_CanSetStrength", INSTANCE_VAR(_objectReb, "Can_modify_strenght")];
-_object SV ["REB_CanSetRange", INSTANCE_VAR(_objectReb, "Can_modify_range")];
+_object SV ["REB_CanSetStrength", _canModifyStren];
+_object SV ["REB_CanSetRange", _canModifyRange];
 
 // 4. Собрать ветку для object_reb (глобально)
 PR _objectRebBranch = [
@@ -148,7 +144,7 @@ PR _objectRebBranch = [
 			[_x, [], _target]
 		};
     },
-    [_objectReb]
+    [_objectRebName]
 ] call ace_interact_menu_fnc_createAction;
 
 // 5. Добавить ветку object_reb к главному REB action (через remoteExec)

@@ -294,13 +294,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
 			private _ooSelf = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _ooInstanceID = "%1"; private _ooInstanceName = "%2"; private _ooSelf = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
-			NAMESPACE setVariable [_ooInstanceName, _ooSelf]; \
+			NAMESPACE setVariable [_ooInstanceName, _ooSelf, if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}]; \
 			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _ooSelf); \
-			LOCAL_SETTER \
 			METHOD(_ooSelf, "InstanceHash", _ooInstanceHash); \
 			METHOD(_ooSelf, "InstanceName", _ooInstanceName); \
 			METHOD(_ooSelf, "Classname", className); \
-			GLOBAL_SETTER \
 			[CONSTRUCTOR_METHOD, (_this select 1)] call _ooSelf; \
 			_ooSelf; \
 		}; \
@@ -376,6 +374,7 @@ Addtions by Vazar
 #define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
 #define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
 
+#define GET_INSTANCE(o) if (o isEqualType "") then {o = call compile o};
 
 /*
 Multiplayer implementation by Vazar

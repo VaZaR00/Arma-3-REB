@@ -25,6 +25,8 @@
 
 #include "defines.h"
 
+if !(isServer) exitWith {};
+
 FILE_ONLY_SPAWN
 
 // init only one REB at time to avoid execution intersections
@@ -32,17 +34,10 @@ WAIT_THIS_SCRIPT
 
 PR _obj = _this select 0;
 
+if (isNil "_obj") exitWith {};
+
 sleep 0.1; // wait for mission fully initialized
 
-
-// Ensure the function is only executed where the object is local on mission init
-if !(local _obj) exitWith {
-	// if mission time is less than 1 second, we assume its init and all clients are executing it including server
-	// also we check if player is JIP, cuz it would call it all again and rewrite everything
-	if (!didJIP && (time > 1)) then {
-		_this remoteExec ["REB_fnc_reb", OBJ_OWNER(_obj)];
-	}; 
-};
 
 // Check if REB system is already initialized
 if !(missionNamespace getVariable ["REB_var_INITED", false]) then {
@@ -55,21 +50,15 @@ waitUntil { (missionNamespace getVariable ["REB_var_INITED", false]) };
 
 
 // create REB instance on server for broadcast to all clients
-EXEC_ON_SERVER_START
-	ENSURE_SPAWN_ONCE_START
+ENSURE_SPAWN_ONCE_START
+	// check if the REB class already exists
+	PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', (_this select 0));
+	PR _previousClass = MGVAR [_name, {}];
 
-		// check if the REB class already exists
-		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', (_this select 0));
-		PR _previousClass = MGVAR [_name, {}];
+	// if the REB class already exists, just apply new parameters on it
+	if !(_previousClass isEqualTo {}) exitWith {
+		METHOD(_previousClass, "constructor", _this)
+	};
 
-		SET_JIP(true); // add all executions to JIP
-
-		// if the REB class already exists, just apply new parameters on it
-		if !(_previousClass isEqualTo {}) exitWith {
-			METHOD_GLOBAL(_previousClass, "constructor", _this)
-		};
-
-		SPAWN_METHOD_GLOBAL(OO_REB, "new", _this);
-
-	ENSURE_SPAWN_ONCE_END
-EXEC_ON_SERVER_END
+	METHOD(OO_REB, "new", _this);
+ENSURE_SPAWN_ONCE_END

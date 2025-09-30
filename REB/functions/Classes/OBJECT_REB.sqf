@@ -30,7 +30,7 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_range", true);
 	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_strenght", false);
 
-	PUBLIC FUNCTION("array","constructor") { // executed on every client
+	PUBLIC SERVER_FUNCTION("array","constructor") { // executed only on server
 		params[
 			"_obj", 
 			"_rebClassname", 
@@ -52,8 +52,6 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		if !(_obj isEqualTo objNull) then {
 			_simulateDamage = (getText (configFile >> "CfgVehicles" >> (typeOf _obj) >> "destrType")) isEqualTo "DestructNo";
 		};
-
-		LOCAL_SETTER
 
 		MEMBER("SelfObjVarSetterObject", _obj);
 		MEMBER("SelfObjVarSetterPrefix", (PREF_VAR + _hash));
@@ -80,15 +78,11 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("Max_Deadzone", _maxDeadzone);
 		MEMBER("Max_Strenght", _maxStrenght);
 
-		GLOBAL_SETTER
-
-		// _obj setVariable [format["REB_var_OBJECT_REB_IS_ACTIVE_%1", _hash], _active, true];
-
 		if (_simulateDamage) then {
-			[_obj, _simulateDamage, _health] call REB_fnc_simulateDamage;
+			[_obj, _simulateDamage, _health] remoteExec ["REB_fnc_simulateDamage", 0, true];
 		};
-		[_obj] call REB_fnc_setEventHandlers;
-		[_ooSelf] call REB_fnc_createAceActionsForObjectReb;
+		[_obj] remoteExec ["REB_fnc_setEventHandlers", 0, true];
+		[_obj, _rebClassname, _hash, _can_modify_strenght, _can_modify_range, _ooInstanceName] remoteExec ["REB_fnc_createAceActionsForObjectReb", 0, true];
 
 		_ooSelf
 	};

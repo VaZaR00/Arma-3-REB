@@ -1,8 +1,8 @@
 #include "..\defines.h"
 
-#define VEH_CHECK (_vehOnlyForCrew && {(_this select 1) in (crew (_this select 0))})
+#define VEH_CHECK ([_vehOnlyForCrew, (_this select 1), (_this select 0)] call { params["_vehOnlyForCrew", "_plr", "_veh"]; if !(_vehOnlyForCrew) exitWith {true}; _plr in (crew _veh)})
 
-params ["_object", "_rebClassname", "_objectRebHash", "_canModifyStren", "_canModifyRange", "_objectRebName", ["_vehOnlyForCrew", true]];
+params ["_object", "_rebClassname", "_objectRebHash", "_canModifyStren", "_canModifyRange", "_objectRebName", ["_vehOnlyForCrew", true], ["_originObject", (_this select 0)]];
 
 PR _hashVal = _objectRebHash;
 
@@ -61,12 +61,12 @@ PR _actionDisable = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = MGVAR [(_params select 0), {}];
+        private _objectReb = MGVAR [(_params select 1), {}];
         [_objectReb, false] call REB_fnc_setActive;
     },
-    {(_this select 2) params ["_objectRebName", "_objectRebHash", "_vehOnlyForCrew"]; PR _hashVal = ((_this select 2) select 1); ((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false]) && VEH_CHECK},
+    {(_this select 2) params ["_object", "_objectRebName", "_hashVal", "_vehOnlyForCrew"]; _vehOnlyForCrew = _object getVariable [OBJ_VARPREF("vehActionsOnlyForCrew"), _vehOnlyForCrew]; (_object getVariable [OBJ_VARPREF("Is_active"), false]) && VEH_CHECK},
     {},
-    [_objectRebName, _objectRebHash, _vehOnlyForCrew]
+    [_originObject, _objectRebName, _objectRebHash, _vehOnlyForCrew]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionEnable = [
@@ -75,12 +75,12 @@ PR _actionEnable = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = MGVAR [(_params select 0), {}];
+        private _objectReb = MGVAR [(_params select 1), {}];
         [_objectReb, true] call REB_fnc_setActive;
     },
-    {(_this select 2) params ["_objectRebName", "_objectRebHash", "_vehOnlyForCrew"]; PR _hashVal = ((_this select 2) select 1); !((_this select 0) getVariable [OBJ_VARPREF("Is_active"), false]) && VEH_CHECK},
+    {(_this select 2) params ["_object", "_objectRebName", "_hashVal", "_vehOnlyForCrew"];_vehOnlyForCrew = _object getVariable [OBJ_VARPREF("vehActionsOnlyForCrew"), _vehOnlyForCrew]; !(_object getVariable [OBJ_VARPREF("Is_active"), false]) && VEH_CHECK},
     {},
-    [_objectRebName, _objectRebHash]
+    [_originObject, _objectRebName, _objectRebHash, _vehOnlyForCrew]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionSetRange = [
@@ -89,12 +89,12 @@ PR _actionSetRange = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = MGVAR [(_params select 0), {}];
+        private _objectReb = MGVAR [(_params select 1), {}];
         [_objectReb] spawn REB_fnc_setRange;
     },
-    {(_this select 2) params ["_objectRebName", "_vehOnlyForCrew"]; (MGVAR ["REB_CanSetRangeGlobal", true]) && VEH_CHECK},
+    {(_this select 2) params ["_object", "_objectRebName", "_hashVal", "_vehOnlyForCrew"]; _vehOnlyForCrew = _object getVariable [OBJ_VARPREF("vehActionsOnlyForCrew"), _vehOnlyForCrew]; (MGVAR ["REB_CanSetRangeGlobal", true]) && VEH_CHECK},
     {},
-    [_objectRebName, _vehOnlyForCrew]
+    [_originObject, _objectRebName, _objectRebHash, _vehOnlyForCrew]
 ] call ace_interact_menu_fnc_createAction;
 
 PR _actionSetStrength = [
@@ -103,20 +103,20 @@ PR _actionSetStrength = [
     "",
     {
         params ["_target", "_player", "_params"];
-        private _objectReb = MGVAR [(_params select 0), {}];
+        private _objectReb = MGVAR [(_params select 1), {}];
         [_objectReb] spawn REB_fnc_setStrenght;
     },
-    {(_this select 2) params ["_objectRebName", "_vehOnlyForCrew"]; (MGVAR ["REB_CanSetStrengthGlobal", false]) && VEH_CHECK},
+    {(_this select 2) params ["_object", "_objectRebName", "_hashVal", "_vehOnlyForCrew"]; _vehOnlyForCrew = _object getVariable [OBJ_VARPREF("vehActionsOnlyForCrew"), _vehOnlyForCrew]; (MGVAR ["REB_CanSetStrengthGlobal", false]) && VEH_CHECK},
     {},
-    [_objectRebName, _vehOnlyForCrew]
+    [_originObject, _objectRebName, _objectRebHash, _vehOnlyForCrew]
 ] call ace_interact_menu_fnc_createAction;
 
-_object SV ["REB_actionDisable", _actionDisable];
-_object SV ["REB_actionEnable", _actionEnable];
-_object SV ["REB_actionSetRange", _actionSetRange];
-_object SV ["REB_actionSetStrength", _actionSetStrength];
-_object SV ["REB_CanSetStrength", _canModifyStren];
-_object SV ["REB_CanSetRange", _canModifyRange];
+_object SV [OBJ_VARPREF('actionDisable'), _actionDisable];
+_object SV [OBJ_VARPREF('actionEnable'), _actionEnable];
+_object SV [OBJ_VARPREF('actionSetRange'), _actionSetRange];
+_object SV [OBJ_VARPREF('actionSetStrength'), _actionSetStrength];
+_object SV [OBJ_VARPREF('CanSetStrength'), _canModifyStren];
+_object SV [OBJ_VARPREF('CanSetRange'), _canModifyRange];
 
 // 4. Собрать ветку для object_reb (глобально)
 PR _objectRebBranch = [
@@ -127,21 +127,22 @@ PR _objectRebBranch = [
     {true},
     {
         params ["_target", ["_player", player], ["_params", []]];
+        _params params ["_originObject", "_hashVal"];
         _acts = [
-            _target GV "REB_actionDisable",
-            _target GV "REB_actionEnable"
+            _target GV (OBJ_VARPREF('actionDisable')),
+            _target GV (OBJ_VARPREF('actionEnable'))
         ];
-        if (_target GV ["REB_CanSetStrength", false]) then {
-            _acts pushBack (_target GV "REB_actionSetStrength");
+        if (_target GV [OBJ_VARPREF('CanSetStrength'), false]) then {
+            _acts pushBack (_target GV (OBJ_VARPREF('actionSetStrength')));
         };
-        if (_target GV ["REB_CanSetRange", false]) then {
-            _acts pushBack (_target GV "REB_actionSetRange");
+        if (_target GV [OBJ_VARPREF('CanSetRange'), false]) then {
+            _acts pushBack (_target GV (OBJ_VARPREF('actionSetRange')));
         };
         _acts apply {
 			[_x, [], _target]
 		};
     },
-    [_objectRebName]
+    [_originObject, _objectRebHash]
 ] call ace_interact_menu_fnc_createAction;
 
 // 5. Добавить ветку object_reb к главному REB action (через remoteExec)

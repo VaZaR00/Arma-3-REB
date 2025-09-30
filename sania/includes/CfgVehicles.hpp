@@ -1,3 +1,41 @@
+#define STR_PREF STR_REB_Module_Device_
+#define STR(s) #s
+#define PREF(s) REB_##s
+#define SPREF(s) STR(PREF(s))
+#define SSTR_N(s) $##STR_PREF##s
+#define SSTR_DESC_N(s) $##STR_PREF##DESC_##s
+#define SSTR(s) STR(SSTR_N(s))
+#define SSTR_DESC(s) STR(SSTR_DESC_N(s))
+#define TRIPPLE(s1,s2,s3) s1##s2##s3
+#define STRSYM "
+#define STRIPPLE(s1,s2,s3) STRSYM##s1##s2##s3##STRSYM
+
+#define SVAR _this setVariable ['
+#define PBSVAL ', (_value isEqualTo 1), true];
+#define PSVAL ', _value, true];
+
+#define PARAMETER_BOOL(paramName, default) class PREF(paramName) \
+{ \
+	displayName = SSTR(paramName); \
+	tooltip = SSTR_DESC(paramName); \
+	property = SPREF(paramName); \
+	control = "CheckboxNumber"; \
+	expression = STRIPPLE(SVAR,paramName,PBSVAL); \
+	defaultValue = STR(default); \
+	validate = "number";  \
+};
+
+#define PARAMETER(paramName, default) class PREF(paramName) \
+{ \
+	displayName = SSTR(paramName); \
+	tooltip = SSTR_DESC(paramName); \
+	property = SPREF(paramName); \
+	control = "EditShort"; \
+	expression = STRIPPLE(SVAR,paramName,PSVAL); \
+	defaultValue = default; \
+	validate = "none";  \
+};
+
 class CfgVehicleClasses
 {
     class sania_podavitel
@@ -33,72 +71,17 @@ class CfgVehicles
 		class UserActions
 		{
 		};
-		class Attributes
-		{
-			class REB_Enabled
-			{
-				displayName = "$STR_REB_Enabled";
-				tooltip = "$STR_REB_Enabled";
-				property = "REB_Enabled";
-				control = "CheckboxNumber";
-				expression = "_this setVariable ['REB_var_hasActiveReb', (_value isEqualTo 1) , true];";
-				defaultValue = "1";
-				validate = "number"; 
-			};
-			class REB_Range
-			{
-				displayName = "$STR_REB_Range";
-				tooltip = "$STR_REB_Range";
-				property = "REB_Range";
-				control = "EditShort";
-				expression = "[_this, 'REB_var_rebMaxRange', _value] call DB_fnc_setRebValAtt";
-				defaultValue = "'100'";
-				typeName = "STRING";
-				validate = "none";
-			};
-			class REB_Deadzone
-			{
-				displayName = "$STR_REB_Deadzone";
-				tooltip = "$STR_REB_Deadzone";
-				property = "REB_Deadzone";
-				control = "EditShort";
-				expression = "[_this, 'REB_var_rebMaxDeadzone', _value] call DB_fnc_setRebValAtt";
-				defaultValue = "'30'";
-				typeName = "STRING";
-				validate = "none";
-			};
-			class REB_Strength
-			{
-				displayName = "$STR_REB_Strength";
-				tooltip = "$STR_REB_Strength";
-				property = "REB_Strength";
-				control = "EditShort";
-				expression = "[_this, 'REB_var_rebMaxStrength', _value] call DB_fnc_setRebValAtt";
-				defaultValue = "'0.8'";
-				typeName = "STRING";
-				validate = "none";
-			};
-			class REB_canChangeRange
-			{
-				displayName = "$REB_canChangeRange";
-				tooltip = "$REB_canChangeRange";
-				property = "REB_canChangeRange";
-				control = "CheckboxNumber";
-				expression = "_this setVariable ['REB_var_canChangeRange', (_value isEqualTo 1) , true];";
-				defaultValue = "1";
-				validate = "number";
-			};
-			class REB_canChangeStrength
-			{
-				displayName = "$REB_canChangeStrength";
-				tooltip = "$REB_canChangeStrength";
-				property = "REB_canChangeStrength";
-				control = "CheckboxNumber";
-				expression = "_this setVariable ['REB_var_canChangeStrength', (_value isEqualTo 1) , true];";
-				defaultValue = "1";
-				validate = "number";
-			};
-		};
+        class Attributes
+        {
+            PARAMETER(Radius,"100")
+            PARAMETER(Deadzone,"30")
+            PARAMETER(Strength,"0.5")
+            PARAMETER_BOOL(IsAttachable,0)
+            PARAMETER_BOOL(CanModifyRange,1)
+            PARAMETER_BOOL(CanModifyStrength,0)
+            PARAMETER_BOOL(IsActive,1)
+            PARAMETER(linkedObjects,"")
+        };
 
 		// Dragging
         ace_dragging_canDrag = 1;  // Can be dragged (0-no, 1-yes)

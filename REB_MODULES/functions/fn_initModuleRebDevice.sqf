@@ -9,6 +9,7 @@ private _activated = [_this,2,true,[true]] call BIS_fnc_param;
 
 if !(_activated) exitWith {};
 if (is3DEN) exitWith {};
+if !(isServer) exitWith {};
 
 [_logic] spawn {
 	params["_logic"];
@@ -21,16 +22,17 @@ if (is3DEN) exitWith {};
 
 	sleep 0.1;
 
-	private _object = call compile (LGVAR ["Object", ""]);
-	private _linkedObjects = (LGVAR ["linkedObjects", ""]) splitString ";., ";
+	private _object = (LGVAR ["Object", ""]);
+	if (_object isEqualType "") then {
+		_object = call compile _object;
+	};
+	private _linkedObjects = ((LGVAR ["linkedObjects", ""]) splitString ";., ") apply {MGVAR [_x, objNull]};
 
 	if ((isNil "_object") || {!(_object isEqualType objNull)}) then {
 		_object = _syncedObj;
 	};
 
 	if ((isNil "_object") || {(_object isEqualTo objNull)}) exitWith {};
-
-	if !(local _object) exitWith {};
 
 	[
 		_object,

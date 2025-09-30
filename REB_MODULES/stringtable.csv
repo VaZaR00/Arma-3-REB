@@ -21,3 +21,7 @@ STR_REB_Module_Device_SimulateDamage, "Simulate Damage", "Симулювати �
 STR_REB_Module_Device_DESC_SimulateDamage, "Whether to simulate damage on REB object which has no damage model.", "Чи симулювати пошкодження на об'єкті РЕБ, який не має моделі пошкоджень."
 STR_REB_Module_Device_SimulatedHealth, "Simulated Health", "Симулюване ХП"
 STR_REB_Module_Device_DESC_SimulatedHealth, "Simulated damage health.", "Кількість ХП для симуляції пошкоджень."
+STR_REB_Module_Device_linkedObjects, "Linked Objects", "Приєднані об'єкти"
+STR_REB_Module_Device_DESC_linkedObjects, "Objects which will have ACE actions of control over the REB", "Об'єкт який буде мати АСЕ взаємодію для контролю РЕБу"
+STR_REB_Module_Device_ActionsOnlyForCrew, "Actions only for crew", "Меню взаємодії лише для екіпажу"
+STR_REB_Module_Device_DESC_ActionsOnlyForCrew, "Actions will be available only for crew in vehicle", "Меню взаємодії буде доступне лише для екіпажу техніки"

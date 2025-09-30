@@ -138,6 +138,8 @@ class CfgVehicles
             };
             PARAMETER_SELECT(SimulateDamage, "NUMBER", 0)
             PARAMETER(SimulatedHealth, "NUMBER", 100)
+            PARAMETER(linkedObjects, "STRING", "")
+            PARAMETER_SELECT(ActionsOnlyForCrew, "NUMBER", 0)
         };
     };
     // Change priority to default module for create diary

@@ -29,6 +29,8 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 	PUBLIC OBJECT_VAR_SETTER("scalar","SimulatedHealth", 0);
 	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_range", true);
 	PUBLIC OBJECT_VAR_SETTER("bool","Can_modify_strenght", false);
+	PUBLIC OBJECT_VAR_SETTER("bool","vehActionsOnlyForCrew", true);
+	PUBLIC OBJECT_VAR_SETTER("array","linkedObjects", []);
 
 	PUBLIC SERVER_FUNCTION("array","constructor") { // executed only on server
 		params[
@@ -43,7 +45,9 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			["_simulateDamage", false], 
 			["_health", 100],
 			["_can_modify_range", true], 
-			["_can_modify_strenght", false]
+			["_can_modify_strenght", false],
+			["_vehActionsOnlyForCrew", true],
+			["_linkedObjects", []]
 		];
 
 		PR _rebClass = call compile _rebClassname;
@@ -69,6 +73,8 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 		MEMBER("SimulatedHealth", _health);
 		MEMBER("Can_modify_range", _can_modify_range);
 		MEMBER("Can_modify_strenght", _can_modify_strenght);
+		MEMBER("vehActionsOnlyForCrew", _vehActionsOnlyForCrew);
+		MEMBER("linkedObjects", _linkedObjects);
 
 		PR _maxRange = INSTANCE_VAR(_rebClass, "Max_Range");
 		PR _maxDeadzone = INSTANCE_VAR(_rebClass, "Max_Deadzone");
@@ -82,7 +88,7 @@ CLASS("OO_OBJECT_REB") // IOO_OBJECT_REB
 			[_obj, _simulateDamage, _health] remoteExec ["REB_fnc_simulateDamage", 0, true];
 		};
 		[_obj] remoteExec ["REB_fnc_setEventHandlers", 0, true];
-		[_obj, _rebClassname, _hash, _can_modify_strenght, _can_modify_range, _ooInstanceName] remoteExec ["REB_fnc_createAceActionsForObjectReb", 0, true];
+		[_obj, _rebClassname, _hash, _can_modify_strenght, _can_modify_range, _ooInstanceName, _vehActionsOnlyForCrew, _linkedObjects] remoteExec ["REB_fnc_createAceActionsForObjectReb", 0, true];
 
 		_ooSelf
 	};

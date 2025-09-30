@@ -27,6 +27,8 @@ CLASS("OO_REB") // IOO_REB
 	PUBLIC VARIABLE("bool","Is_item");
 	PUBLIC VARIABLE("bool","SimulateDamage");
 	PUBLIC VARIABLE("scalar","SimulatedHealth");
+	PUBLIC VARIABLE("bool","vehActionsOnlyForCrew");
+	PUBLIC VARIABLE("array","linkedObjects");
 
 	PUBLIC SERVER_FUNCTION("array","constructor") { // executed only on server
 		params[
@@ -39,7 +41,9 @@ CLASS("OO_REB") // IOO_REB
 			["_can_modify_strenght", false], 
 			["_active", true],
 			["_simulateDamage", false], 
-			["_health", 100]
+			["_health", 100],
+			["_linkedObjects", []],
+			["_vehActionsOnlyForCrew", true]
 		];
 
 		PR _name = METHOD(IOO_REB_DB, 'Make_reb_classname', _obj);
@@ -75,6 +79,8 @@ CLASS("OO_REB") // IOO_REB
 		MEMBER("Is_item", IS_STR(_obj));
 		MEMBER("SimulateDamage", _simulateDamage);
 		MEMBER("SimulatedHealth", _health);
+		MEMBER("vehActionsOnlyForCrew", _vehActionsOnlyForCrew);
+		MEMBER("linkedObjects", _linkedObjects);
 
 		MSVAR [_name, _ooSelf, true]; // sent OOP object to all clients
 
@@ -144,7 +150,9 @@ CLASS("OO_REB") // IOO_REB
 			IF_ELSE(_obj isEqualTo SELF_VAR('Init_object'), SELF_VAR('SimulateDamage'), false),
 			SELF_VAR('SimulatedHealth'),
 			SELF_VAR('Can_modify_range'),
-			SELF_VAR('Can_modify_strenght')
+			SELF_VAR('Can_modify_strenght'),
+			SELF_VAR('vehActionsOnlyForCrew'),
+			SELF_VAR('linkedObjects')
 		];
 
 		PR _objectReb = ["new", _params] call OO_OBJECT_REB;

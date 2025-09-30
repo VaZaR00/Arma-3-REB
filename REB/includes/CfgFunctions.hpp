@@ -33,6 +33,7 @@ class CfgFunctions
 			recompile=1;
 			file = CFG_FUNCTIONS_PATH_FOLDER(ace_actions);
 			class createAceActionsForObjectReb {};
+			class createActions {};
 			class removeAceActionsForObjectReb {};
 			class objectRemoveAceActions {};
 		};

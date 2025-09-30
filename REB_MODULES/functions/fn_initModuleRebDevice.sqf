@@ -22,6 +22,7 @@ if (is3DEN) exitWith {};
 	sleep 0.1;
 
 	private _object = call compile (LGVAR ["Object", ""]);
+	private _linkedObjects = (LGVAR ["linkedObjects", ""]) splitString ";., ";
 
 	if ((isNil "_object") || {!(_object isEqualType objNull)}) then {
 		_object = _syncedObj;
@@ -41,7 +42,9 @@ if (is3DEN) exitWith {};
 		BOOL("CanModifyStrength", 0),
 		BOOL("IsActive", 1),
 		BOOL("SimulateDamage", 0),
-		LGVAR ["SimulatedHealth", 100]
+		LGVAR ["SimulatedHealth", 100],
+		_linkedObjects,
+		BOOL("ActionsOnlyForCrew", 1)
 	] spawn REB_fnc_reb;
 };
 

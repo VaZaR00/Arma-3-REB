@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SV setVariable
 #define PR private
 #define STR(s) #s
+#define _LOG call {_txt = text format["[OO_LOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]; diag_log _txt};
+
 
 #define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
 #define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
@@ -125,7 +127,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	See Also:
 		<CLASSEXTENDS>
 */
-#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _ooSelfClass, _ooMember, _ooArgType]; };
+#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, SAFE_VAR(_ooSelfClass), SAFE_VAR(_ooMember), SAFE_VAR(_ooArgType), SAFE_VAR(_this), SAFE_VAR(_ooInstanceName), SAFE_VAR(_ooInstanceID), SAFE_VAR(_ooSelf), SAFE_VAR(_objectName), SAFE_VAR(_method), SAFE_VAR(_args)]; };
 
 /*
 	Macro: CLASS_EXTENDS(childClassName,parentClassName)
@@ -339,10 +341,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FINALIZE_CLASS };};};};} catch { \
 	switch (_exception select 0) do { \
 		case ERR_UNDEFMEMBER : { \
-			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] call BIS_fnc_error; \
+			[format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3], _exception] _LOG \
 		}; \
 		default { \
-			format ['EXCEPTION : %1', _exception select 1] call BIS_fnc_error; \
+			[format ['EXCEPTION : %1', _exception select 1], _exception] _LOG \
 		}; \
 	}; \
 }}] 

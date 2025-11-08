@@ -98,8 +98,8 @@ CLASS("OO_REB") // IOO_REB
 		if (
 			!IS_OBJNULL(_initObj) && 
 			{
-				((_isAttachable && (getMass _initObj <= 100)) || 
-				(getMass _initObj <= 31))
+				_isAttachable &&
+				(getMass _initObj <= 100)
 			}
 		) then {
 			if (REB_attachSystemOn) then {

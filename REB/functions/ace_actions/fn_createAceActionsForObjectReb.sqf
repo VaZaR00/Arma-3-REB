@@ -13,5 +13,5 @@ params ["_object", "_rebClassname", "_objectRebHash", "_canModifyStren", "_canMo
     if (isNil "_x") then {continue};
     if !(_x isEqualType objNull) then {continue};
     if (_x isEqualTo objNull) then {continue};
-    [_x, _rebClassname, _objectRebHash, _canModifyStren, _canModifyRange, _objectRebName, _vehOnlyForCrew] call REB_fnc_createActions;
+    [_x, _rebClassname, _objectRebHash, _canModifyStren, _canModifyRange, _objectRebName, _vehOnlyForCrew, _object] call REB_fnc_createActions;
 } forEach _linkObjects;

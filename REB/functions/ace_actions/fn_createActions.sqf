@@ -2,13 +2,22 @@
 
 #define VEH_CHECK ([_vehOnlyForCrew, (_this select 1), (_this select 0)] call { params["_vehOnlyForCrew", "_plr", "_veh"]; if !(_vehOnlyForCrew) exitWith {true}; _plr in (crew _veh)})
 
-params ["_object", "_rebClassname", "_objectRebHash", "_canModifyStren", "_canModifyRange", "_objectRebName", ["_vehOnlyForCrew", true], ["_originObject", (_this select 0)]];
+params [
+    "_object", 
+    "_rebClassname", 
+    "_objectRebHash", 
+    "_canModifyStren", 
+    "_canModifyRange", 
+    "_objectRebName", 
+    ["_vehOnlyForCrew", true], 
+    ["_originObject", (_this select 0)]
+];
 
 PR _hashVal = _objectRebHash;
 
 private _addToSelfActions = _object isKindOf "AllVehicles";
 
-if ((getMass _object) < 150) then {
+if ((getMass _object) < 100) then {
     if !(_object getVariable ["ace_dragging_canDrag", false]) then {
         [_object, true] call ace_dragging_fnc_setDraggable;
     };
@@ -52,7 +61,7 @@ if (_mainActionId isEqualTo "") then {
 };
 
 // 2. Получить displayName объекта для ветки object_reb
-private _displayName = getText(configFile >> "CfgVehicles" >> typeOf _object >> "displayName");
+private _displayName = getText(configFile >> "CfgVehicles" >> typeOf _originObject >> "displayName");
 
 // 3. Создать child actions для управления object_reb (глобально)
 PR _actionDisable = [

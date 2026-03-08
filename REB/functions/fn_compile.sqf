@@ -58,23 +58,29 @@ REB_fnc_eventHandler = {
 REB_fnc_main = {
 	params [["_freq", REB_freq], ["_random", REB_random], ["_noise", REB_noise], ["_uav", GET_PLAYER_DRONE]];
 
+	// reset effects and vars
 	REB_isSuppressed = false;
 	_noise ppEffectEnable false; 
 	call REB_fnc_removeInputDelay;
 
-	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
-	if (_uav getVariable ["REB_var_skipThis", false]) exitWith {};
-
-	if (_uav getVariable ['ArmaFPV_EnableTI', false]) then {
+	// set TI
+	private _hadTI = _uav getVariable ['REB_hadTI', 0];
+	if (_hadTI isEqualTo 0) then { // set default TI value
+		(equipmentDisabled _uav) params ["_nvg", "_hasTI"];
+		_uav setVariable ['REB_hadTI', _hasTI];
+	};
+	if (_hadTI isEqualTo true) then {
 		_uav disableTIEquipment false;
 	};
-	
+
+	// check if system is on, if we have drone and if we have any rebs
+	if !(MGVAR ["REB_systemIsOn", true]) exitWith {};
+	if (_uav getVariable ["REB_var_skipThis", false]) exitWith {};
 	if (count REB_all_rebs == 0) exitWith {};
 
+	// check if lancet
 	PR _isLancet = ISLANCETHANDL;
-
 	if !((_uav in allUnitsUAV) || _isLancet) exitWith {};
-
 	if (_isLancet) then {
 		_uav = uiNamespace getVariable ["lancet_currentProjectile", objNull];
 	};

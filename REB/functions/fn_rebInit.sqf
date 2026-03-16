@@ -42,6 +42,12 @@ REB_random = _random;
 REB_delayInput = false;
 REB_delayInputCoef = 0.5;
 
+REB_customRebEmitSettings = [
+    [(tolower "Sania_with_tripod"), [0,0,1.5]],
+    [(tolower "Sania"), [0,0,0.5]]
+];
+REB_customRebEmitSettings = createHashMapFromArray REB_customRebEmitSettings;
+
 call REB_fnc_initEffects;
 
 if (isNil "REB_ON_HANDLE_DRONE_EH") then {

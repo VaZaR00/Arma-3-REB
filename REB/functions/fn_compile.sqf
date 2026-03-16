@@ -85,11 +85,11 @@ REB_fnc_main = {
 		_uav = uiNamespace getVariable ["lancet_currentProjectile", objNull];
 	};
 
-	if (_uav call REB_fnc_isInDeadzone) exitWith {
+	(_uav call REB_fnc_currentJammingRebStrength) params ["_activeRebStrength", "_activeReb", "_isInDeadZone"];
+
+	if (_isInDeadZone) exitWith {
 		_uav call REB_fnc_disconectDrone;
 	};
-
-	PR _activeRebStrength = _uav call REB_fnc_currentJammingRebStrength;
 
 	if !(_activeRebStrength > 0) exitWith {};
 
@@ -102,20 +102,39 @@ REB_fnc_main = {
 	_activeRebStrength call REB_fnc_suppress;
 };
 REB_fnc_currentJammingRebStrength = {
-	PR _currentStrength = 0;
+	private _currentStrength = 0;
+	private _isInDeadzone = false;
+	private _currentReb = objNull;
 
 	REB_all_rebs apply {
+		if (_isInDeadzone) exitWith {};
 		PR _obj = _y;
 		PR _d = (_this distance _obj);
 		OBJ_REBS_LIST(_obj) apply {
+			if (_isInDeadzone) exitWith {};
 			PR _hashVal = _x;
 			PR _stren = _obj GV [OBJ_VARPREF("Strenght"), 0];
+			PR _range = _obj GV [OBJ_VARPREF("Range"), -1];
 			if (
-				(_d < (_obj GV [OBJ_VARPREF("Range"), -1])) &&
-				(_obj GV [OBJ_VARPREF("Is_active"), false]) &&
-				(_stren > _currentStrength)
+				(_d < _range) &&
+				{(_obj GV [OBJ_VARPREF("Is_active"), false]) &&
+				(_stren > _currentStrength)}
 			) then {
 				_currentStrength = _stren;
+				_currentReb = _obj;
+				private _lineOfSight = [_currentReb, _this, _currentStrength, _range] call REB_fnc_lineOfSightModifier;
+				if (_lineOfSight > 0) then {
+					private _strenRatio = _lineOfSight / _currentStrength;
+					private _deadzone = (_obj GV [OBJ_VARPREF("Deadzone"), -1]);
+					private _deadZoneRatioed = _deadzone * _strenRatio;
+					_currentStrength = _lineOfSight;
+					if (_d < _deadZoneRatioed) exitWith {
+						_isInDeadzone = true;
+					};
+				} else {
+					_currentStrength = 0;
+					_currentReb = objNull;
+				};
 			};
 		};
 	};
@@ -125,27 +144,116 @@ REB_fnc_currentJammingRebStrength = {
 	} else {
 		_currentStrength
 	};
-	REB_currentStrength
+	[REB_currentStrength, _currentReb, _isInDeadzone]
 };
-REB_fnc_isInDeadzone = {
-	PR _isDead = false;
+REB_fnc_getRebEmitPoint = {
+	// get relative point where reb effect should be emitted from
+	params ["_reb"];
 
-	REB_all_rebs apply {
-		PR _obj = _y;
-		PR _d = (_this distance _obj);
-		OBJ_REBS_LIST(_obj) apply {
-			PR _hashVal = _x;
-			PR _stren = _obj GV [OBJ_VARPREF("Strenght"), 0];
-			if (
-				(_d < (_obj GV [OBJ_VARPREF("Deadzone"), -1])) &&
-				(_obj GV [OBJ_VARPREF("Is_active"), false])
-			) EW {
-				_isDead = true;
-			};
-		};
+	private _typeOf = typeOf _reb;
+	private _customSettings = MGVAR ["REB_customRebEmitSettings", createHashMap];
+
+	_customSettings getOrDefault [_typeOf, [0,0,0.3]] // default point is 30cm above center of object;
+};
+REB_fnc_getObjectModifier = {
+	params ["_obj", ["_mod", 1]];
+
+	private _modelInfo = getModelInfo _obj;
+	private _p3dPath = _modelInfo select 1;
+	private _modifier = 0;
+
+	_modifier = _obj call {
+		if (_obj isKindOf "Tank") exitWith {0.7};
+		if (_obj isKindOf "LandVehicle") exitWith {0.5};
+		if (_obj isKindOf "AllVehicles") exitWith {0.4};
 	};
 
-	_isDead
+	if (_modifier == 0) then {
+		_modifier = _p3dPath call {
+			if ("bush" in _this) exitWith {0.1};
+			if ("tree" in _this) exitWith {0.1};
+			if ("office" in _this) exitWith {0.7};
+			if ("build" in _this) exitWith {0.6};
+			if ("house" in _this) exitWith {0.6};
+			if ("trench" in _this) exitWith {0.6};
+			if ("okop" in _this) exitWith {0.6};
+			if ("metal" in _this) exitWith {0.7};
+			if ("wall" in _this) exitWith {0.4};
+			if ("fence" in _this) exitWith {0.3};
+			0
+		};
+	};
+	_modifier = _modifier * _mod;
+	private _result = 1 - _modifier;
+	_result = _result max 0;
+	_result = _result min 1;
+	_result
+};
+REB_fnc_lineOfSightModifier = {
+	params ["_reb", "_uav", "_baseStrength", "_rebRange"];
+
+	private _uavPos = getPosASL _uav;
+	private _rebPos = getPosASL _reb;
+	private _rebEmitPoint = _reb call REB_fnc_getRebEmitPoint;
+	private _correctedRebPos = _rebPos vectorAdd _rebEmitPoint;
+	private _dist = _uav distance _reb;
+	private _distMod = _dist / _rebRange;
+
+	private _finalStrength = _baseStrength;
+
+	// check terrain intersection
+	private _interstectsTerrain = terrainIntersectASL [_uavPos, _rebPos];
+	if (_interstectsTerrain) then {
+		_finalStrength = _finalStrength * MVARDEF(REB_terrainInterstectStrengthCoef, 0.5);
+	};
+
+	// check straight line of sight between reb and drone
+	private _interstectsStraight1 = lineIntersectsObjs [_correctedRebPos, _uavPos, _uav, objNull, true];
+	private _interstects1Count = count _interstectsStraight1;
+	private _interstectsAboveCount = 0;
+	if (_interstects1Count > 0) then {
+		private _firstIntersectStraight1 = _interstectsStraight1#0;
+
+		// check if reb is covered by something from above
+		private _posAboveReb = _correctedRebPos vectorAdd [0,0,20];
+		private _interstectsAbove = lineIntersectsObjs [_correctedRebPos, _posAboveReb, _uav, objNull, true];
+		_interstectsAboveCount = count _interstectsAbove;
+
+		if (_interstectsAboveCount > 0) then {
+			private _firstIntersectAbove = _interstectsAbove#0;
+			private _objectAboveModifier = [_firstIntersectStraight1, _distMod] call REB_fnc_getObjectModifier;
+			private _isSameObjs = _firstIntersectStraight1 isEqualTo _firstIntersectAbove;
+
+			if (_isSameObjs && {(_interstectsAboveCount == 1) && (_interstects1Count == 1)}) exitWith {};
+
+			if (_isSameObjs) then {
+				if (_objectAboveModifier > 0.5) then {
+					// if line of sight and above reb is same object and modifier is high we count it as reb is in building fully covered
+					_finalStrength = _finalStrength * MVARDEF(REB_coveredRebStrengthModifier, 0.7);
+				};
+			};
+			_finalStrength = _finalStrength * (_objectAboveModifier);
+		};
+
+		if (_finalStrength < MVARDEF(REB_minRebStrength, 0.05)) exitWith {
+			_finalStrength = 0;
+		}; 
+
+		{
+			private _objectModifier = [_x, _distMod] call REB_fnc_getObjectModifier;
+			_finalStrength = _finalStrength * (_objectModifier);
+			if (_finalStrength < MVARDEF(REB_minRebStrength, 0.05)) exitWith {
+				_finalStrength = 0;
+			}; 
+		} forEach _interstectsStraight1;
+	} else {
+		// if we have straight line of sight - full effect
+		_finalStrength = _baseStrength;
+	};
+
+	hintSilent format ["STR: %1; INTERSECTS: %2; ABOVE: %3; MODS: %4", _finalStrength, _interstects1Count, _interstectsAboveCount, (_interstectsStraight1 apply {[_x, ([_x, _distMod] call REB_fnc_getObjectModifier), getModelInfo _x]})];
+
+	_finalStrength
 };
 REB_fnc_disconectDrone = {
 	if (ISLANCETHANDL) exitWith {

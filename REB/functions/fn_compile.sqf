@@ -129,7 +129,6 @@ REB_fnc_currentJammingRebStrength = {
 					private _dInInit = _rangeFull - _d;
 					private _initDCoef = _dInInit / _rangeInit;
 					_currentStrength = _stren * _initDCoef;
-					LOG_VARS("INIT RANGE", "_d, _range, _rangeInit, _dInInit, _initDCoef, _stren, _currentStrength");
 				};
 				_currentReb = _obj;
 				private _lineOfSight = _currentStrength;
@@ -264,8 +263,6 @@ REB_fnc_lineOfSightModifier = {
 		// if we have straight line of sight - full effect
 		_finalStrength = _baseStrength;
 	};
-
-	// hintSilent format ["STR: %1; INTERSECTS: %2; ABOVE: %3; MODS: %4", _finalStrength, _interstects1Count, _interstectsAboveCount, (_interstectsStraight1 apply {[_x, ([_x, _distMod] call REB_fnc_getObjectModifier), getModelInfo _x]})];
 
 	_finalStrength
 };

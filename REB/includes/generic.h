@@ -8,9 +8,13 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define MVARDEF(var, def) (MGVAR [STR(var), def])
-#define LOG hint str 
+#define LOG hintSilent str 
 #define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]; hint _txt; diag_log _txt};
 #define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
+#define VARS_STR call {params["_txt", ["_varstr", ""]]; if (_varstr EQTO "") then {_varstr = _txt}; private _ar = _varstr splitString ",;. "; private _arvs = _ar apply {private _val = call compile format["if !(isNil '%1') then {%1}", _x]; if (isNil "_val") then {""} else {format["%1: %2", _x, _val]}}; _txt + "  :  " + (_arvs joinString "; ")}
+#define LOG_VARS ;
+#define RLOG_VARS VARS_STR RLOG
+#define LOG_VARS(txt, vars) LOG ([txt, vars] VARS_STR);
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];

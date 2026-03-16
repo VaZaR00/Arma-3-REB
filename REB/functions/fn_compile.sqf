@@ -105,6 +105,7 @@ REB_fnc_currentJammingRebStrength = {
 	private _currentStrength = 0;
 	private _isInDeadzone = false;
 	private _currentReb = objNull;
+	private _initRCoef = MVARDEF(REB_initialInfluenceRadiusCoef, 3);
 
 	REB_all_rebs apply {
 		if (_isInDeadzone) exitWith {};
@@ -115,14 +116,27 @@ REB_fnc_currentJammingRebStrength = {
 			PR _hashVal = _x;
 			PR _stren = _obj GV [OBJ_VARPREF("Strenght"), 0];
 			PR _range = _obj GV [OBJ_VARPREF("Range"), -1];
+			PR _rangeInit = (_range / _initRCoef);
+			PR _rangeFull = _range + _rangeInit;
 			if (
-				(_d < _range) &&
+				(_d < _rangeFull) &&
 				{(_obj GV [OBJ_VARPREF("Is_active"), false]) &&
 				(_stren > _currentStrength)}
 			) then {
-				_currentStrength = _stren;
+				if (_d <= _range) then {
+					_currentStrength = _stren;
+				} else {
+					private _dInInit = _rangeFull - _d;
+					private _initDCoef = _dInInit / _rangeInit;
+					_currentStrength = _stren * _initDCoef;
+					LOG_VARS("INIT RANGE", "_d, _range, _rangeInit, _dInInit, _initDCoef, _stren, _currentStrength");
+				};
 				_currentReb = _obj;
-				private _lineOfSight = [_currentReb, _this, _currentStrength, _range] call REB_fnc_lineOfSightModifier;
+				private _lineOfSight = _currentStrength;
+				private _lineOfSightCalculated = [_currentReb, _this, _currentStrength, _range] call REB_fnc_lineOfSightModifier;
+				if !(isNil "_lineOfSightCalculated") then {
+					_lineOfSight = _lineOfSightCalculated;
+				};
 				if (_lineOfSight > 0) then {
 					private _strenRatio = _lineOfSight / _currentStrength;
 					private _deadzone = (_obj GV [OBJ_VARPREF("Deadzone"), -1]);
@@ -165,7 +179,7 @@ REB_fnc_getObjectModifier = {
 	_modifier = _obj call {
 		if (_obj isKindOf "Tank") exitWith {0.7};
 		if (_obj isKindOf "LandVehicle") exitWith {0.5};
-		if (_obj isKindOf "AllVehicles") exitWith {0.4};
+		0
 	};
 
 	if (_modifier == 0) then {
@@ -190,7 +204,7 @@ REB_fnc_getObjectModifier = {
 	_result
 };
 REB_fnc_lineOfSightModifier = {
-	params ["_reb", "_uav", "_baseStrength", "_rebRange"];
+	params [["_reb", objNull], ["_uav", objNull], ["_baseStrength", 0.5], ["_rebRange", 50]];
 
 	private _uavPos = getPosASL _uav;
 	private _rebPos = getPosASL _reb;
@@ -251,7 +265,7 @@ REB_fnc_lineOfSightModifier = {
 		_finalStrength = _baseStrength;
 	};
 
-	hintSilent format ["STR: %1; INTERSECTS: %2; ABOVE: %3; MODS: %4", _finalStrength, _interstects1Count, _interstectsAboveCount, (_interstectsStraight1 apply {[_x, ([_x, _distMod] call REB_fnc_getObjectModifier), getModelInfo _x]})];
+	// hintSilent format ["STR: %1; INTERSECTS: %2; ABOVE: %3; MODS: %4", _finalStrength, _interstects1Count, _interstectsAboveCount, (_interstectsStraight1 apply {[_x, ([_x, _distMod] call REB_fnc_getObjectModifier), getModelInfo _x]})];
 
 	_finalStrength
 };

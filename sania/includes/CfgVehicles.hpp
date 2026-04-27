@@ -127,6 +127,17 @@ class CfgVehicles
 			// 	statement="this call DB_fnc_addJammerToInventory";
 			// };
 		};
+        class Attributes
+        {
+            PARAMETER(Radius,"100")
+            PARAMETER(Deadzone,"30")
+            PARAMETER(Strength,"0.5")
+            PARAMETER_BOOL(IsAttachable,1)
+            PARAMETER_BOOL(CanModifyRange,1)
+            PARAMETER_BOOL(CanModifyStrength,0)
+            PARAMETER_BOOL(IsActive,1)
+            PARAMETER(linkedObjects,"")
+        };
     };
 	class Sania_with_tripod : Sania_Base
     {
